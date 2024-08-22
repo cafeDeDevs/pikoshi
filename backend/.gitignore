@@ -9,5 +9,9 @@ wheels/
 # venv
 .venv
 
+# environment variables
 *.env
+# editor configs
 *.vim
+# loggers
+logs/

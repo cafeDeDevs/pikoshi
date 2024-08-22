@@ -18,13 +18,5 @@ class User(Base):
 
     items = relationship("Item", back_populates="owner")
 
-    albums = relationship("Album", back_populates="user")
-    founded_networks = relationship(
-        "Network", foreign_keys="[Network.founder_id]", back_populates="founder"
-    )
-    networks = relationship(
-        "Network", foreign_keys="[Network.user_id]", back_populates="user"
-    )
-
     def __repr__(self):
         return f"<User(name='{self.name}', email='{self.email}', is_active={self.is_active})>"

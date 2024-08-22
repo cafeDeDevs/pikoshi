@@ -2,12 +2,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from ..dependencies import get_db
+from ..middlewares.logger import TimedRoute
 from ..schemas.item import Item
 from ..services.item_service import get_items
 
 router = APIRouter(
     prefix="/items",
     tags=["items"],
+    route_class=TimedRoute,
 )
 
 

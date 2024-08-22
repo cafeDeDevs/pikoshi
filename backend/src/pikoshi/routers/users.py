@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..dependencies import get_db
+from ..middlewares.logger import TimedRoute
 from ..schemas.item import Item, ItemCreate
 from ..schemas.user import User, UserCreate
 from ..services.user_service import (
@@ -12,11 +13,7 @@ from ..services.user_service import (
     get_users,
 )
 
-router = APIRouter()
-router = APIRouter(
-    prefix="/users",
-    tags=["users"],
-)
+router = APIRouter(prefix="/users", tags=["users"], route_class=TimedRoute)
 
 
 @router.post("/", response_model=User)
