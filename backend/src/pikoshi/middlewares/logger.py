@@ -9,6 +9,15 @@ from fastapi.routing import APIRoute
 
 
 class TimedRoute(APIRoute):
+    """
+    A FastAPI route that measures and logs the duration of each request.
+
+    This custom route handler appends standard HTTP logging information
+    to a JSON log file. The log file is created in the 'logs' directory
+    with a daily date format, allowing for easy tracking and analysis of
+    route performance.
+    """
+
     def get_route_handler(self) -> Callable:
         original_route_handler = super().get_route_handler()
 
