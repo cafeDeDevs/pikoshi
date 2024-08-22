@@ -37,7 +37,8 @@ source .venv/bin/activate
 ```
 
 You'll need to migrate the database so that the essential tables are
-established. You can do this with alembic:
+established. You can do this with alembic (make sure you invoke `alembic` from
+within the `src/pikoshi` directory):
 
 ```sh
 alembic upgrade head
