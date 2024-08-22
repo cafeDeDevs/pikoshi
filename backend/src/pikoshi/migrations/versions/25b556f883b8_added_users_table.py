@@ -70,7 +70,7 @@ def upgrade() -> None:
         sa.Column("file_name", sa.String(length=254), nullable=False),
     )
 
-    # Create networks tablef
+    # Create networks table
     op.create_table(
         "networks",
         sa.Column("id", sa.Integer(), primary_key=True, index=True),
