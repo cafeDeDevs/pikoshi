@@ -1,0 +1,4 @@
+VITE_PORT=3000
+VITE_GOOGLE_OAUTH2_CLIENT_ID=
+# NOTE: To generate random nonce, from the command line you can invoke: openssl rand -hex 8
+VITE_GOOGLE_OAUTH2_NONCE=

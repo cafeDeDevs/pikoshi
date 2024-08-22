@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:16.2-alpine3.19
+    container_name: ${PG_CONTAINER_NAME}
+    restart: always
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASS}
+      - POSTGRES_DB=${PG_DB}
+    ports:
+      - "${PG_PORT}:${DB_PORT}"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "postgres", "-U", "admin"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  cache:
+    image: redis:7.2-alpine
+    container_name: ${REDIS_CONTAINER_NAME}
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning --requirepass "${REDIS_PASS}"
+    ports:
+      - ${REDIS_PORT}:${CACHE_PORT}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 5

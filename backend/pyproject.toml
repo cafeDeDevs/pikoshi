@@ -1,0 +1,36 @@
+[project]
+name = "pikoshi"
+version = "0.0.0"
+description = "Pikoshi: The Photo Sharing Application With Privacy In Mind By Default 🐱"
+authors = [
+  { name = "tomit4", email = "mosssap@gmail.com" },
+  { name = "paulcap510", email = "paul.capob@gmail.com" },
+]
+dependencies = [
+  "fastapi>=0.112.1",
+  "uvicorn>=0.30.6",
+  "python-dotenv>=1.0.1",
+  "sqlalchemy>=2.0.32",
+  "alembic>=1.13.2",
+  "httpx>=0.27.0",
+  "psycopg2>=2.9.9",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = ["pytest>=8.3.2", "black>=24.8.0", "isort>=5.13.2"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pikoshi"]
+
+[project.scripts]
+dev = "pikoshi.main:main"

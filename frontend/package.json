@@ -1,0 +1,32 @@
+{
+  "name": "pikoshi",
+  "version": "0.0.0",
+  "description": "Pikoshi: The Photo Sharing Application With Privacy In Mind By Default 🐱",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "test": "vitest"
+  },
+  "type": "module",
+  "license": "MIT",
+  "devDependencies": {
+    "@solidjs/testing-library": "^0.8.9",
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/bun": "^1.1.6",
+    "jsdom": "^24.1.1",
+    "msw": "^2.3.5",
+    "solid-devtools": "^0.29.2",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.11",
+    "vite-plugin-solid": "^2.8.2",
+    "vitest": "^2.0.5"
+  },
+  "dependencies": {
+    "@solidjs/router": "^0.14.3",
+    "solid-js": "^1.8.11",
+    "zod": "^3.23.8"
+  }
+}
