@@ -15,16 +15,8 @@ Before diving into Pikoshi's codebase, you'll first need to have
 
 **Getting Started:**
 
-Once those are installed, you can clone this repository in a directory of your
-choosing:
-
-```sh
-git clone https://github.com/cafededevs/pikoshi &&\
-cd pikoshi
-```
-
-You'll also need to simply copy the included `env-sample` file as a `.env` to
-adjust from the default `HOST` and `PORT`:
+Once those are installed, you'll also need to simply copy the included
+`env-sample` file as a `.env` to adjust from the default `HOST` and `PORT`:
 
 ```sh
 cp env-sample .env
