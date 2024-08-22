@@ -4,7 +4,9 @@ from .item import Item
 
 
 class UserBase(BaseModel):
+    name: str
     email: str
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserCreate(UserBase):
@@ -16,4 +18,5 @@ class User(UserBase):
     is_active: bool
     items: list[Item] = []
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True

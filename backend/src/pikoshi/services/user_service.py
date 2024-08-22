@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 
 from ..models.item import Item
 from ..models.user import User
@@ -20,7 +21,14 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 def create_user(db: Session, user: UserCreate):
     fake_hashed_password = user.password + "notreallyhashed"
-    db_user = User(email=user.email, hashed_password=fake_hashed_password)
+    db_user = User(
+        created=func.now(),
+        name=user.name,
+        email=user.email,
+        password=fake_hashed_password,
+        is_active=True,
+        last_login=func.now(),
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)

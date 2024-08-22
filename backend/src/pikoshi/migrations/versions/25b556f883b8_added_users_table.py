@@ -6,6 +6,7 @@ Create Date: 2024-08-22 04:19:34.619552
 
 """
 
+from os import walk
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -23,9 +24,12 @@ def upgrade() -> None:
     op.create_table(
         "users",
         sa.Column("id", sa.Integer(), primary_key=True, index=True),
-        sa.Column("email", sa.String(length=120), unique=True, nullable=False),
-        sa.Column("hashed_password", sa.String(length=250), nullable=True),
+        sa.Column("created", sa.DateTime(timezone=True)),
+        sa.Column("name", sa.String(length=30), unique=False, index=True),
+        sa.Column("password", sa.String(length=254), nullable=True),
+        sa.Column("email", sa.Text, unique=True, index=True),
         sa.Column("is_active", sa.Boolean(), default=True),
+        sa.Column("last_login", sa.DateTime(timezone=True)),
     )
 
     # Create items table
@@ -37,7 +41,63 @@ def upgrade() -> None:
         sa.Column("owner_id", sa.Integer(), sa.ForeignKey("users.id"), nullable=True),
     )
 
+    # Create albums table
+    op.create_table(
+        "albums",
+        sa.Column("id", sa.Integer(), primary_key=True, index=True),
+        sa.Column(
+            "user_id",
+            sa.Integer(),
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("title", sa.String(length=30), unique=False, index=True),
+        sa.Column("album_name", sa.String(length=254), nullable=True),
+        sa.Column("is_private", sa.Boolean(), nullable=True, default=True),
+    )
+
+    # Create photos table
+    op.create_table(
+        "photos",
+        sa.Column("id", sa.Integer(), primary_key=True, index=True),
+        sa.Column(
+            "album_id",
+            sa.Integer(),
+            sa.ForeignKey("albums.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("date", sa.DateTime(timezone=True)),
+        sa.Column("file_name", sa.String(length=254), nullable=False),
+    )
+
+    # Create networks tablef
+    op.create_table(
+        "networks",
+        sa.Column("id", sa.Integer(), primary_key=True, index=True),
+        sa.Column(
+            "founder_id",
+            sa.Integer,
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "user_id",
+            sa.Integer,
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "album_id",
+            sa.Integer,
+            sa.ForeignKey("albums.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+    )
+
 
 def downgrade() -> None:
+    op.drop_table("networks")
+    op.drop_table("photos")
+    op.drop_table("albums")
     op.drop_table("items")
     op.drop_table("users")
