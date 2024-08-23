@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class UserBase(BaseModel):
@@ -28,6 +28,17 @@ class UserInput(BaseModel):
         str,
         Field(
             min_length=10,
-            pattern=r'(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};":\\|,.<>/?])',
         ),
     ]
+
+    @field_validator("password")
+    def validate_password(cls, value):
+        if not any(c.islower() for c in value):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not any(c.isupper() for c in value):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(c.isdigit() for c in value):
+            raise ValueError("Password must contain at least one digit")
+        if not any(c in '!@#$%^&*()_+-=[]{};":\\|,.<>/?' for c in value):
+            raise ValueError("Password must contain at least one special character")
+        return value

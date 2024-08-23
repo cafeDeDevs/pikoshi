@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from .dependencies import get_db
 from .meta import meta
 from .middlewares import cors
-from .routers import google_auth, items, jwt_auth, users
+from .routers import google_auth, jwt_auth, users
 
 app = FastAPI(
     **meta.meta_info,
@@ -24,7 +24,6 @@ HOST = os.environ.get("HOST") or "::"
 PORT = int(str(os.environ.get("PORT"))) or 8000
 
 app.include_router(users.router)
-app.include_router(items.router)
 app.include_router(google_auth.router)
 #  app.include_router(jwt_auth.router)
 

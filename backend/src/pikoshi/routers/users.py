@@ -3,15 +3,8 @@ from sqlalchemy.orm import Session
 
 from ..dependencies import get_db
 from ..middlewares.logger import TimedRoute
-from ..schemas.item import Item, ItemCreate
 from ..schemas.user import User, UserCreate
-from ..services.user_service import (
-    create_user,
-    create_user_item,
-    get_user,
-    get_user_by_email,
-    get_users,
-)
+from ..services.user_service import create_user, get_user, get_user_by_email, get_users
 
 router = APIRouter(prefix="/users", tags=["users"], route_class=TimedRoute)
 
@@ -36,8 +29,3 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
-
-
-@router.post("/{user_id}/items/", response_model=Item)
-def create_item_for_user(user_id: int, item: ItemCreate, db: Session = Depends(get_db)):
-    return create_user_item(db=db, item=item, user_id=user_id)
