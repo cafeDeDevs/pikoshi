@@ -23,5 +23,6 @@ async def signup_with_google(user_input: UserInput):
     print("user_input :=>", user_input.email)
     # TODO: Check if email is in DB and return HTTP ERR if so
     # Send Transac Email that returns user back to frontend route with token in URL
+    # TODO: Set up redis cache to hold onto token to be checked in URL
     jsonMsg = jsonable_encoder({"message": "Hello world"})
     return JSONResponse(jsonMsg)
