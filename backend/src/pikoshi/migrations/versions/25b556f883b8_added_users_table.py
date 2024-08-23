@@ -26,20 +26,11 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), primary_key=True, index=True),
         sa.Column("created", sa.DateTime(timezone=True)),
         sa.Column("name", sa.String(length=30), unique=False, index=True),
-        sa.Column("password", sa.String(length=254), nullable=False),
-        sa.Column("salt", sa.String(64), unique=True, nullable=False),
+        sa.Column("password", sa.String(length=254), nullable=False, index=True),
+        sa.Column("salt", sa.String(64), unique=True, nullable=False, index=True),
         sa.Column("email", sa.Text, unique=True, index=True),
         sa.Column("is_active", sa.Boolean(), default=True),
         sa.Column("last_login", sa.DateTime(timezone=True)),
-    )
-
-    # Create items table
-    op.create_table(
-        "items",
-        sa.Column("id", sa.Integer(), primary_key=True, index=True),
-        sa.Column("title", sa.String(length=120), index=True, nullable=False),
-        sa.Column("description", sa.String(length=250)),
-        sa.Column("owner_id", sa.Integer(), sa.ForeignKey("users.id"), nullable=True),
     )
 
     # Create albums table
@@ -100,5 +91,4 @@ def downgrade() -> None:
     op.drop_table("networks")
     op.drop_table("photos")
     op.drop_table("albums")
-    op.drop_table("items")
     op.drop_table("users")

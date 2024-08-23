@@ -4,12 +4,12 @@ import { useNavigate } from '@solidjs/router';
 
 import urls from '../config/urls';
 
-const GoogleLoginBtn: Component = () => {
+const GoogleSignupBtn: Component = () => {
     const navigate = useNavigate();
     const signup = useGoogleLogin({
         onSuccess: async (codeResponse): Promise<void> => {
             try {
-                const response = await fetch(urls.BACKEND_LOGIN_GOOGLE_ROUTE, {
+                const response = await fetch(urls.BACKEND_SIGNUP_GOOGLE_ROUTE, {
                     method: 'POST',
                     headers: {
                         Accept: 'application/json',
@@ -35,7 +35,7 @@ const GoogleLoginBtn: Component = () => {
         },
         flow: 'auth-code', // change to 'implicit' for access_token
     });
-    return <button onClick={signup}>Login With Google</button>;
+    return <button onClick={signup}>Sign Up With Google</button>;
 };
 
-export default GoogleLoginBtn;
+export default GoogleSignupBtn;
