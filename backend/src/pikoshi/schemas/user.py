@@ -1,4 +1,6 @@
-from pydantic import BaseModel, ConfigDict
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserBase(BaseModel):
@@ -18,3 +20,14 @@ class User(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class UserInput(BaseModel):
+    email: EmailStr
+    password: Annotated[
+        str,
+        Field(
+            min_length=10,
+            pattern=r'(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};":\\|,.<>/?])',
+        ),
+    ]
