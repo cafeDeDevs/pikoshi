@@ -1,5 +1,6 @@
 import App from '../App.tsx';
 import TestComponent from '../views/Test';
+import EmailRegistrationForm from '../views/EmailRegistration';
 
 const routes = [
     {
@@ -9,6 +10,10 @@ const routes = [
     {
         path: '/test',
         component: TestComponent,
+    },
+    {
+        path: '/email-registration',
+        component: EmailRegistrationForm,
     },
 ];
 

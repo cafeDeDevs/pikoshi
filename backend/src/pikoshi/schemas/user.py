@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -24,6 +24,9 @@ class User(UserBase):
 
 class UserInput(BaseModel):
     email: EmailStr
+
+
+class UserInputPass(UserInput):
     password: Annotated[
         str,
         Field(

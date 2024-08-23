@@ -25,7 +25,7 @@ PORT = int(str(os.environ.get("PORT"))) or 8000
 
 app.include_router(users.router)
 app.include_router(google_auth.router)
-#  app.include_router(jwt_auth.router)
+app.include_router(jwt_auth.router)
 
 
 def main():
