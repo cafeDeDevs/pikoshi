@@ -22,3 +22,7 @@ REDIS_CONTAINER_NAME="app_cache"
 GOOGLE_OAUTH2_CLIENT_ID=""
 GOOGLE_OAUTH2_CLIENT_SECRET=""
 GOOGLE_OAUTH2_REDIRECT_URI=""
+
+# Cryptographic Pepper
+# Generate using `openssl rand -hex 16`
+PEPPER=""

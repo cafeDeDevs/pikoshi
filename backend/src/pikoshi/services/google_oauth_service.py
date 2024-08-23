@@ -8,7 +8,7 @@ load_dotenv()
 
 class GoogleOAuthService:
     @staticmethod
-    def get_oauth_config(auth_code):
+    def get_oauth_config(auth_code: str):
         return {
             "code": auth_code,
             "client_id": os.environ.get("GOOGLE_OAUTH2_CLIENT_ID"),
@@ -18,11 +18,22 @@ class GoogleOAuthService:
         }
 
     @staticmethod
-    async def get_user_info(data):
+    async def get_user_tokens(data):
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 "https://www.googleapis.com/oauth2/v4/token", data=data
             )
+        if response.status_code == 200:
+            return response.json()
+        return None
+
+    @staticmethod
+    async def get_user_info(access_token: str):
+        user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
+
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {access_token}"}
+            response = await client.get(user_info_url, headers=headers)
         if response.status_code == 200:
             return response.json()
         return None
