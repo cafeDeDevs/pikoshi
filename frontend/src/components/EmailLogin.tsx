@@ -62,7 +62,7 @@ const EmailLogin: Component = () => {
                     />
                 </div>
                 <div>
-                    <label>Password:</label>
+                    <label>password:</label>
                     <br />
                     <input
                         type='password'
