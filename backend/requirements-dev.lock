@@ -75,6 +75,8 @@ pydantic-core==2.20.1
 pytest==8.3.2
 python-dotenv==1.0.1
     # via pikoshi
+redis==5.0.8
+    # via pikoshi
 requests==2.32.3
     # via resend
 resend==2.4.0

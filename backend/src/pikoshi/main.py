@@ -10,10 +10,7 @@ from .meta import meta
 from .middlewares import cors
 from .routers import google_auth, jwt_auth, users
 
-app = FastAPI(
-    **meta.meta_info,
-    dependencies=[Depends(get_db)],
-)
+app = FastAPI(**meta.meta_info, dependencies=[Depends(get_db)])
 
 cors.add_cors_middleware(app)
 

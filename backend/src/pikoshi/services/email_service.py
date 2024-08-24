@@ -7,7 +7,7 @@ load_dotenv()
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
 
-def send_signup_email(email: str, html_content: str):
+def send_signup_email(email: str, html_content: str) -> None:
     resend.Emails.send(
         {
             "from": "pikoshi@thelastselftaught.dev",

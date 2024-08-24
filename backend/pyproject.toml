@@ -16,6 +16,7 @@ dependencies = [
     "psycopg2>=2.9.9",
     "pydantic[email]>=2.8.2",
     "resend>=2.4.0",
+    "redis>=5.0.8",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"

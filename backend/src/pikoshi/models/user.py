@@ -1,5 +1,4 @@
 from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
-from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from ..database import Base
@@ -16,8 +15,6 @@ class User(Base):
     email = Column(Text, unique=True, index=True)
     is_active = Column(Boolean, nullable=True, default=True)
     last_login = Column(DateTime(timezone=True), onupdate=func.now())
-
-    items = relationship("Item", back_populates="owner")
 
     def __repr__(self):
         return f"<User(name='{self.name}', email='{self.email}', is_active={self.is_active})>"
