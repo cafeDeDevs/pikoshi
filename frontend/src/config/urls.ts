@@ -5,4 +5,5 @@ export default {
     BACKEND_CHECK_TOKEN_ROUTE: 'http://localhost:8000/auth/check-token/',
     BACKEND_EMAIL_ONBOARDING_ROUTE:
         'http://localhost:8000/auth/email-onboarding/',
+    BACKEND_EMAIL_LOGIN_ROUTE: 'http://localhost:8000/auth/email-login/',
 };

@@ -3,7 +3,6 @@ import Gallery from '../views/Gallery';
 import Login from '../views/Login';
 import Onboarding from '../views/Onboarding';
 import Signup from '../views/Signup';
-import TestComponent from '../views/TestComponent';
 
 const routes = [
     {
@@ -17,10 +16,6 @@ const routes = [
     {
         path: '/signup',
         component: Signup,
-    },
-    {
-        path: '/test',
-        component: TestComponent,
     },
     {
         path: '/onboarding',

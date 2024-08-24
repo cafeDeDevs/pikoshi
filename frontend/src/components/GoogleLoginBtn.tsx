@@ -1,10 +1,11 @@
-import type { Component } from 'solid-js';
+import { createSignal, Show, type Component } from 'solid-js';
 import useGoogleLogin from '../hooks/useGoogleLogin';
 import { useNavigate } from '@solidjs/router';
 
 import urls from '../config/urls';
 
 const GoogleLoginBtn: Component = () => {
+    const [message, setMessage] = createSignal<string>('');
     const navigate = useNavigate();
     const login = useGoogleLogin({
         onSuccess: async (codeResponse): Promise<void> => {
@@ -20,11 +21,11 @@ const GoogleLoginBtn: Component = () => {
                         code: codeResponse.code,
                     }),
                 });
+                const jsonRes = await response.json();
+                setMessage(jsonRes.message);
                 if (!response.ok)
                     throw new Error('Error While Authenticating.');
-                const jsonResponse = await response.json();
-                console.log('jsonResponse :=>', jsonResponse);
-                navigate('/test');
+                navigate('/gallery');
             } catch (err) {
                 const error = err as Error;
                 console.error('ERROR :=>', error);
@@ -35,7 +36,14 @@ const GoogleLoginBtn: Component = () => {
         },
         flow: 'auth-code', // change to 'implicit' for access_token
     });
-    return <button onClick={login}>Google</button>;
+    return (
+        <>
+            <button onClick={login}>Google</button>;
+            <Show when={message().length}>
+                <p>{message()}</p>
+            </Show>
+        </>
+    );
 };
 
 export default GoogleLoginBtn;

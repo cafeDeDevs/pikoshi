@@ -37,7 +37,8 @@ const EmailSignup: Component = () => {
     return (
         <div>
             <form onSubmit={handleSubmit}>
-                <label for='email-form' />
+                <label for='email-form'>email:</label>
+                <br />
                 <input
                     type='email'
                     id='email-form'

@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from '@solidjs/router';
 import { z } from 'zod';
 
 import urls from '../config/urls';
-import { delay, usernameSchema, passwordSchema } from '../utils/utils';
+import { delay, usernameSchema } from '../utils/utils';
+import { validatePasswordInput } from '../utils/schema-validators';
 import styles from '../css/AuthCard.module.css';
 
 const Onboarding: Component = () => {
@@ -52,6 +53,8 @@ const Onboarding: Component = () => {
         setError('');
         setSuccess('');
 
+        // TODO: establish a validateUsernameInput()
+        // in utils/schema-validators.ts to replace this
         try {
             usernameSchema.parse(username());
         } catch (err) {
@@ -65,23 +68,13 @@ const Onboarding: Component = () => {
             }
         }
 
-        try {
-            passwordSchema.parse(password());
-        } catch (err) {
-            if (err instanceof z.ZodError) {
-                setError(err.errors[0].message);
-                throw new Error(err.errors[0].message);
-            } else {
-                const error = err as Error;
-                setError(error.message);
-                throw new Error(error.message);
-            }
-        }
+        validatePasswordInput(password());
 
         if (password() !== confirmPassword()) {
             setError('Passwords do not match');
             throw new Error('Passwords do not match');
         }
+
         try {
             const res = await fetch(urls.BACKEND_EMAIL_ONBOARDING_ROUTE, {
                 method: 'POST',

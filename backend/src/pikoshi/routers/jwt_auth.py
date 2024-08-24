@@ -9,7 +9,7 @@ from ..config.redis_config import redis_instance as redis
 from ..dependencies import get_db
 from ..middlewares.logger import TimedRoute
 from ..schemas.auth import TokenRequest
-from ..schemas.user import UserInput, UserInputPass
+from ..schemas.user import UserInput, UserInputEmailPass, UserInputPass
 from ..services.email_service import send_signup_email
 from ..services.jwt_service import JWTAuthService
 from ..services.security_service import (
@@ -75,12 +75,16 @@ async def check_token(request: TokenRequest) -> Response:
 
 
 @router.post("/email-onboarding/")
-async def email_onboarding(user_info: UserInputPass, db: Session = Depends(get_db)):
+async def email_onboarding(
+    user_info: UserInputPass, db: Session = Depends(get_db)
+) -> Response:
     try:
         user_email = await redis.get(f"signup_token_for_{user_info.token}")
         if not user_email:
             logger.error(f"Token not found or expired: {user_info.token}")
             raise HTTPException(status_code=401, detail="Token not found or expired.")
+
+        await redis.delete(f"signup_token_for_{user_info.token}")
 
         salt = generate_salt()
         user_name = user_info.username
@@ -101,6 +105,41 @@ async def email_onboarding(user_info: UserInputPass, db: Session = Depends(get_d
         )
         response = JSONResponse(status_code=200, content=response)
         response = set_auth_cookies(response, access_token, refresh_token)
+        return response
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error.")
+
+
+@router.post("/email-login/")
+async def email_login(
+    user_info: UserInputEmailPass, db: Session = Depends(get_db)
+) -> Response:
+    try:
+        user_email = user_info.email
+        user_password = user_info.password
+
+        user_from_db = get_user_by_email(db, user_email)
+        if not user_from_db:
+            raise HTTPException(status_code=400, detail="No User By That Email Found")
+
+        user_password_from_db = str(user_from_db.password)
+        user_salt = str(user_from_db.salt)
+        user_is_verified = verify_value(user_password, user_password_from_db, user_salt)
+
+        if not user_is_verified:
+            raise HTTPException(status_code=401, detail="Hashes in DB do not match")
+
+        user_tokens = JWTAuthService.get_user_tokens()
+        access_token = user_tokens["access_token"]
+        refresh_token = user_tokens["refresh_token"]
+
+        response = jsonable_encoder(
+            {"message": "User Authenticated, setting credentials."}
+        )
+        response = JSONResponse(content=response)
+        response = set_auth_cookies(response, access_token, refresh_token)
+
         return response
     except Exception as e:
         logger.error(f"An unexpected error occurred: {str(e)}")
