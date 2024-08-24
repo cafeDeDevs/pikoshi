@@ -43,3 +43,4 @@ development environment set up properly.
 - [ ] Create Logo For App
 - [ ] Completely rewrite this README once the base scaffolding of Pikoshi App is
       solidified.
+- [ ] Write Unit Tests
