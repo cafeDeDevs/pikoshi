@@ -17,6 +17,7 @@ dependencies = [
     "pydantic[email]>=2.8.2",
     "resend>=2.4.0",
     "redis>=5.0.8",
+    "pyjwt>=2.9.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"

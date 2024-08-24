@@ -19,12 +19,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 
 # TODO: Add services (not in this file) related to generating first album, photo, and network
-def generate_user_profile(user_info, user_password, salt) -> UserCreate:
-    user_name = user_info.get("name")
-    user_email = user_info.get("email")
-    user_id = user_info.get("id")
-    salt = generate_salt()
-    user_password = hash_value(user_id, salt)
+def generate_user_profile(user_name, user_password, user_email, salt) -> UserCreate:
     new_user = UserCreate(
         name=user_name, email=user_email, password=user_password, salt=salt
     )

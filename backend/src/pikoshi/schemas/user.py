@@ -26,13 +26,15 @@ class UserInput(BaseModel):
     email: EmailStr
 
 
-class UserInputPass(UserInput):
+class UserInputPass(BaseModel):
+    username: Annotated[str, Field(min_length=5)]
     password: Annotated[
         str,
         Field(
             min_length=10,
         ),
     ]
+    token: str
 
     @field_validator("password")
     def validate_password(cls, value):
@@ -45,3 +47,6 @@ class UserInputPass(UserInput):
         if not any(c in '!@#$%^&*()_+-=[]{};":\\|,.<>/?' for c in value):
             raise ValueError("Password must contain at least one special character")
         return value
+
+    class Config:
+        from_attributes = True

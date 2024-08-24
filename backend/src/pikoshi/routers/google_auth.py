@@ -43,12 +43,14 @@ async def signup_with_google(
         # NOTE: Generates hash based off of user_info.id instead of password
         user_id = user_info.get("id")
         salt = generate_salt()
+        user_name = user_info.get("name")
+        user_email = user_info.get("email")
         user_password = hash_value(user_id, salt)
-        new_user = generate_user_profile(user_info, user_password, salt)
+        new_user = generate_user_profile(user_name, user_password, user_email, salt)
         new_user = create_user(db, new_user)
         if not new_user:
             raise HTTPException(
-                status_code=400, detail="Email has already been registered."
+                status_code=409, detail="Email has already been registered."
             )
 
         response = jsonable_encoder(
