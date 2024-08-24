@@ -38,7 +38,7 @@ const GoogleLoginBtn: Component = () => {
     });
     return (
         <>
-            <button onClick={login}>Google</button>;
+            <button onClick={login}>Google</button>
             <Show when={message().length}>
                 <p>{message()}</p>
             </Show>
