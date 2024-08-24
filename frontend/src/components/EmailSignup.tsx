@@ -41,10 +41,13 @@ const EmailSignup: Component = () => {
                 <input
                     type='email'
                     id='email-form'
+                    placeholder='johndoe@example.com'
+                    style='text-align: center;'
                     value={email()}
                     onChange={e => setEmail(e.target.value)}
                     required
                 />
+                <br />
                 <br />
                 <button type='submit'>Continue</button>
             </form>

@@ -35,7 +35,7 @@ const GoogleSignupBtn: Component = () => {
         },
         flow: 'auth-code', // change to 'implicit' for access_token
     });
-    return <button onClick={signup}>Sign Up With Google</button>;
+    return <button onClick={signup}>Google</button>;
 };
 
 export default GoogleSignupBtn;

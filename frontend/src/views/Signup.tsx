@@ -5,10 +5,12 @@ import GoogleSignupBtn from '../components/GoogleSignupBtn.tsx';
 const googleClientId = import.meta.env.VITE_GOOGLE_OAUTH2_CLIENT_ID;
 const googleClientNonce = import.meta.env.VITE_GOOGLE_OAUTH2_NONCE;
 
+import styles from '../css/AuthCard.module.css';
+
 const Signup: Component = () => {
     return (
-        <>
-            <p>Sign up to continue</p>
+        <div class={styles.AuthCard}>
+            <h1>Sign up to continue</h1>
             <EmailSignup />
             <p>Or Continue with:</p>
             <GoogleOAuthProvider
@@ -19,7 +21,7 @@ const Signup: Component = () => {
             <br />
             <br />
             <a href='/login'>Already have a Pikoshi account? Log in</a>
-        </>
+        </div>
     );
 };
 
