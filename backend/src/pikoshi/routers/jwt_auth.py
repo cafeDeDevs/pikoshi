@@ -30,25 +30,26 @@ async def signup_with_email(
     user_input: UserInput,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-):
-    user_from_db = get_user_by_email(db, user_input.email)
-    if user_from_db:
-        raise HTTPException(
-            status_code=409, detail="User By That Email Already Exists."
-        )
+) -> Response:
+    try:
+        user_from_db = get_user_by_email(db, user_input.email)
+        if user_from_db:
+            raise HTTPException(
+                status_code=409, detail="User By That Email Already Exists."
+            )
 
-    token = generate_sha256_hash(user_input.email)
-    await redis.set(f"email_token_for_{user_input.email}", token)
+        token = generate_sha256_hash(user_input.email)
+        await redis.set(f"email_token_for_{user_input.email}", token)
 
-    activation_link = f"http://localhost:5173/onboarding/?token={token}"
-    template_path = Path("./src/pikoshi/templates/signup_email.html")
-    html_template = template_path.read_text()
-    html_content = html_template.format(activation_link=activation_link)
+        activation_link = f"http://localhost:5173/onboarding/?token={token}"
+        template_path = Path("./src/pikoshi/templates/signup_email.html")
+        html_template = template_path.read_text()
+        html_content = html_template.format(activation_link=activation_link)
 
-    background_tasks.add_task(send_signup_email, user_input.email, html_content)
+        background_tasks.add_task(send_signup_email, user_input.email, html_content)
 
-    # TODO: Check if email is in DB and return HTTP ERR if so
-    # Send Transac Email that returns user back to frontend route with token in URL
-    # TODO: Set up redis cache to hold onto token to be checked in URL
-    jsonMsg = jsonable_encoder({"message": "email has been sent"})
-    return JSONResponse(status_code=200, content=jsonMsg)
+        jsonMsg = jsonable_encoder({"message": "email has been sent"})
+        return JSONResponse(status_code=200, content=jsonMsg)
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error.")

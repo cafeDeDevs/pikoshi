@@ -54,7 +54,7 @@ async def signup_with_google(
         response = jsonable_encoder(
             {"message": "User Authenticated, setting credentials."}
         )
-        response = JSONResponse(content=response)
+        response = JSONResponse(status_code=200, content=response)
         response = set_auth_cookies(response, access_token, refresh_token)
 
         return response
