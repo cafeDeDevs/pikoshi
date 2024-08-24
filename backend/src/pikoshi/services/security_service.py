@@ -1,5 +1,9 @@
 import hashlib
+import hmac
 import os
+from base64 import urlsafe_b64encode
+from hashlib import sha256
+from time import time
 
 from dotenv import load_dotenv
 
@@ -21,3 +25,12 @@ def verify_value(value: str, hashed_value: str, salt: str) -> bool:
 def generate_salt() -> str:
     """Generates a random salt."""
     return os.urandom(16).hex()
+
+
+def generate_sha256_hash(email) -> str:
+    secret_key = os.urandom(32)
+    timestamp = str(int(time())).encode("utf-8")
+    message = email.encode("utf-8") + timestamp
+    signature = hmac.new(secret_key, message, sha256).digest()
+    token = urlsafe_b64encode(message + signature).decode("utf-8")
+    return token

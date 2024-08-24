@@ -26,3 +26,16 @@ GOOGLE_OAUTH2_REDIRECT_URI=""
 # Cryptographic Pepper
 # Generate using `openssl rand -hex 16`
 PEPPER=""
+
+# Email Configuration/Credentials
+# WARNING: DO NOT COMMIT THIS!!
+MAIL_USERNAME="phlintapp@gmail.com"
+MAIL_PASSWORD="tgnoflodmzwojgur"
+MAIL_FROM="phlintapp@gmail.com"
+MAIL_PORT=587
+MAIL_SERVER="smtp.gmail.com"
+MAIL_FROM_NAME="Pikoshi App"
+MAIL_STARTTLS="True"
+MAIL_SSL_TLS="False"
+USE_CREDENTIALS="True"
+VALIDATE_CERTS="True"

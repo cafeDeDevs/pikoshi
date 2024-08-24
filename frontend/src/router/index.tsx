@@ -1,7 +1,8 @@
 import App from '../App.tsx';
-import TestComponent from '../views/TestComponent';
 import Login from '../views/Login';
+import Onboarding from '../views/Onboarding';
 import Signup from '../views/Signup';
+import TestComponent from '../views/TestComponent';
 
 const routes = [
     {
@@ -19,6 +20,10 @@ const routes = [
     {
         path: '/test',
         component: TestComponent,
+    },
+    {
+        path: '/onboarding',
+        component: Onboarding,
     },
 ];
 

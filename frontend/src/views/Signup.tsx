@@ -10,7 +10,7 @@ import styles from '../css/AuthCard.module.css';
 const Signup: Component = () => {
     return (
         <div class={styles.AuthCard}>
-            <h1>Sign up to continue</h1>
+            <h1>Sign up</h1>
             <EmailSignup />
             <p>Or Continue with:</p>
             <GoogleOAuthProvider

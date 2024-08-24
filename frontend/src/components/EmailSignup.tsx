@@ -11,7 +11,7 @@ const EmailSignup: Component = () => {
         e.preventDefault();
         try {
             validateEmailInput(email());
-            const res = await fetch(urls.BACKEND_EMAIL_REGISTRATION_ROUTE, {
+            const res = await fetch(urls.BACKEND_SIGNUP_EMAIL_ROUTE, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -21,6 +21,9 @@ black==24.8.0
 certifi==2024.7.4
     # via httpcore
     # via httpx
+    # via requests
+charset-normalizer==3.3.2
+    # via requests
 click==8.1.7
     # via black
     # via uvicorn
@@ -43,6 +46,7 @@ idna==3.7
     # via anyio
     # via email-validator
     # via httpx
+    # via requests
 iniconfig==2.0.0
     # via pytest
 isort==5.13.2
@@ -71,6 +75,10 @@ pydantic-core==2.20.1
 pytest==8.3.2
 python-dotenv==1.0.1
     # via pikoshi
+requests==2.32.3
+    # via resend
+resend==2.4.0
+    # via pikoshi
 sniffio==1.3.1
     # via anyio
     # via httpx
@@ -84,6 +92,9 @@ typing-extensions==4.12.2
     # via fastapi
     # via pydantic
     # via pydantic-core
+    # via resend
     # via sqlalchemy
+urllib3==2.2.2
+    # via requests
 uvicorn==0.30.6
     # via pikoshi
