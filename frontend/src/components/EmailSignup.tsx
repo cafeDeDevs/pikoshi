@@ -3,7 +3,7 @@ import { createSignal, Show, type Component } from 'solid-js';
 import urls from '../config/urls';
 import { validateEmailInput } from '../utils/schema-validators';
 
-const EmailRegistrationForm: Component = () => {
+const EmailSignup: Component = () => {
     const [email, setEmail] = createSignal<string>('');
     const [message, setMessage] = createSignal<string>('');
 
@@ -36,10 +36,8 @@ const EmailRegistrationForm: Component = () => {
 
     return (
         <div>
-            <h1>Email Registration</h1>
             <form onSubmit={handleSubmit}>
-                <label for='email-form'>Please Enter Your Email:</label>
-                <br />
+                <label for='email-form' />
                 <input
                     type='email'
                     id='email-form'
@@ -48,7 +46,7 @@ const EmailRegistrationForm: Component = () => {
                     required
                 />
                 <br />
-                <button type='submit'>Register</button>
+                <button type='submit'>Continue</button>
             </form>
             <Show when={message().length}>
                 <p>{message()}</p>
@@ -57,4 +55,4 @@ const EmailRegistrationForm: Component = () => {
     );
 };
 
-export default EmailRegistrationForm;
+export default EmailSignup;

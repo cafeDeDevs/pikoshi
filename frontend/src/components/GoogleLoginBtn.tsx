@@ -6,7 +6,7 @@ import urls from '../config/urls';
 
 const GoogleLoginBtn: Component = () => {
     const navigate = useNavigate();
-    const signup = useGoogleLogin({
+    const login = useGoogleLogin({
         onSuccess: async (codeResponse): Promise<void> => {
             try {
                 const response = await fetch(urls.BACKEND_LOGIN_GOOGLE_ROUTE, {
@@ -35,7 +35,7 @@ const GoogleLoginBtn: Component = () => {
         },
         flow: 'auth-code', // change to 'implicit' for access_token
     });
-    return <button onClick={signup}>Login With Google</button>;
+    return <button onClick={login}>Google</button>;
 };
 
 export default GoogleLoginBtn;
