@@ -6,4 +6,5 @@ export default {
     BACKEND_EMAIL_ONBOARDING_ROUTE:
         'http://localhost:8000/auth/email-onboarding/',
     BACKEND_EMAIL_LOGIN_ROUTE: 'http://localhost:8000/auth/email-login/',
+    BACKEND_AUTH_CONTEXT_ROUTE: 'http://localhost:8000/auth/auth-context/',
 };
