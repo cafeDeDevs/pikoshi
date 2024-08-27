@@ -43,3 +43,9 @@ def create_user(db: Session, user: UserCreate) -> User | None:
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+def set_user_as_active(db: Session, user: User) -> None:
+    user.__setattr__("is_active", True)
+    db.add(user)
+    db.commit()

@@ -22,6 +22,7 @@ from ..services.user_service import (
     create_user,
     generate_user_profile,
     get_user_by_email,
+    set_user_as_active,
 )
 from ..utils.auth_cookies import set_auth_cookies
 from ..utils.logger import logger
@@ -64,7 +65,7 @@ async def signup_with_email(
 async def check_token(request: TokenRequest) -> Response:
     try:
         token = request.token
-        user_email = await redis.get(f"signup_token_for_{token}")
+        user_email = str(await redis.get(f"signup_token_for_{token}"))
         if not user_email:
             logger.error(f"Token not found or expired: {token}")
             raise HTTPException(status_code=401, detail="Token not found or expired.")
@@ -79,18 +80,19 @@ async def email_onboarding(
     user_info: UserInputPass, db: Session = Depends(get_db)
 ) -> Response:
     try:
-        user_email = await redis.get(f"signup_token_for_{user_info.token}")
+        user_email = str(await redis.get(f"signup_token_for_{user_info.token}"))
         if not user_email:
             logger.error(f"Token not found or expired: {user_info.token}")
             raise HTTPException(status_code=401, detail="Token not found or expired.")
 
-        await redis.delete(f"signup_token_for_{user_info.token}")
+        #  await redis.delete(f"signup_token_for_{user_info.token}")
 
         salt = generate_salt()
         user_name = user_info.username
         user_password = hash_value(user_info.password, salt)
         new_user = generate_user_profile(user_name, user_password, user_email, salt)
         new_user = create_user(db, new_user)
+
         if not new_user:
             raise HTTPException(
                 status_code=409, detail="Email has already been registered."
@@ -100,6 +102,15 @@ async def email_onboarding(
         access_token = user_tokens["access_token"]
         refresh_token = user_tokens["refresh_token"]
 
+        # Sets raw user id in redis cache
+        # Keeps track of whether user session is_active
+        # with jwt access_token (default expiry 1 hour)
+        user_from_db = get_user_by_email(db, user_email)
+        if user_from_db:
+            user_id = user_from_db.id
+            if isinstance(user_id, int):
+                await redis.set(f"auth_session_{access_token}", user_id, ex=3600)
+            set_user_as_active(db, user_from_db)
         response = jsonable_encoder(
             {"message": "User Authenticated, setting credentials."}
         )
@@ -133,6 +144,16 @@ async def email_login(
         user_tokens = JWTAuthService.get_user_tokens()
         access_token = user_tokens["access_token"]
         refresh_token = user_tokens["refresh_token"]
+
+        # Sets raw user email string in redis cache
+        # Keeps track of whether user session is_active
+        # with jwt access_token (default expiry 1 hour)
+        user_from_db = get_user_by_email(db, user_email)
+        if user_from_db:
+            user_id = user_from_db.id
+            if isinstance(user_id, int):
+                await redis.set(f"auth_session_{access_token}", user_id, ex=3600)
+            set_user_as_active(db, user_from_db)
 
         response = jsonable_encoder(
             {"message": "User Authenticated, setting credentials."}

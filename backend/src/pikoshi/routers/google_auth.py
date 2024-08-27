@@ -3,6 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from ..config.redis_config import redis_instance as redis
 from ..dependencies import get_db
 from ..middlewares.logger import TimedRoute
 from ..schemas.auth import AuthCodeRequest
@@ -12,6 +13,7 @@ from ..services.user_service import (
     create_user,
     generate_user_profile,
     get_user_by_email,
+    set_user_as_active,
 )
 from ..utils.auth_cookies import set_auth_cookies
 from ..utils.logger import logger
@@ -52,6 +54,9 @@ async def signup_with_google(
             raise HTTPException(
                 status_code=409, detail="Email has already been registered."
             )
+        if isinstance(user_id, int):
+            await redis.set(f"auth_session_{access_token}", user_id, ex=3600)
+        set_user_as_active(db, new_user)
 
         response = jsonable_encoder(
             {"message": "User Authenticated, setting credentials."}
@@ -103,7 +108,13 @@ async def login_with_google(
         if not user_is_verified:
             raise HTTPException(status_code=401, detail="Hashes in DB do not match")
 
-        # TODO: Set user.is_active to true in DB, and update user.last_login to now
+        # TODO:
+        # [x] Set user.is_active to true in DB,
+        # [ ] update user.last_login to now
+        user_id = user_from_db.id
+        if isinstance(user_id, int):
+            await redis.set(f"auth_session_{access_token}", user_id, ex=3600)
+        set_user_as_active(db, user_from_db)
 
         response = jsonable_encoder(
             {"message": "User Authenticated, setting credentials."}
