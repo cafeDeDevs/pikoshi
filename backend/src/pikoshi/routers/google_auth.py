@@ -110,9 +110,7 @@ async def login_with_google(
         # TODO:
         # [x] Set user.is_active to true in DB,
         # [ ] update user.last_login to now
-        user_id = user_from_db.id
-        if isinstance(user_id, int):
-            await redis.set(f"auth_session_{access_token}", user_id, ex=3600)
+        await redis.set(f"auth_session_{access_token}", user_id, ex=3600)
         set_user_as_active(db, user_from_db)
 
         response = jsonable_encoder(
@@ -125,9 +123,3 @@ async def login_with_google(
     except Exception as e:
         logger.error(f"An unexpected error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error.")
-
-
-# TODO: Create Generic Authentication Route That will test against Google OAuth2
-# Token AND JWT Token.
-# NOTE: Route MUST check access_token first, then if that fails, check refresh_token
-# NOTE: If refresh_token still good, request new access_token from Auth Authority (Google OR JWT)
