@@ -57,7 +57,6 @@ async def check_auth_context(
                         await redis.get(f"auth_session_{access_token}")
                     )
                     if user_id_from_access_token == user_id_from_redis:  # type:ignore
-                        print("they are EQUAL!!")
                         user = get_user_by_email(db, user_email)
                         if (
                             user
