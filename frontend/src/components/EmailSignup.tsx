@@ -18,8 +18,6 @@ const EmailSignup: Component = () => {
                 },
                 body: JSON.stringify({ email: email() }),
             });
-            // TODO: Remove else clause and simply navigate('/onboarding')
-            // NOTE: onboarding route not yet implemented
             if (!res.ok) {
                 const jsonRes = await res.json();
                 throw new Error(jsonRes.message);

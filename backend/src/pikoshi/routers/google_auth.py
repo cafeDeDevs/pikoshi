@@ -110,7 +110,9 @@ async def login_with_google(
         # TODO:
         # [x] Set user.is_active to true in DB,
         # [ ] update user.last_login to now
-        await redis.set(f"auth_session_{access_token}", user_id, ex=3600)
+        user_id = user_from_db.id
+        if isinstance(user_id, int):
+            await redis.set(f"auth_session_{access_token}", user_id, ex=3600)
         set_user_as_active(db, user_from_db)
 
         response = jsonable_encoder(

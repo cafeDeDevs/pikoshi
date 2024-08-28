@@ -49,11 +49,15 @@ async def check_auth_context(
         if not JWTAuthService.is_jwt(access_token):
             user_info = await GoogleOAuthService.get_user_info(access_token)
             if user_info is not None:
-                user_id_from_access_token = user_info.get("id")
-                user_id_from_redis = await redis.get(f"auth_session_{access_token}")
-                if user_id_from_access_token == user_id_from_redis:
-                    user_email = user_info.get("email")
-                    if user_email:
+                user_email = user_info.get("email")
+                user_from_db = get_user_by_email(db, user_email)
+                if user_from_db:
+                    user_id_from_access_token = user_from_db.id
+                    user_id_from_redis = int(
+                        await redis.get(f"auth_session_{access_token}")
+                    )
+                    if user_id_from_access_token == user_id_from_redis:  # type:ignore
+                        print("they are EQUAL!!")
                         user = get_user_by_email(db, user_email)
                         if (
                             user
