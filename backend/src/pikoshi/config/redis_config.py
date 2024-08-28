@@ -9,4 +9,5 @@ redis_instance = aioredis.StrictRedis(
     port=int(str(os.environ.get("REDIS_PORT"))),
     password=str(os.environ.get("REDIS_PASS")),
     db=0,
+    decode_responses=True,
 )

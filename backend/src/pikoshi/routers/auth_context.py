@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 from ..config.redis_config import redis_instance as redis
 from ..dependencies import get_db
 from ..middlewares.logger import TimedRoute
+from ..services.google_oauth_service import GoogleOAuthService
 from ..services.jwt_service import JWTAuthService
-from ..services.user_service import get_user
+from ..services.user_service import get_user, get_user_by_email
 from ..utils.logger import logger
 
 router = APIRouter(prefix="/auth", tags=["auth"], route_class=TimedRoute)
@@ -46,16 +47,33 @@ async def check_auth_context(
         # TODO: Implement logic re: refreshing of
         # access_token using refresh_token logic
         if not JWTAuthService.is_jwt(access_token):
-            print("is google-oauth2 access token")
-            #  authenticate_google_oauth_access_token(access_token)
-        else:
+            user_info = await GoogleOAuthService.get_user_info(access_token)
+            if user_info is not None:
+                user_id_from_access_token = user_info.get("id")
+                user_id_from_redis = await redis.get(f"auth_session_{access_token}")
+                if user_id_from_access_token == user_id_from_redis:
+                    user_email = user_info.get("email")
+                    if user_email:
+                        user = get_user_by_email(db, user_email)
+                        if (
+                            user
+                            and isinstance(user.is_active, bool)
+                            and user.is_active == True
+                        ):
+                            return JSONResponse(
+                                status_code=200,
+                                content={
+                                    "message": "User Is Authenticated With Google OAuth2."
+                                },
+                            )
+        elif JWTAuthService.is_jwt(access_token):
             JWTAuthService.verify_token(str(access_token))
             user_id = int(await redis.get(f"auth_session_{access_token}"))
             user = get_user(db, user_id)
             if user and isinstance(user.is_active, bool) and user.is_active == True:
                 return JSONResponse(
                     status_code=200,
-                    content={"message": "User Is Authenticated."},
+                    content={"message": "User Is Authenticated With JWTs."},
                 )
         raise HTTPException(
             status_code=401,

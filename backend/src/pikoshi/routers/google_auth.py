@@ -54,8 +54,7 @@ async def signup_with_google(
             raise HTTPException(
                 status_code=409, detail="Email has already been registered."
             )
-        if isinstance(user_id, int):
-            await redis.set(f"auth_session_{access_token}", user_id, ex=3600)
+        await redis.set(f"auth_session_{access_token}", user_id, ex=3600)
         set_user_as_active(db, new_user)
 
         response = jsonable_encoder(

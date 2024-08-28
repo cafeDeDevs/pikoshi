@@ -3,7 +3,6 @@ from sqlalchemy.sql import func
 
 from ..models.user import User
 from ..schemas.user import UserCreate
-from ..services.security_service import generate_salt, hash_value
 
 
 def get_user(db: Session, user_id: int):
