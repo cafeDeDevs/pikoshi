@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
@@ -5,15 +7,15 @@ from ..models.user import User
 from ..schemas.user import UserCreate
 
 
-def get_user(db: Session, user_id: int):
+def get_user(db: Session, user_id: int) -> User:
     return db.query(User).filter(User.id == user_id).first()
 
 
-def get_user_by_email(db: Session, email: str):
+def get_user_by_email(db: Session, email: str) -> User:
     return db.query(User).filter(User.email == email).first()
 
 
-def get_users(db: Session, skip: int = 0, limit: int = 100):
+def get_users(db: Session, skip: int = 0, limit: int = 100) -> List[User]:
     return db.query(User).offset(skip).limit(limit).all()
 
 

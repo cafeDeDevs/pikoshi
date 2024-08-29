@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
+from typing import Dict
 
 import jwt
 from dotenv import load_dotenv
@@ -12,7 +13,7 @@ ALGORITHM = str(os.environ.get("ALGORITHM"))
 
 class JWTAuthService:
     @staticmethod
-    def get_user_tokens():
+    def get_user_tokens() -> Dict[str, str]:
         # NOTE: Change each values to test invalidation of token logic
         access_token_expires = datetime.now(timezone.utc) + timedelta(
             hours=1
@@ -43,10 +44,5 @@ class JWTAuthService:
         return {"access_token": access_token, "refresh_token": refresh_token}
 
     @staticmethod
-    def is_jwt(token):
-        """Check if a token is a JWT based on its structure."""
-        return token.count(".") == 2
-
-    @staticmethod
-    def verify_token(token: str):
+    def verify_token(token: str) -> None:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
