@@ -2,6 +2,11 @@ import os
 
 import httpx
 from dotenv import load_dotenv
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+from ..dependencies import get_db
+from ..services.user_service import get_user_by_email
 
 load_dotenv()
 
@@ -21,9 +26,11 @@ class GoogleOAuthService:
             response = await client.post(
                 "https://www.googleapis.com/oauth2/v4/token", data=data
             )
-        if response.status_code == 200:
-            return response.json()
-        return None
+        if response.status_code != 200:
+            raise ValueError(
+                "Error Occurred While Getting Tokens Via Google Auth Code."
+            )
+        return response.json()
 
     @staticmethod
     async def get_user_info(access_token: str):
@@ -32,6 +39,22 @@ class GoogleOAuthService:
         async with httpx.AsyncClient() as client:
             headers = {"Authorization": f"Bearer {access_token}"}
             response = await client.get(user_info_url, headers=headers)
-        if response.status_code == 200:
-            return response.json()
-        return None
+        if response.status_code != 200:
+            raise ValueError(
+                "An Error Occurred While Authenticating User By Access Token."
+            )
+        return response.json()
+
+    @staticmethod
+    async def get_user_from_db(access_token: str, db: Session = Depends(get_db)):
+        # TODO: Implement logic re: refreshing of access_token using refresh_token logic
+
+        user_info = await GoogleOAuthService.get_user_info(access_token)
+        user_email = user_info.get("email")
+        if not user_email:
+            raise ValueError("No User Email Found by Access Token")
+        user = get_user_by_email(db, user_email)
+
+        if not user:
+            raise ValueError("User not found in DB")
+        return user
