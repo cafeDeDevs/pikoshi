@@ -70,7 +70,7 @@ class GoogleOAuthService:
         return user
 
     @staticmethod
-    # NOTE: User schema needs to be adjusted to return User type in this case...
+    # TODO: User schema needs to be adjusted to return User type in this case...
     def get_user_by_email_from_db(user_info, db: Session = Depends(get_db)):
         user_email = str(user_info.get("email"))
         user_from_db = get_user_by_email(db, user_email)
@@ -124,9 +124,6 @@ class GoogleOAuthService:
           access_token expiry.
         - Toggles the user's is_active field in the DB to True.
         """
-        # Generates a hash from the user_id (from the google oauth code)
-        # and the user_salt (from the DB)
-        # and then compares the hash generated to the hash in the DB (user_password)
         user_id = str(user_info.get("id"))
         user_password = str(user_from_db.password)
         user_salt = str(user_from_db.salt)
