@@ -1,10 +1,12 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Response
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from ..config.redis_config import redis_instance as redis
 from ..dependencies import get_db
 from ..services.user_service import get_user
+from ..utils.auth_cookies import set_auth_cookies
 from .google_oauth_service import GoogleOAuthService
 from .jwt_service import JWTAuthService
 
@@ -63,3 +65,12 @@ class AuthService:
             raise HTTPException(
                 status_code=401, detail="No User Found Within DB or User Not Active"
             )
+
+    @staticmethod
+    def set_authenticated_response(access_token, refresh_token) -> Response:
+        response = jsonable_encoder(
+            {"message": "User Authenticated, setting credentials."}
+        )
+        response = JSONResponse(status_code=200, content=response)
+        response = set_auth_cookies(response, access_token, refresh_token)
+        return response

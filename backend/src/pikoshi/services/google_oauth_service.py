@@ -3,9 +3,8 @@ from typing import Dict
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import Depends, HTTPException, Response
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi import Depends
+from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 
 from ..config.redis_config import redis_instance as redis
@@ -18,7 +17,6 @@ from ..services.user_service import (
     get_user_by_email,
     set_user_as_active,
 )
-from ..utils.auth_cookies import set_auth_cookies
 
 load_dotenv()
 
@@ -142,12 +140,3 @@ class GoogleOAuthService:
         user_id = user_from_db.id
         await redis.set(f"auth_session_{access_token}", user_id, ex=3600)  # type:ignore
         set_user_as_active(db, user_from_db)
-
-    @staticmethod
-    def set_authenticated_response(access_token, refresh_token) -> Response:
-        response = jsonable_encoder(
-            {"message": "User Authenticated, setting credentials."}
-        )
-        response = JSONResponse(status_code=200, content=response)
-        response = set_auth_cookies(response, access_token, refresh_token)
-        return response

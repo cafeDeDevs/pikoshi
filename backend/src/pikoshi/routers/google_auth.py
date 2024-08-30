@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from ..dependencies import get_db
 from ..middlewares.logger import TimedRoute
 from ..schemas.auth import AuthCodeRequest
+from ..services.auth_service import AuthService
 from ..services.exception_handler_service import ExceptionService
 from ..services.google_oauth_service import GoogleOAuthService
 
@@ -23,9 +24,7 @@ async def signup_with_google(
         user_info = await GoogleOAuthService.get_user_info(access_token)
         await GoogleOAuthService.signup_user_with_google(user_info, access_token, db)
 
-        response = GoogleOAuthService.set_authenticated_response(
-            access_token, refresh_token
-        )
+        response = AuthService.set_authenticated_response(access_token, refresh_token)
 
         return response
     except HTTPException as http_e:
@@ -53,9 +52,7 @@ async def login_with_google(
             user_info, user_from_db, access_token, db
         )
 
-        response = GoogleOAuthService.set_authenticated_response(
-            access_token, refresh_token
-        )
+        response = AuthService.set_authenticated_response(access_token, refresh_token)
 
         return response
     except HTTPException as http_e:
