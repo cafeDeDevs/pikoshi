@@ -6,7 +6,6 @@ import {
     validateEmailInput,
     validatePasswordInput,
 } from "../utils/schema-validators";
-
 import { delay } from "../utils/utils";
 
 const EmailLogin: Component = () => {

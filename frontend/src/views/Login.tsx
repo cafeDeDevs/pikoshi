@@ -2,6 +2,7 @@ import type { Component } from "solid-js";
 import { GoogleOAuthProvider } from "../contexts/GoogleOAuthProvider";
 import EmailLogin from "../components/EmailLogin";
 import GoogleLoginBtn from "../components/GoogleLoginBtn.tsx";
+
 const googleClientId = import.meta.env.VITE_GOOGLE_OAUTH2_CLIENT_ID;
 const googleClientNonce = import.meta.env.VITE_GOOGLE_OAUTH2_NONCE;
 

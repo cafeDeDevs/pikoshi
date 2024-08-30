@@ -10,6 +10,7 @@ import styles from "../css/Gallery.module.css";
 const Gallery: Component = () => {
     const [isAuthenticated, setIsAuthenticated] = createSignal(false);
     const navigate = useNavigate();
+
     onMount(async () => {
         try {
             const response = await fetch(urls.BACKEND_AUTH_CONTEXT_ROUTE, {
@@ -33,6 +34,7 @@ const Gallery: Component = () => {
 
     return (
         <>
+            {/* TODO: Replace Loading... with GalleryLoading component */}
             <Show when={isAuthenticated()} fallback={<p>Loading...</p>}>
                 <div class={styles.Gallery}>
                     <Navbar />

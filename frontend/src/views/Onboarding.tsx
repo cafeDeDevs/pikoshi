@@ -5,6 +5,7 @@ import { z } from "zod";
 import urls from "../config/urls";
 import { delay, usernameSchema } from "../utils/utils";
 import { validatePasswordInput } from "../utils/schema-validators";
+
 import styles from "../css/AuthCard.module.css";
 
 const Onboarding: Component = () => {

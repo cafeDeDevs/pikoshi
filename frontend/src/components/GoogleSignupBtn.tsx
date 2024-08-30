@@ -7,6 +7,7 @@ import urls from "../config/urls";
 const GoogleSignupBtn: Component = () => {
     const [message, setMessage] = createSignal<string>("");
     const navigate = useNavigate();
+
     const signup = useGoogleLogin({
         onSuccess: async (codeResponse): Promise<void> => {
             try {
@@ -36,6 +37,7 @@ const GoogleSignupBtn: Component = () => {
         },
         flow: "auth-code", // change to 'implicit' for access_token
     });
+
     return (
         <>
             <button onClick={signup}>Google</button>
