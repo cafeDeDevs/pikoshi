@@ -1,0 +1,7 @@
+.Gallery {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1.75em auto 0 auto;
+    width: 80vw;
+}

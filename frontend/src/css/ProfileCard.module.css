@@ -1,0 +1,12 @@
+.ProfileCard {
+    margin-top: 2.5em;
+    position: fixed;
+    border: 2px solid black;
+    height: 20em;
+    width: 15em;
+}
+
+.ProfileCard > .logout-btn {
+    margin-top: 23.5em;
+    margin-left: 12.5em;
+}

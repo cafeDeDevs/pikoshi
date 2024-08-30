@@ -1,0 +1,29 @@
+.NavContainer {
+    position: fixed;
+    height: 2.75em;
+    margin-top: -0.5em;
+    padding-top: 0.25em;
+    background-color: white;
+    width: 80vw;
+    max-width: 1280px;
+}
+
+.Navbar {
+    position: fixed;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+    height: 2.5em;
+    background-color: white;
+    display: flex;
+    width: 80vw;
+    max-width: 1280px;
+    justify-content: right;
+}
+
+.hamburger-btn {
+    border: none;
+}
+.hamburger-btn:hover {
+    background-color: grey;
+    cursor: pointer;
+}

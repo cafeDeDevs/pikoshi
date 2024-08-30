@@ -20,6 +20,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body > * {
+    justify-items: center;
+    align-items: center;
+    margin: 0 auto;
+}
+
 main {
   width: min(70ch, 100% - 4rem);
   margin-inline: auto;

@@ -1,10 +1,11 @@
 import { createSignal, onMount, Show, type Component } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import LogoutBtn from '../components/LogoutBtn';
+import Navbar from '../components/Navbar';
 
 import urls from '../config/urls';
-
 import { delay } from '../utils/utils';
+
+import styles from '../css/Gallery.module.css';
 
 const Gallery: Component = () => {
     const [isAuthenticated, setIsAuthenticated] = createSignal(false);
@@ -33,8 +34,9 @@ const Gallery: Component = () => {
     return (
         <>
             <Show when={isAuthenticated()} fallback={<p>Loading...</p>}>
-                <h1>Gallery</h1>
-                <LogoutBtn />
+                <div class={styles.Gallery}>
+                    <Navbar />
+                </div>
             </Show>
         </>
     );
