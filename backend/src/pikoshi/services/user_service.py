@@ -50,3 +50,9 @@ def set_user_as_active(db: Session, user: User) -> None:
     user.__setattr__("is_active", True)
     db.add(user)
     db.commit()
+
+
+def update_user_last_login(db: Session, user: User) -> None:
+    user.__setattr__("last_login", func.now())
+    db.add(user)
+    db.commit()

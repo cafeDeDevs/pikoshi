@@ -16,6 +16,7 @@ from ..services.user_service import (
     generate_user_profile,
     get_user_by_email,
     set_user_as_active,
+    update_user_last_login,
 )
 
 load_dotenv()
@@ -93,6 +94,7 @@ class JWTAuthService:
             f"auth_session_{access_token}", user_id, ex=3600  # type:ignore
         )
         set_user_as_active(db, user_from_db)
+        update_user_last_login(db, user_from_db)
 
     @staticmethod
     async def authenticate_user_with_jwt(
@@ -132,3 +134,4 @@ class JWTAuthService:
             f"auth_session_{access_token}", user_id, ex=3600  # type:ignore
         )
         set_user_as_active(db, user_from_db)
+        update_user_last_login(db, user_from_db)

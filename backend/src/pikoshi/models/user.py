@@ -13,7 +13,7 @@ class User(Base):
     password = Column(String(254), nullable=False, index=True)
     salt = Column(String(64), unique=True, nullable=False, index=True)
     email = Column(Text, unique=True, index=True)
-    is_active = Column(Boolean, nullable=True, default=True)
+    is_active = Column(Boolean, nullable=True, default=False)
     last_login = Column(DateTime(timezone=True), onupdate=func.now())
 
     def __repr__(self):

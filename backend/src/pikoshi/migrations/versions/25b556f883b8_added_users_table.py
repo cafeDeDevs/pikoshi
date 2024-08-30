@@ -29,7 +29,7 @@ def upgrade() -> None:
         sa.Column("password", sa.String(length=254), nullable=False, index=True),
         sa.Column("salt", sa.String(64), unique=True, nullable=False, index=True),
         sa.Column("email", sa.Text, unique=True, index=True),
-        sa.Column("is_active", sa.Boolean(), default=True),
+        sa.Column("is_active", sa.Boolean(), default=False),
         sa.Column("last_login", sa.DateTime(timezone=True)),
     )
 
