@@ -1,22 +1,21 @@
 import { createSignal, onMount, Show, type Component } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
+import LogoutBtn from '../components/LogoutBtn';
 
 import urls from '../config/urls';
 
-import { delay, grabStoredCookie } from '../utils/utils';
+import { delay } from '../utils/utils';
 
 const Gallery: Component = () => {
     const [isAuthenticated, setIsAuthenticated] = createSignal(false);
     const navigate = useNavigate();
     onMount(async () => {
         try {
-            // const csrfToken = grabStoredCookie('csrftoken');
             const response = await fetch(urls.BACKEND_AUTH_CONTEXT_ROUTE, {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
-                    // 'X-CSRFToken': csrfToken,
                 },
                 credentials: 'include',
             });
@@ -35,6 +34,7 @@ const Gallery: Component = () => {
         <>
             <Show when={isAuthenticated()} fallback={<p>Loading...</p>}>
                 <h1>Gallery</h1>
+                <LogoutBtn />
             </Show>
         </>
     );

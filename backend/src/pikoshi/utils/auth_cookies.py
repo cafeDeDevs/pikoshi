@@ -26,3 +26,9 @@ def set_auth_cookies(
     response = set_auth_cookie(response, "access_token", access_token, 3600)
     response = set_auth_cookie(response, "refresh_token", refresh_token, 86400)
     return response
+
+
+def remove_auth_cookies(response: Response) -> Response:
+    response.delete_cookie(key="access_token")
+    response.delete_cookie(key="refresh_token")
+    return response

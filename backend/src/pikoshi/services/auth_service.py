@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from ..config.redis_config import redis_instance as redis
 from ..dependencies import get_db
-from ..services.user_service import get_user
-from ..utils.auth_cookies import set_auth_cookies
+from ..services.user_service import get_user, set_user_as_inactive
+from ..utils.auth_cookies import remove_auth_cookies, set_auth_cookies
 from .google_oauth_service import GoogleOAuthService
 from .jwt_service import JWTAuthService
 
@@ -73,4 +73,19 @@ class AuthService:
         )
         response = JSONResponse(status_code=200, content=response)
         response = set_auth_cookies(response, access_token, refresh_token)
+        return response
+
+    @staticmethod
+    async def logout(
+        access_token: str,
+        db: Session = Depends(get_db),
+    ) -> Response:
+        user_id = int(await redis.get(f"auth_session_{access_token}"))
+        user = get_user(db, user_id)
+        set_user_as_inactive(db, user)
+        await redis.delete(f"auth_session_{access_token}")
+        response = JSONResponse(
+            status_code=200, content={"message": "User Logged Out Successfully."}
+        )
+        response = remove_auth_cookies(response)
         return response

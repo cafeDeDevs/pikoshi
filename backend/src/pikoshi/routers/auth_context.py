@@ -43,3 +43,15 @@ async def check_auth_context(
         return ExceptionService.handle_value_exception(ve)
     except Exception as e:
         return ExceptionService.handle_generic_exception(e)
+
+
+@router.post("/auth-logout/")
+async def auth_logout(
+    access_token: Annotated[str | None, Cookie()] = None,
+    db: Session = Depends(get_db),
+) -> Response:
+    try:
+        response = await AuthService.logout(str(access_token), db)
+        return response
+    except Exception as e:
+        return ExceptionService.handle_generic_exception(e)
