@@ -67,6 +67,15 @@ class JWTAuthService:
         access_token: str,
         db: Session = Depends(get_db),
     ) -> None:
+        """
+        - Creates a User instance in DB using fields grabbed from Front End Forms
+        - Generates Unique Salt and stores it in DB.
+        - Hashes,salts, and peppers the User's Inputted Password, and stores the
+          hashed password and salt in the DB.
+        - Creates a user session in redis, using the access_token as the key,
+          and the new_user.id as the value. Lasts as long as the default access_token expiry.
+        - Toggles the user's is_active field in the DB to True.
+        """
         salt = generate_salt()
         user_name = user_info.username
         user_password = hash_value(user_info.password, salt)
@@ -89,6 +98,18 @@ class JWTAuthService:
     async def authenticate_user_with_jwt(
         user_info, access_token: str, db: Session = Depends(get_db)
     ) -> None:
+        """
+        - Grabs the User's Email and Password From Front End Forms.
+        - Grabs the User's hashed/salted/peppered password from the DB.
+        - Grabs the User's salt from the DB.
+        - Verifies that the hashed/salted/peppered user_id matches the
+          password retreived from the DB.
+        - Grabs the User's Pikoshi DB id.
+        - Sets in the redis cache the session via the access_token as the key,
+          and the user id from the DB as the value. Lasts as long as the default
+          access_token expiry.
+        - Toggles the user's is_active field in the DB to True.
+        """
         user_email = user_info.email
         user_password = user_info.password
 

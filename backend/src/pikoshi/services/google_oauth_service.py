@@ -118,7 +118,7 @@ class GoogleOAuthService:
         - Grabs the User's salt from the DB.
         - Verifies that the hashed/salted/peppered user_id matches the
           password retreived from the DB.
-        - Grabs the User's Pikoshi DB id (different from Google ID)
+        - Grabs the User's Pikoshi DB id (different from Google ID).
         - Sets in the redis cache the session via the access_token as the key,
           and the user id from the DB as the value. Lasts as long as the default
           access_token expiry.
