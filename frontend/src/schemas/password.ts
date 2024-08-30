@@ -7,11 +7,11 @@ const passwordSchemaRegex = new RegExp(
         /[A-Za-z\d!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{10,}$/, // At least 10 characters long
     ]
         .map(r => r.source)
-        .join(''),
+        .join(""),
 );
 const passwordSchemaErrMsg =
-    'Password must be at least 10 characters in length and contain at \
+    "Password must be at least 10 characters in length and contain at \
                 least one lowercase letter, one uppercase letter, one digit, and one \
-                special character';
+                special character";
 
 export { passwordSchemaRegex, passwordSchemaErrMsg };

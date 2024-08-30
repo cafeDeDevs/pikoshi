@@ -4,10 +4,10 @@ import {
     createMemo,
     Accessor,
     ParentComponent,
-} from 'solid-js';
+} from "solid-js";
 import useLoadGsiScript, {
     UseLoadGsiScriptOptions,
-} from '../hooks/useLoadGsiScript';
+} from "../hooks/useLoadGsiScript";
 
 export interface GoogleOAuthContextProps {
     clientId: string;
@@ -45,7 +45,7 @@ export function useGoogleOAuth() {
     const context = useContext(GoogleOAuthContext);
     if (!context) {
         throw new Error(
-            'Google OAuth components must be used within GoogleOAuthProvider',
+            "Google OAuth components must be used within GoogleOAuthProvider",
         );
     }
     return context;

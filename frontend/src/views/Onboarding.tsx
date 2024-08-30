@@ -1,35 +1,35 @@
-import { createSignal, onMount, Show, type Component } from 'solid-js';
-import { useLocation, useNavigate } from '@solidjs/router';
-import { z } from 'zod';
+import { createSignal, onMount, Show, type Component } from "solid-js";
+import { useLocation, useNavigate } from "@solidjs/router";
+import { z } from "zod";
 
-import urls from '../config/urls';
-import { delay, usernameSchema } from '../utils/utils';
-import { validatePasswordInput } from '../utils/schema-validators';
-import styles from '../css/AuthCard.module.css';
+import urls from "../config/urls";
+import { delay, usernameSchema } from "../utils/utils";
+import { validatePasswordInput } from "../utils/schema-validators";
+import styles from "../css/AuthCard.module.css";
 
 const Onboarding: Component = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const [checkHashError, setCheckHashError] = createSignal<string>('');
-    const [success, setSuccess] = createSignal<string>('');
-    const [error, setError] = createSignal<string>('');
-    const [username, setUsername] = createSignal<string>('');
-    const [password, setPassword] = createSignal<string>('');
-    const [confirmPassword, setConfirmPassword] = createSignal<string>('');
+    const [checkHashError, setCheckHashError] = createSignal<string>("");
+    const [success, setSuccess] = createSignal<string>("");
+    const [error, setError] = createSignal<string>("");
+    const [username, setUsername] = createSignal<string>("");
+    const [password, setPassword] = createSignal<string>("");
+    const [confirmPassword, setConfirmPassword] = createSignal<string>("");
 
     const queryParams = new URLSearchParams(location.search);
-    const token = queryParams.get('token');
+    const token = queryParams.get("token");
 
     onMount(() => {
-        if (!token) navigate('/');
+        if (!token) navigate("/");
         (async () => {
             try {
                 const response = await fetch(urls.BACKEND_CHECK_TOKEN_ROUTE, {
-                    method: 'POST',
+                    method: "POST",
                     headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
+                        Accept: "application/json",
+                        "Content-Type": "application/json",
                     },
                     body: JSON.stringify({ token: token }),
                 });
@@ -39,10 +39,10 @@ const Onboarding: Component = () => {
                 }
             } catch (err) {
                 const error = err as Error;
-                console.error('ERROR :=>', error);
+                console.error("ERROR :=>", error);
                 setCheckHashError(error.message);
                 await delay(3000);
-                navigate('/');
+                navigate("/");
                 throw new Error(error.message);
             }
         })();
@@ -50,8 +50,8 @@ const Onboarding: Component = () => {
 
     const handleSubmit = async (e: Event) => {
         e.preventDefault();
-        setError('');
-        setSuccess('');
+        setError("");
+        setSuccess("");
 
         // TODO: establish a validateUsernameInput()
         // in utils/schema-validators.ts to replace this
@@ -71,18 +71,18 @@ const Onboarding: Component = () => {
         validatePasswordInput(password());
 
         if (password() !== confirmPassword()) {
-            setError('Passwords do not match');
-            throw new Error('Passwords do not match');
+            setError("Passwords do not match");
+            throw new Error("Passwords do not match");
         }
 
         try {
             const res = await fetch(urls.BACKEND_EMAIL_ONBOARDING_ROUTE, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
                 },
-                credentials: 'include',
+                credentials: "include",
                 body: JSON.stringify({
                     username: username(),
                     password: password(),
@@ -93,11 +93,11 @@ const Onboarding: Component = () => {
             if (!res.ok) throw new Error(jsonRes.message);
             setSuccess(jsonRes.message);
             await delay(3000);
-            navigate('/gallery');
+            navigate("/gallery");
         } catch (err) {
             const error = err as Error;
             setError(error.message);
-            throw new Error(error.message || 'Unknown error');
+            throw new Error(error.message || "Unknown error");
         }
     };
 

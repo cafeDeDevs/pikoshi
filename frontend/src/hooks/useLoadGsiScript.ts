@@ -1,4 +1,4 @@
-import { createSignal, Accessor, onCleanup } from 'solid-js';
+import { createSignal, Accessor, onCleanup } from "solid-js";
 
 export interface UseLoadGsiScriptOptions {
     nonce?: string;
@@ -14,8 +14,8 @@ export default function useLoadGsiScript(
     const [scriptLoadedSuccessfully, setScriptLoadedSuccessfully] =
         createSignal(false);
 
-    const scriptTag = document.createElement('script');
-    scriptTag.src = 'https://accounts.google.com/gsi/client';
+    const scriptTag = document.createElement("script");
+    scriptTag.src = "https://accounts.google.com/gsi/client";
     scriptTag.async = true;
     scriptTag.defer = true;
     if (nonce) scriptTag.nonce = nonce;

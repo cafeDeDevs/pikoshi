@@ -3,7 +3,7 @@ tabWidth: 4
 printWidth: 80
 semi: true
 jsxSingleQuote: true
-singleQuote: true
+singleQuote: false
 bracketSpacing: true
 bracketSameLine: true
 arrowParens: "avoid"

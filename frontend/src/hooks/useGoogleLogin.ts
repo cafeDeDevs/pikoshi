@@ -1,8 +1,8 @@
-import { createEffect, createMemo } from 'solid-js';
+import { createEffect, createMemo } from "solid-js";
 import {
     useGoogleOAuth,
     GoogleOAuthContextProps,
-} from '../contexts/GoogleOAuthProvider';
+} from "../contexts/GoogleOAuthProvider";
 
 import {
     TokenClientConfig,
@@ -11,52 +11,52 @@ import {
     CodeResponse,
     OverridableTokenClientConfig,
     NonOAuthError,
-} from '../@types/index';
+} from "../@types/index";
 
 interface ImplicitFlowOptions
-    extends Omit<TokenClientConfig, 'client_id' | 'scope' | 'callback'> {
+    extends Omit<TokenClientConfig, "client_id" | "scope" | "callback"> {
     onSuccess?: (
         tokenResponse: Omit<
             TokenResponse,
-            'error' | 'error_description' | 'error_uri'
+            "error" | "error_description" | "error_uri"
         >,
     ) => void;
     onError?: (
         errorResponse: Pick<
             TokenResponse,
-            'error' | 'error_description' | 'error_uri'
+            "error" | "error_description" | "error_uri"
         >,
     ) => void;
     onNonOAuthError?: (nonOAuthError: NonOAuthError) => void;
-    scope?: TokenClientConfig['scope'];
+    scope?: TokenClientConfig["scope"];
     overrideScope?: boolean;
 }
 
 interface AuthCodeFlowOptions
-    extends Omit<CodeClientConfig, 'client_id' | 'scope' | 'callback'> {
+    extends Omit<CodeClientConfig, "client_id" | "scope" | "callback"> {
     onSuccess?: (
         codeResponse: Omit<
             CodeResponse,
-            'error' | 'error_description' | 'error_uri'
+            "error" | "error_description" | "error_uri"
         >,
     ) => void;
     onError?: (
         errorResponse: Pick<
             CodeResponse,
-            'error' | 'error_description' | 'error_uri'
+            "error" | "error_description" | "error_uri"
         >,
     ) => void;
     onNonOAuthError?: (nonOAuthError: NonOAuthError) => void;
-    scope?: CodeResponse['scope'];
+    scope?: CodeResponse["scope"];
     overrideScope?: boolean;
 }
 
 export type UseGoogleLoginOptionsImplicitFlow = {
-    flow?: 'implicit';
+    flow?: "implicit";
 } & ImplicitFlowOptions;
 
 export type UseGoogleLoginOptionsAuthCodeFlow = {
-    flow?: 'auth-code';
+    flow?: "auth-code";
 } & AuthCodeFlowOptions;
 
 export type UseGoogleLoginOptions =
@@ -64,8 +64,8 @@ export type UseGoogleLoginOptions =
     | UseGoogleLoginOptionsAuthCodeFlow;
 
 export default function useGoogleLogin({
-    flow = 'implicit',
-    scope = '',
+    flow = "implicit",
+    scope = "",
     onSuccess,
     onError,
     onNonOAuthError,
@@ -85,7 +85,7 @@ export default function useGoogleLogin({
     createEffect(() => {
         if (!scriptLoadedSuccessfully()) return;
         const clientMethod =
-            flow === 'implicit' ? 'initTokenClient' : 'initCodeClient';
+            flow === "implicit" ? "initTokenClient" : "initCodeClient";
         const client = window?.google?.accounts?.oauth2[clientMethod]({
             client_id: clientId,
             scope: overrideScope ? scope : `openid profile email ${scope}`,
@@ -110,5 +110,5 @@ export default function useGoogleLogin({
     const loginImplicitFlow = () => clientRef?.requestAccessToken();
     const loginAuthCodeFlow = () => clientRef?.requestCode();
 
-    return flow === 'implicit' ? loginImplicitFlow : loginAuthCodeFlow;
+    return flow === "implicit" ? loginImplicitFlow : loginAuthCodeFlow;
 }

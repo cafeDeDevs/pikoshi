@@ -1,3 +1,3 @@
-import { http, HttpResponse, type DefaultBodyType } from 'msw';
+import { http, HttpResponse, type DefaultBodyType } from "msw";
 
 export const handlers = [];

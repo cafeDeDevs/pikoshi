@@ -1,18 +1,18 @@
-import { createSignal, Show, type Component } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
+import { createSignal, Show, type Component } from "solid-js";
+import { useNavigate } from "@solidjs/router";
 
-import urls from '../config/urls';
+import urls from "../config/urls";
 import {
     validateEmailInput,
     validatePasswordInput,
-} from '../utils/schema-validators';
+} from "../utils/schema-validators";
 
-import { delay } from '../utils/utils';
+import { delay } from "../utils/utils";
 
 const EmailLogin: Component = () => {
-    const [email, setEmail] = createSignal<string>('');
-    const [password, setPassword] = createSignal<string>('');
-    const [message, setMessage] = createSignal<string>('');
+    const [email, setEmail] = createSignal<string>("");
+    const [password, setPassword] = createSignal<string>("");
+    const [message, setMessage] = createSignal<string>("");
 
     const navigate = useNavigate();
 
@@ -22,11 +22,11 @@ const EmailLogin: Component = () => {
             validateEmailInput(email());
             validatePasswordInput(password());
             const res = await fetch(urls.BACKEND_EMAIL_LOGIN_ROUTE, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
-                credentials: 'include',
+                credentials: "include",
                 body: JSON.stringify({ email: email(), password: password() }),
             });
             if (!res.ok) {
@@ -36,11 +36,11 @@ const EmailLogin: Component = () => {
                 const jsonRes = await res.json();
                 setMessage(jsonRes.message);
                 await delay(3000);
-                navigate('/gallery');
+                navigate("/gallery");
             }
         } catch (err) {
             const error = err as Error;
-            console.error('ERROR :=>', error.message);
+            console.error("ERROR :=>", error.message);
             setMessage(error.message);
         }
     };

@@ -1,15 +1,15 @@
-export type Context = 'signin' | 'signup' | 'use';
+export type Context = "signin" | "signup" | "use";
 
-export type UxMode = 'popup' | 'redirect';
+export type UxMode = "popup" | "redirect";
 
 export type ErrorCode =
-    | 'invalid_request'
-    | 'access_denied'
-    | 'unauthorized_client'
-    | 'unsupported_response_type'
-    | 'invalid_scope'
-    | 'server_error'
-    | 'temporarily_unavailable';
+    | "invalid_request"
+    | "access_denied"
+    | "unauthorized_client"
+    | "unsupported_response_type"
+    | "invalid_scope"
+    | "server_error"
+    | "temporarily_unavailable";
 
 export interface IdConfiguration {
     /** Your application's client ID */
@@ -61,14 +61,14 @@ export interface CredentialResponse {
     credential?: string;
     /** This field sets how the credential is selected */
     select_by?:
-        | 'auto'
-        | 'user'
-        | 'user_1tap'
-        | 'user_2tap'
-        | 'btn'
-        | 'btn_confirm'
-        | 'btn_add_session'
-        | 'btn_confirm_add_session';
+        | "auto"
+        | "user"
+        | "user_1tap"
+        | "user_2tap"
+        | "btn"
+        | "btn_confirm"
+        | "btn_add_session"
+        | "btn_confirm_add_session";
     clientId?: string;
 }
 
@@ -78,17 +78,17 @@ export interface GoogleCredentialResponse extends CredentialResponse {
 
 export interface GsiButtonConfiguration {
     /** The button [type](https://developers.google.com/identity/gsi/web/reference/js-reference#type): icon, or standard button */
-    type?: 'standard' | 'icon';
+    type?: "standard" | "icon";
     /** The button [theme](https://developers.google.com/identity/gsi/web/reference/js-reference#theme). For example, filled_blue or filled_black */
-    theme?: 'outline' | 'filled_blue' | 'filled_black';
+    theme?: "outline" | "filled_blue" | "filled_black";
     /** The button [size](https://developers.google.com/identity/gsi/web/reference/js-reference#size). For example, small or large */
-    size?: 'large' | 'medium' | 'small';
+    size?: "large" | "medium" | "small";
     /** The button [text](https://developers.google.com/identity/gsi/web/reference/js-reference#text). For example, "Sign in with Google" or "Sign up with Google" */
-    text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
+    text?: "signin_with" | "signup_with" | "continue_with" | "signin";
     /**	The button [shape](https://developers.google.com/identity/gsi/web/reference/js-reference#shape). For example, rectangular or circular */
-    shape?: 'rectangular' | 'pill' | 'circle' | 'square';
+    shape?: "rectangular" | "pill" | "circle" | "square";
     /**	The Google [logo alignment](https://developers.google.com/identity/gsi/web/reference/js-reference#logo_alignment): left or center */
-    logo_alignment?: 'left' | 'center';
+    logo_alignment?: "left" | "center";
     /** The button [width](https://developers.google.com/identity/gsi/web/reference/js-reference#width), in pixels */
     width?: string | number;
     /** If set, then the button [language](https://developers.google.com/identity/gsi/web/reference/js-reference#locale) is rendered */
@@ -110,31 +110,31 @@ export interface PromptMomentNotification {
      * this value is not supported. See Migrate to FedCM page for more information.
      * */
     getNotDisplayedReason: () =>
-        | 'browser_not_supported'
-        | 'invalid_client'
-        | 'missing_client_id'
-        | 'opt_out_or_no_session'
-        | 'secure_http_required'
-        | 'suppressed_by_user'
-        | 'unregistered_origin'
-        | 'unknown_reason';
+        | "browser_not_supported"
+        | "invalid_client"
+        | "missing_client_id"
+        | "opt_out_or_no_session"
+        | "secure_http_required"
+        | "suppressed_by_user"
+        | "unregistered_origin"
+        | "unknown_reason";
     /** Is this notification for a skipped moment? */
     isSkippedMoment: () => boolean;
     /** The detailed reason for the skipped moment */
     getSkippedReason: () =>
-        | 'auto_cancel'
-        | 'user_cancel'
-        | 'tap_outside'
-        | 'issuing_failed';
+        | "auto_cancel"
+        | "user_cancel"
+        | "tap_outside"
+        | "issuing_failed";
     /** Is this notification for a dismissed moment? */
     isDismissedMoment: () => boolean;
     /** The detailed reason for the dismissa */
     getDismissedReason: () =>
-        | 'credential_returned'
-        | 'cancel_called'
-        | 'flow_restarted';
+        | "credential_returned"
+        | "cancel_called"
+        | "flow_restarted";
     /** Return a string for the moment type */
-    getMomentType: () => 'display' | 'skipped' | 'dismissed';
+    getMomentType: () => "display" | "skipped" | "dismissed";
 }
 
 export interface TokenResponse {
@@ -176,7 +176,7 @@ export type NonOAuthError = {
      * https://developers.google.com/identity/oauth2/web/reference/js-reference#TokenClientConfig
      * https://developers.google.com/identity/oauth2/web/reference/js-reference#CodeClientConfig
      */
-    type: 'popup_failed_to_open' | 'popup_closed' | 'unknown';
+    type: "popup_failed_to_open" | "popup_closed" | "unknown";
 };
 export interface TokenClientConfig {
     /**
@@ -215,7 +215,7 @@ export interface TokenClientConfig {
     /**
      * Optional, defaults to 'select_account'. A space-delimited, case-sensitive list of prompts to present the user
      */
-    prompt?: '' | 'none' | 'consent' | 'select_account';
+    prompt?: "" | "none" | "consent" | "select_account";
 
     /**
      * 	Optional, defaults to true. If set to false,
@@ -253,7 +253,7 @@ export interface OverridableTokenClientConfig {
     /**
      * Optional. A space-delimited, case-sensitive list of prompts to present the user.
      */
-    prompt?: '' | 'none' | 'consent' | 'select_account';
+    prompt?: "" | "none" | "consent" | "select_account";
 
     /**
      * Optional. If set to false,
@@ -364,7 +364,7 @@ export interface CodeClientConfig {
      * 	Optional. The UX mode to use for the authorization flow.
      * By default, it will open the consent flow in a popup. Valid values are popup and redirect
      */
-    ux_mode?: 'popup' | 'redirect';
+    ux_mode?: "popup" | "redirect";
 
     /**
      * Optional, defaults to 'false'. Boolean value to prompt the user to select an account

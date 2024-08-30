@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 type Cookies = {
     [key: string]: string;
 };
@@ -9,10 +9,10 @@ const delay = (ms: number): Promise<void> => {
 
 const grabStoredCookie = (cookieKey: string): string | undefined => {
     const cookies: Cookies = document.cookie
-        .split('; ')
+        .split("; ")
         .reduce((prev: Cookies, current) => {
-            const [key, ...value] = current.split('=');
-            prev[key] = value.join('=');
+            const [key, ...value] = current.split("=");
+            prev[key] = value.join("=");
             return prev;
         }, {});
     const cookieVal = cookieKey in cookies ? cookies[cookieKey] : undefined;
@@ -27,18 +27,18 @@ const passwordSchemaRegex = new RegExp(
         /[A-Za-z\d!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{10,}$/, // At least 10 characters long
     ]
         .map(r => r.source)
-        .join(''),
+        .join(""),
 );
 
 const passwordSchema = z
     .string()
     .regex(
         passwordSchemaRegex,
-        'Password must be at least 10 characters long and contain at least one lowercase letter, one uppercase letter, one digit, and one special character.',
+        "Password must be at least 10 characters long and contain at least one lowercase letter, one uppercase letter, one digit, and one special character.",
     );
 
 const usernameSchema = z
     .string()
-    .min(5, 'Username must be at least 5 characters long.');
+    .min(5, "Username must be at least 5 characters long.");
 
 export { grabStoredCookie, delay, passwordSchema, usernameSchema };

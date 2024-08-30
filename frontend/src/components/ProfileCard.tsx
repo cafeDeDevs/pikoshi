@@ -1,38 +1,38 @@
-import { createSignal, Show, type Component } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
+import { createSignal, Show, type Component } from "solid-js";
+import { useNavigate } from "@solidjs/router";
 
-import urls from '../config/urls';
-import { delay } from '../utils/utils';
+import urls from "../config/urls";
+import { delay } from "../utils/utils";
 
-import styles from '../css/ProfileCard.module.css';
+import styles from "../css/ProfileCard.module.css";
 
 const ProfileCard: Component = () => {
     const navigate = useNavigate();
-    const [errorMsg, setErrorMsg] = createSignal<string>('');
-    const [successMsg, setSuccessMsg] = createSignal<string>('');
+    const [errorMsg, setErrorMsg] = createSignal<string>("");
+    const [successMsg, setSuccessMsg] = createSignal<string>("");
 
     const logout = async () => {
         try {
             const response = await fetch(urls.BACKEND_AUTH_LOGOUT_ROUTE, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
                 },
-                credentials: 'include',
+                credentials: "include",
             });
             if (!response.ok) {
                 const jsonRes = await response.json();
                 throw new Error(jsonRes.message);
             }
             setSuccessMsg(
-                'You Have Successfully Logged Out! \nRedirecting you back home!',
+                "You Have Successfully Logged Out! \nRedirecting you back home!",
             );
             await delay(3000);
-            navigate('/');
+            navigate("/");
         } catch (err) {
             const error = err as Error;
-            console.error('ERROR :=>', error);
+            console.error("ERROR :=>", error);
             setErrorMsg(error.message);
         }
     };
@@ -41,7 +41,7 @@ const ProfileCard: Component = () => {
         <>
             <div class={styles.ProfileCard}>
                 <button
-                    class={styles['logout-btn']}
+                    class={styles["logout-btn"]}
                     type='button'
                     onClick={logout}>
                     Logout

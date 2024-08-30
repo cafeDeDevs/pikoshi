@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { passwordSchemaRegex, passwordSchemaErrMsg } from '../schemas/password';
+import { z } from "zod";
+import { passwordSchemaRegex, passwordSchemaErrMsg } from "../schemas/password";
 
 const emailSchema = z.string().email();
 const passwordSchema = z.string().regex(passwordSchemaRegex, {

@@ -6,7 +6,7 @@ import {
     OverridableTokenClientConfig,
     CodeClientConfig,
     TokenResponse,
-} from './types';
+} from "./types";
 declare global {
     interface Window {
         google?: {

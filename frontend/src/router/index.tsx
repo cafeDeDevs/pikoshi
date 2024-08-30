@@ -1,28 +1,28 @@
-import App from '../App.tsx';
-import Gallery from '../views/Gallery';
-import Login from '../views/Login';
-import Onboarding from '../views/Onboarding';
-import Signup from '../views/Signup';
+import App from "../App.tsx";
+import Gallery from "../views/Gallery";
+import Login from "../views/Login";
+import Onboarding from "../views/Onboarding";
+import Signup from "../views/Signup";
 
 const routes = [
     {
-        path: '/',
+        path: "/",
         component: App,
     },
     {
-        path: '/login',
+        path: "/login",
         component: Login,
     },
     {
-        path: '/signup',
+        path: "/signup",
         component: Signup,
     },
     {
-        path: '/onboarding',
+        path: "/onboarding",
         component: Onboarding,
     },
     {
-        path: '/gallery',
+        path: "/gallery",
         component: Gallery,
     },
 ];

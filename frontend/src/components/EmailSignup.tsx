@@ -1,20 +1,20 @@
-import { createSignal, Show, type Component } from 'solid-js';
+import { createSignal, Show, type Component } from "solid-js";
 
-import urls from '../config/urls';
-import { validateEmailInput } from '../utils/schema-validators';
+import urls from "../config/urls";
+import { validateEmailInput } from "../utils/schema-validators";
 
 const EmailSignup: Component = () => {
-    const [email, setEmail] = createSignal<string>('');
-    const [message, setMessage] = createSignal<string>('');
+    const [email, setEmail] = createSignal<string>("");
+    const [message, setMessage] = createSignal<string>("");
 
     const handleSubmit = async (e: Event) => {
         e.preventDefault();
         try {
             validateEmailInput(email());
             const res = await fetch(urls.BACKEND_SIGNUP_EMAIL_ROUTE, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify({ email: email() }),
             });
@@ -27,7 +27,7 @@ const EmailSignup: Component = () => {
             }
         } catch (err) {
             const error = err as Error;
-            console.error('ERROR :=>', error.message);
+            console.error("ERROR :=>", error.message);
             setMessage(error.message);
         }
     };
