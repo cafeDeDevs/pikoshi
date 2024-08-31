@@ -8,4 +8,5 @@ export default {
     BACKEND_EMAIL_LOGIN_ROUTE: "http://localhost:8000/auth/email-login/",
     BACKEND_AUTH_CONTEXT_ROUTE: "http://localhost:8000/auth/auth-context/",
     BACKEND_AUTH_LOGOUT_ROUTE: "http://localhost:8000/auth/auth-logout/",
+    BACKEND_GALLERY_INITIAL_ROUTE: "http://localhost:8000/gallery/default/",
 };

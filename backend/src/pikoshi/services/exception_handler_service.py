@@ -30,6 +30,11 @@ class ExceptionService:
         )
 
     @staticmethod
+    def handle_s3_exception(e: Exception) -> JSONResponse:
+        logger.error(f"An error occurred while trying to access S3: {str(e)}")
+        return JSONResponse(status_code=400, content={"message": f"S3 error: str{e}"})
+
+    @staticmethod
     def handle_generic_exception(e: Exception) -> JSONResponse:
         logger.error(f"An unexpected error occurred: {str(e)}")
         return JSONResponse(

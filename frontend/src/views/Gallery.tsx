@@ -1,5 +1,13 @@
-import { createSignal, onMount, Show, type Component } from "solid-js";
+import {
+    createSignal,
+    createEffect,
+    onMount,
+    Show,
+    type Component,
+} from "solid-js";
 import { useNavigate } from "@solidjs/router";
+import { useAuthContext } from "../hooks/useAuthContext";
+
 import Navbar from "../components/Navbar";
 
 import urls from "../config/urls";
@@ -12,8 +20,17 @@ const Gallery: Component = () => {
     const navigate = useNavigate();
 
     onMount(async () => {
+        const authContext = await useAuthContext();
+        setIsAuthenticated(authContext);
+        if (!isAuthenticated()) {
+            await delay(3000);
+            navigate("/");
+        }
+    });
+
+    onMount(async () => {
         try {
-            const response = await fetch(urls.BACKEND_AUTH_CONTEXT_ROUTE, {
+            const response = await fetch(urls.BACKEND_GALLERY_INITIAL_ROUTE, {
                 method: "POST",
                 headers: {
                     Accept: "application/json",
@@ -21,14 +38,13 @@ const Gallery: Component = () => {
                 },
                 credentials: "include",
             });
-            const jsonRes = await response.json();
-            if (!response.ok) throw new Error(jsonRes.message);
-            setIsAuthenticated(true);
+            if (!response.ok) {
+                const jsonRes = await response.json();
+                throw new Error(jsonRes.message);
+            }
         } catch (err) {
             const error = err as Error;
-            console.error("ERROR :=>", error);
-            await delay(3000);
-            navigate("/");
+            console.error("ERROR :=>", error.message);
         }
     });
 
