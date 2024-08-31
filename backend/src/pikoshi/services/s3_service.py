@@ -8,6 +8,10 @@ from .exception_handler_service import ExceptionService
 
 class S3Service:
     @staticmethod
+    def instantiate_s3_client():
+        return boto3.client("s3")
+
+    @staticmethod
     def create_bucket(bucket_name, region=None) -> bool:
         try:
             if region is None:
