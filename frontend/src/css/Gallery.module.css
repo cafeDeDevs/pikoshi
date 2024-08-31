@@ -5,3 +5,15 @@
     margin: 1.75em auto 0 auto;
     width: 80vw;
 }
+
+.upload-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1em auto 0 auto;
+}
+
+.file-picker {
+    display: none;
+    color: transparent;
+}

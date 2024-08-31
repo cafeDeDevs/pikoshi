@@ -52,9 +52,11 @@ async def get_default_gallery(
         return ExceptionService.handle_s3_exception(e)
 
 
-#  @router.post("/upload/")
-#  async def upload_image_to_gallery(
-#  access_token: Annotated[str | None, Cookie()] = None,
-#  refresh_token: Annotated[str | None, Cookie()] = None,
-#  db: Session = Depends(get_db),
-#  ) -> Response:
+# TODO: grab request.FILES
+@router.post("/upload/")
+async def upload_image_to_gallery(
+    access_token: Annotated[str | None, Cookie()] = None,
+    refresh_token: Annotated[str | None, Cookie()] = None,
+    db: Session = Depends(get_db),
+) -> Response:
+    return JSONResponse(status_code=200, content={"message": "HELLO WORLD!"})
