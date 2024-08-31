@@ -1,4 +1,6 @@
+# TODO: Refactor as a Class, pass db directly instead of from routes
 from typing import List
+from uuid import uuid4
 
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
@@ -20,21 +22,25 @@ def get_users(db: Session, skip: int = 0, limit: int = 100) -> List[User]:
 
 
 # TODO: Add services (not in this file) related to generating first album, photo, and network
-def generate_user_profile(user_name, user_password, user_email, salt) -> UserCreate:
+def generate_user_profile(
+    user_name, user_password, user_email, salt, uuid
+) -> UserCreate:
     new_user = UserCreate(
-        name=user_name, email=user_email, password=user_password, salt=salt
+        name=user_name, email=user_email, password=user_password, salt=salt, uuid=uuid
     )
     return new_user
 
 
 def create_user(db: Session, user: UserCreate) -> User | None:
     db_user = get_user_by_email(db, email=user.email)
+    uuid = str(uuid4())
     if db_user:
         return None
     db_user = User(
         created=func.now(),
         name=user.name,
         email=user.email,
+        uuid=uuid,
         password=user.password,
         salt=user.salt,
         is_active=True,

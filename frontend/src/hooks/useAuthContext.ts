@@ -1,4 +1,7 @@
 import urls from "../config/urls";
+
+// TODO: Figure out how to cache authentication context
+// (short lived (10 minutes), that way we don't have forever loading... on Gallery)
 const useAuthContext = async (): Promise<boolean> => {
     let isAuthenticated = false;
     try {

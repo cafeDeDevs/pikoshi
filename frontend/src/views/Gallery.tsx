@@ -1,10 +1,4 @@
-import {
-    createSignal,
-    createEffect,
-    onMount,
-    Show,
-    type Component,
-} from "solid-js";
+import { createSignal, For, onMount, Show, type Component } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { useAuthContext } from "../hooks/useAuthContext";
 
@@ -16,7 +10,8 @@ import { delay } from "../utils/utils";
 import styles from "../css/Gallery.module.css";
 
 const Gallery: Component = () => {
-    const [isAuthenticated, setIsAuthenticated] = createSignal(false);
+    const [isAuthenticated, setIsAuthenticated] = createSignal<boolean>(false);
+    const [images, setImages] = createSignal<string[]>([]);
     const navigate = useNavigate();
 
     onMount(async () => {
@@ -38,10 +33,15 @@ const Gallery: Component = () => {
                 },
                 credentials: "include",
             });
-            if (!response.ok) {
-                const jsonRes = await response.json();
-                throw new Error(jsonRes.message);
-            }
+            const jsonRes = await response.json();
+
+            if (!response.ok)
+                throw new Error(
+                    "An Error Occurred While Trying To Retrieve Your Gallery",
+                );
+
+            const { imagesAsBase64 } = jsonRes;
+            setImages(imagesAsBase64);
         } catch (err) {
             const error = err as Error;
             console.error("ERROR :=>", error.message);
@@ -52,8 +52,14 @@ const Gallery: Component = () => {
         <>
             {/* TODO: Replace Loading... with GalleryLoading component */}
             <Show when={isAuthenticated()} fallback={<p>Loading...</p>}>
+                <Navbar />
                 <div class={styles.Gallery}>
-                    <Navbar />
+                    {/* TODO: Replace Loading... with Default Image Component */}
+                    <For each={images()} fallback={<p>Loading...</p>}>
+                        {image => (
+                            <img src={`data:image/jpg;base64,${image}`} />
+                        )}
+                    </For>
                 </div>
             </Show>
         </>

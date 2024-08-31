@@ -1,93 +1,105 @@
+import hashlib
 import os
 from typing import List
 
 import boto3
+from dotenv import load_dotenv
 
 from .exception_handler_service import ExceptionService
+
+load_dotenv()
+AWS_REGION = str(os.environ.get("AWS_REGION"))
 
 
 class S3Service:
     @staticmethod
-    def instantiate_s3_client():
+    def get_s3_client():
         return boto3.client("s3")
 
     @staticmethod
-    def create_bucket(bucket_name, region=None) -> bool:
-        try:
-            if region is None:
-                s3_client = boto3.client("s3")
-                s3_client.create_bucket(Bucket=bucket_name)
-            else:
-                s3_client = boto3.client("s3", region_name=region)
-                location = {"LocationConstraint": region}
-                s3_client.create_bucket(
-                    Bucket=bucket_name, CreateBucketConfiguration=location
-                )
-        except Exception as e:
-            ExceptionService.handle_s3_exception(e)
-            return False
-        return True
+    def get_bucket_index(user_uuid: str, num_buckets: int = 100) -> int:
+        """Takes a user's uuid and returns the number index that user's albums will live in"""
+        hash_digest = hashlib.sha256(user_uuid.encode()).hexdigest()
+        return int(hash_digest, 16) % num_buckets
 
     @staticmethod
-    def delete_bucket(bucket) -> bool:
-        s3_client = boto3.client("s3")
+    def create_bucket(
+        bucket_name: str,
+        user_uuid: str,
+        album_name: str,
+    ) -> None:
         try:
+            s3_client = boto3.client("s3", region_name=AWS_REGION)
+            location = {"LocationConstraint": AWS_REGION}
+            s3_client.create_bucket(
+                Bucket=bucket_name, CreateBucketConfiguration=location
+            )
+            s3_client.put_object(Bucket=bucket_name, Key=f"{user_uuid}/{album_name}/")
+        except Exception as e:
+            ExceptionService.handle_s3_exception(e)
+
+    @staticmethod
+    def delete_bucket(bucket) -> None:
+        try:
+            s3_client = boto3.client("s3")
             s3_client.delete_bucket(Bucket=bucket)
         except Exception as e:
             ExceptionService.handle_s3_exception(e)
-            return False
-        return True
 
     @staticmethod
-    def grab_file_list(bucket) -> List[str]:
+    def grab_file_list(
+        bucket: str, user_uuid: str, album_name: str = "default"
+    ) -> List[str]:
         try:
             file_list = []
             s3 = boto3.client("s3")
-            response = s3.list_objects_v2(Bucket=bucket)
+            response = s3.list_objects_v2(
+                Bucket=bucket, Prefix=f"{user_uuid}/{album_name}/"
+            )
             if response:
                 for contents in response["Contents"]:
-                    file_list.append(contents["Key"])
+                    key = contents["Key"]
+                    if not key.endswith("/"):
+                        file_list.append(key)
             return file_list
         except Exception as e:
             ExceptionService.handle_s3_exception(e)
             return []
 
     @staticmethod
-    def upload_file(file, bucket, object_name=None, gallery_name=None) -> bool:
+    def upload_file(
+        file_name: str,
+        bucket_name: str,
+        user_uuid: str,
+        object_name: str | None = None,
+        album_name: str = "default",
+    ) -> None:
         try:
             s3_client = boto3.client("s3")
-            if gallery_name is None:
-                gallery_name = "default/"
-            # NOTE: If object_name is not NONE, then get file
-            # from file-like object (direct upload)
+
+            gallery_name = f"{user_uuid}/{album_name}/"
+
             if object_name is not None:
-                object_name = os.path.join(gallery_name, os.path.basename(file))
-                s3_client.upload_file(file, bucket, object_name)
-            # NOTE: Otherwise, get file from file system (hard drive)
+                object_name = os.path.join(gallery_name, os.path.basename(file_name))
+                s3_client.upload_file(file_name, bucket_name, object_name)
             else:
-                object_name = os.path.join(gallery_name, file.name)
-                s3_client.upload_fileobj(file, bucket, object_name)
+                object_name = os.path.join(gallery_name, file_name)
+                s3_client.upload_fileobj(file_name, bucket_name, object_name)
         except Exception as e:
             ExceptionService.handle_s3_exception(e)
-            return False
-        return True
 
     @staticmethod
-    def download_file(file_name, bucket, object_name) -> bool:
-        s3_client = boto3.client("s3")
+    def download_file(file_name, bucket, object_name) -> None:
         try:
+            s3_client = boto3.client("s3")
             s3_client.download_file(bucket, object_name, file_name)
         except Exception as e:
             ExceptionService.handle_s3_exception(e)
-            return False
-        return True
 
     @staticmethod
-    def delete_file(bucket, key_name) -> bool:
-        s3_client = boto3.client("s3")
+    def delete_file(bucket, key_name) -> None:
         try:
+            s3_client = boto3.client("s3")
             s3_client.delete_object(Bucket=bucket, Key=key_name)
         except Exception as e:
             ExceptionService.handle_s3_exception(e)
-            return False
-        return True

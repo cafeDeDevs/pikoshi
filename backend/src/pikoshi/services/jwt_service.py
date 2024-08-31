@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Dict
+from uuid import uuid4
 
 import jwt
 from dotenv import load_dotenv
@@ -80,7 +81,10 @@ class JWTAuthService:
         salt = generate_salt()
         user_name = user_info.username
         user_password = hash_value(user_info.password, salt)
-        new_user = generate_user_profile(user_name, user_password, user_email, salt)
+        uuid = str(uuid4())
+        new_user = generate_user_profile(
+            user_name, user_password, user_email, salt, uuid
+        )
         new_user = create_user(db, new_user)
 
         if not new_user:

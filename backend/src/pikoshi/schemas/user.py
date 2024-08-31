@@ -14,6 +14,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     salt: str
+    uuid: str
 
 
 class User(UserBase):

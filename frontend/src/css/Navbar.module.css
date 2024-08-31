@@ -1,22 +1,16 @@
 .NavContainer {
-    position: fixed;
-    height: 2.75em;
-    margin-top: -0.5em;
-    padding-top: 0.25em;
-    background-color: white;
     width: 80vw;
     max-width: 1280px;
+    margin: 0.25em auto 0 auto;
 }
 
+
 .Navbar {
-    position: fixed;
     border-top: 1px solid black;
     border-bottom: 1px solid black;
     height: 2.5em;
     background-color: white;
     display: flex;
-    width: 80vw;
-    max-width: 1280px;
     justify-content: right;
 }
 

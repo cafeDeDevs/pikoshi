@@ -4,6 +4,7 @@ from sqlalchemy.sql import func
 from ..database import Base
 
 
+# TODO: Consider putting certain fields in a separate table
 class User(Base):
     __tablename__ = "users"
 
@@ -13,6 +14,7 @@ class User(Base):
     password = Column(String(254), nullable=False, index=True)
     salt = Column(String(64), unique=True, nullable=False, index=True)
     email = Column(Text, unique=True, index=True)
+    uuid = Column(String(36), unique=True, nullable=False, index=True)
     is_active = Column(Boolean, nullable=True, default=False)
     last_login = Column(DateTime(timezone=True), onupdate=func.now())
 

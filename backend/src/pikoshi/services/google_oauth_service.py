@@ -1,5 +1,6 @@
 import os
 from typing import Dict
+from uuid import uuid4
 
 import httpx
 from dotenv import load_dotenv
@@ -98,7 +99,10 @@ class GoogleOAuthService:
         user_name = user_info.get("name")
         user_email = user_info.get("email")
         user_password = hash_value(user_id, salt)
-        new_user = generate_user_profile(user_name, user_password, user_email, salt)
+        uuid = str(uuid4())
+        new_user = generate_user_profile(
+            user_name, user_password, user_email, salt, uuid
+        )
         new_user = create_user(db, new_user)
         if not new_user:
             raise HTTPException(

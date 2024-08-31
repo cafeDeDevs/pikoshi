@@ -1,3 +1,4 @@
+from base64 import b64encode
 from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
@@ -7,41 +8,72 @@ from sqlalchemy.orm import Session
 from ..config.redis_config import redis_instance as redis
 from ..dependencies import get_db
 from ..middlewares.logger import TimedRoute
+from ..services.exception_handler_service import ExceptionService
 from ..services.s3_service import S3Service
+from ..services.user_service import get_user
 
 router = APIRouter(prefix="/gallery", tags=["gallery"], route_class=TimedRoute)
 
 
+# TODO: Figure out how to get parameters which will lead to the album name
+# NOTE: IF parameter album_name == None, then default it to "default"
 @router.post("/default/")
 async def get_default_gallery(
     access_token: Annotated[str | None, Cookie()] = None,
-    refresh_token: Annotated[str | None, Cookie()] = None,
     db: Session = Depends(get_db),
 ) -> Response:
-    # Create a unique id per user and store it in the DB as s3_bucket_id
-    # grab the user's PK id from the redis cache utilizing the access_token:
-    # NOTE: UUIDs can be randomly generated using python's native uuid4 package
-    # NOTE: Consider hashing the UUID (or using a different variation of uuid)
-    # NOTE: Do NOT generate the UUID here obviously...
+    # TODO: Refactor this into more service file/helper functions in s3_service.py
+    try:
+        user_id = int(await redis.get(f"auth_session_{access_token}"))
 
-    # user_id = int(await redis.get(f"auth_session_{access_token}"))
-    # Use the PK id to grab the user's s3_bucket_id
+        s3_client = S3Service.get_s3_client()
 
-    # Create a bucket named by that s3_bucket_id (errors to logger if bucket already exists)
-    # NOTE: Create the bucket's name based off the first character of the UUID only
+        user = get_user(db, user_id)
+        user_uuid = str(user.uuid)
 
-    # Instantiate a variable named bucket_name that stores the string of the newly created bucket
-    # S3Service.grab_file_list(bucket_name) by that bucket_name and store it in a variable called file_list
-    # Instantiate a new emtpy List called image_files
-    # If the file_list is empty, upload a default.jpg file to the bucket in a newly created directory called "default"
-    # Iterate over the file_list List, and if the string "default/" exists in the file name:
-    # If the string "default/" DOES EXIST, THEN:
-    #  file_obj = s3_client.get_object(Bucket=bucket_name, Key=file)
-    #  image_data = base64.b64encode(file_obj["Body"].read()).decode("utf-8")
-    #  image_files.append(image_data)
-    # Return a 200 OK HTTP Response Object (not JSON??) that has the image_files list in a field titled "images_as_base_64"
-    # Handle Exceptions
-    return JSONResponse(status_code=200, content={"message": "Hello World!"})
+        user_bucket_index = S3Service.get_bucket_index(user_uuid)  # type:ignore
+        bucket_name = f"user-bucket-{user_bucket_index}"
+        S3Service.create_bucket(bucket_name, user_uuid, album_name="default")
+
+        file_list = S3Service.grab_file_list(bucket_name, user_uuid)
+
+        if len(file_list) == 0:
+            S3Service.upload_file(
+                file_name="./src/pikoshi/public/default.jpg",
+                bucket_name=bucket_name,
+                user_uuid=user_uuid,
+                object_name="default.jpg",
+                album_name="default",
+            )
+
+        file_list = S3Service.grab_file_list(
+            bucket_name, user_uuid, album_name="default"
+        )
+        image_files = []
+
+        # TODO: Once album_name is grabbed from parameters, change this
+        for file_name in file_list:
+            if "/default/" in file_name:
+                file_obj = s3_client.get_object(Bucket=bucket_name, Key=file_name)
+                image_data = b64encode(file_obj["Body"].read()).decode("utf-8")
+                image_files.append(image_data)
+
+        if len(image_files) == 0:
+            raise HTTPException(
+                status_code=400, detail="No Images Found In Default Album."
+            )
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Images Retrieved From S3 And Sent To Client Successfully.",
+                "imagesAsBase64": image_files,
+            },
+        )
+    except HTTPException as http_e:
+        return ExceptionService.handle_http_exception(http_e)
+    except Exception as e:
+        return ExceptionService.handle_s3_exception(e)
 
 
 #  @router.post("/upload/")
