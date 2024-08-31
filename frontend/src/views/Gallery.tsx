@@ -13,6 +13,7 @@ import styles from "../css/Gallery.module.css";
 // And Then pass this param "default" as an album_name to the backend
 const Gallery: Component = () => {
     const [isAuthenticated, setIsAuthenticated] = createSignal<boolean>(false);
+    const [error, setError] = createSignal<string>("");
     const [images, setImages] = createSignal<string[]>([]);
     const navigate = useNavigate();
 
@@ -21,11 +22,8 @@ const Gallery: Component = () => {
         setIsAuthenticated(authContext);
         if (!isAuthenticated()) {
             await delay(3000);
-            navigate("/");
+            return navigate("/");
         }
-    });
-
-    onMount(async () => {
         try {
             const response = await fetch(urls.BACKEND_GALLERY_INITIAL_ROUTE, {
                 method: "POST",
@@ -46,7 +44,8 @@ const Gallery: Component = () => {
             setImages(imagesAsBase64);
         } catch (err) {
             const error = err as Error;
-            console.error("ERROR :=>", error.message);
+            setError(error.message);
+            throw new Error(error.message || "Unknown error");
         }
     });
 
@@ -62,6 +61,9 @@ const Gallery: Component = () => {
                             <img src={`data:image/jpg;base64,${image}`} />
                         )}
                     </For>
+                    <Show when={error().length > 0}>
+                        <p style='color: red;'>{error()}</p>
+                    </Show>
                 </div>
             </Show>
         </>
