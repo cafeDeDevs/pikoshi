@@ -1,16 +1,13 @@
-from base64 import b64encode
 from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from ..config.redis_config import redis_instance as redis
 from ..dependencies import get_db
 from ..middlewares.logger import TimedRoute
 from ..services.exception_handler_service import ExceptionService
-from ..services.s3_service import S3Service
-from ..services.user_service import get_user
+from ..services.gallery_service import GalleryService
 
 router = APIRouter(prefix="/gallery", tags=["gallery"], route_class=TimedRoute)
 
@@ -22,41 +19,20 @@ async def get_default_gallery(
     access_token: Annotated[str | None, Cookie()] = None,
     db: Session = Depends(get_db),
 ) -> Response:
-    # TODO: Refactor this into more service file/helper functions in s3_service.py
     try:
-        user_id = int(await redis.get(f"auth_session_{access_token}"))
+        s3_credentials = await GalleryService.create_new_user_bucket(
+            str(access_token), db
+        )
+        bucket_name = str(s3_credentials.get("bucket_name"))
+        user_uuid = str(s3_credentials.get("user_uuid"))
 
-        s3_client = S3Service.get_s3_client()
-
-        user = get_user(db, user_id)
-        user_uuid = str(user.uuid)
-
-        user_bucket_index = S3Service.get_bucket_index(user_uuid)  # type:ignore
-        bucket_name = f"user-bucket-{user_bucket_index}"
-        S3Service.create_bucket(bucket_name, user_uuid, album_name="default")
-
-        file_list = S3Service.grab_file_list(bucket_name, user_uuid)
-
-        if len(file_list) == 0:
-            S3Service.upload_file(
-                file_name="./src/pikoshi/public/default.jpg",
-                bucket_name=bucket_name,
-                user_uuid=user_uuid,
-                object_name="default.jpg",
-                album_name="default",
-            )
-
-        file_list = S3Service.grab_file_list(
+        file_list = GalleryService.grab_file_list(
             bucket_name, user_uuid, album_name="default"
         )
-        image_files = []
 
-        # TODO: Once album_name is grabbed from parameters, change this
-        for file_name in file_list:
-            if "/default/" in file_name:
-                file_obj = s3_client.get_object(Bucket=bucket_name, Key=file_name)
-                image_data = b64encode(file_obj["Body"].read()).decode("utf-8")
-                image_files.append(image_data)
+        image_files = GalleryService.grab_image_files(
+            file_list, bucket_name, album_name="default"
+        )
 
         if len(image_files) == 0:
             raise HTTPException(

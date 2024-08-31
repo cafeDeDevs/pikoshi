@@ -9,6 +9,8 @@ import { delay } from "../utils/utils";
 
 import styles from "../css/Gallery.module.css";
 
+// TODO: Figure out how to pass optional params (i.e. gallery/default)
+// And Then pass this param "default" as an album_name to the backend
 const Gallery: Component = () => {
     const [isAuthenticated, setIsAuthenticated] = createSignal<boolean>(false);
     const [images, setImages] = createSignal<string[]>([]);
