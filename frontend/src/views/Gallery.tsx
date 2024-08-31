@@ -23,8 +23,9 @@ const Gallery: Component = () => {
     const [error, setError] = createSignal<string>("");
     const [files, setFiles] = createSignal<File[]>([]);
     const [images, setImages] = createSignal<string[]>([]);
-    let inputRef: HTMLInputElement | null = null;
     const [galleryUpdated, setGalleryUpdated] = createSignal<boolean>(false);
+
+    let inputRef: HTMLInputElement | null = null;
 
     const navigate = useNavigate();
 
