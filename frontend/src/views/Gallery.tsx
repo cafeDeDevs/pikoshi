@@ -55,12 +55,16 @@ const Gallery: Component = () => {
             <Show when={isAuthenticated()} fallback={<p>Loading...</p>}>
                 <Navbar />
                 <div class={styles.Gallery}>
-                    {/* TODO: Replace Loading... with Default Image Component */}
-                    <For each={images()} fallback={<p>Loading...</p>}>
-                        {image => (
-                            <img src={`data:image/jpg;base64,${image}`} />
-                        )}
-                    </For>
+                    {/* TODO: Replace Loading... with ImageLoading Component */}
+                    <Show
+                        when={images().length > 0}
+                        fallback={<p>Loading...</p>}>
+                        <For each={images()}>
+                            {image => (
+                                <img src={`data:image/jpg;base64,${image}`} />
+                            )}
+                        </For>
+                    </Show>
                     <Show when={error().length > 0}>
                         <p style='color: red;'>{error()}</p>
                     </Show>
