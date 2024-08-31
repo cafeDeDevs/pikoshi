@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -52,11 +52,20 @@ async def get_default_gallery(
         return ExceptionService.handle_s3_exception(e)
 
 
-# TODO: grab request.FILES
 @router.post("/upload/")
 async def upload_image_to_gallery(
+    file: UploadFile,
     access_token: Annotated[str | None, Cookie()] = None,
-    refresh_token: Annotated[str | None, Cookie()] = None,
     db: Session = Depends(get_db),
 ) -> Response:
-    return JSONResponse(status_code=200, content={"message": "HELLO WORLD!"})
+    try:
+        await GalleryService.upload_new_image(str(access_token), file, db)
+        # TODO: Utilize file meta data in s3 bucket
+        #  print("file :=>", file)
+        #  print("file.filename :=>", file.filename)
+        #  print("file.content_type :=>", file.content_type)
+        #  print("file.file :=>", file.file)
+
+        return JSONResponse(status_code=200, content={"message": "HELLO WORLD!"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

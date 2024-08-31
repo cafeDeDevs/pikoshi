@@ -4,6 +4,7 @@ from typing import List
 
 import boto3
 from dotenv import load_dotenv
+from fastapi import UploadFile
 
 from .exception_handler_service import ExceptionService
 
@@ -68,10 +69,11 @@ class S3Service:
 
     @staticmethod
     def upload_file(
-        file_name: str,
+        file: UploadFile | None,
         bucket_name: str,
         user_uuid: str,
         object_name: str | None = None,
+        file_name: str = "./src/pikoshi/public/default.jpg",
         album_name: str = "default",
     ) -> None:
         try:
@@ -79,12 +81,17 @@ class S3Service:
 
             gallery_name = f"{user_uuid}/{album_name}/"
 
+            if file is not None:
+                object_name = os.path.join(gallery_name, str(file.filename))
+                return s3_client.upload_fileobj(file.file, bucket_name, object_name)
+
             if object_name is not None:
                 object_name = os.path.join(gallery_name, os.path.basename(file_name))
-                s3_client.upload_file(file_name, bucket_name, object_name)
+                return s3_client.upload_file(file_name, bucket_name, object_name)
+
             else:
                 object_name = os.path.join(gallery_name, file_name)
-                s3_client.upload_fileobj(file_name, bucket_name, object_name)
+                return s3_client.upload_fileobj(file_name, bucket_name, object_name)
         except Exception as e:
             ExceptionService.handle_s3_exception(e)
 

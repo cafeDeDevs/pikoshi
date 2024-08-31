@@ -1,11 +1,13 @@
 from base64 import b64encode
 from typing import Dict, List
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from ..config.redis_config import redis_instance as redis
 from ..dependencies import get_db
+from ..services.s3_service import S3Service
+from ..services.user_service import get_user
 from .exception_handler_service import ExceptionService
 from .s3_service import S3Service
 from .user_service import get_user
@@ -58,10 +60,11 @@ class GalleryService:
     ) -> None:
         try:
             S3Service.upload_file(
-                file_name="./src/pikoshi/public/default.jpg",
+                file=None,
                 bucket_name=bucket_name,
                 user_uuid=user_uuid,
                 object_name="default.jpg",
+                file_name="./src/pikoshi/public/default.jpg",
                 album_name="default",
             )
         except Exception as e:
@@ -86,3 +89,27 @@ class GalleryService:
         except Exception as e:
             ExceptionService.handle_generic_exception(e)
             return []
+
+    @staticmethod
+    async def upload_new_image(
+        access_token: str,
+        file: UploadFile,
+        db: Session = Depends(get_db),
+        album_name: str = "default",
+    ) -> None:
+        try:
+            user_id = int(await redis.get(f"auth_session_{access_token}"))
+            user = get_user(db, user_id)
+            user_uuid = str(user.uuid)
+            user_bucket_index = S3Service.get_bucket_index(user_uuid)
+            bucket_name = f"user-bucket-{user_bucket_index}"
+
+            S3Service.upload_file(
+                file=file,
+                bucket_name=bucket_name,
+                user_uuid=user_uuid,
+                object_name=None,
+                album_name=album_name,
+            )
+        except Exception as e:
+            ExceptionService.handle_generic_exception(e)

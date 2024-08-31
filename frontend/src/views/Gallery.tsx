@@ -8,6 +8,7 @@ import {
 
 import { useNavigate } from "@solidjs/router";
 import { useAuthContext } from "../hooks/useAuthContext";
+import { useGrabGallery } from "../hooks/useGrabGallery";
 
 import Navbar from "../components/Navbar";
 
@@ -36,43 +37,19 @@ const Gallery: Component = () => {
             await delay(3000);
             return navigate("/");
         }
+        const imagesAsBase64 = await useGrabGallery();
+        if (imagesAsBase64) {
+            setImages(imagesAsBase64);
+        } else {
+            setError(imagesAsBase64);
+        }
+    });
 
-        const grabGallery = async (): Promise<void> => {
-            try {
-                const response = await fetch(
-                    urls.BACKEND_GALLERY_INITIAL_ROUTE,
-                    {
-                        method: "POST",
-                        headers: {
-                            Accept: "application/json",
-                            "Content-Type": "application/json",
-                        },
-                        credentials: "include",
-                    },
-                );
-                const jsonRes = await response.json();
-
-                if (!response.ok)
-                    throw new Error(
-                        "An Error Occurred While Trying To Retrieve Your Gallery",
-                    );
-
-                const { imagesAsBase64 } = jsonRes;
-                setImages(imagesAsBase64);
-            } catch (err) {
-                const error = err as Error;
-                setError(error.message);
-                throw new Error(error.message || "Unknown error");
-            }
-        };
-        grabGallery();
-    }, [galleryUpdated()]);
-
-    createEffect(() => {
+    createEffect(async () => {
         if (files().length === 0) return;
         const imageData = new FormData();
-        files().forEach((file, index) => {
-            imageData.append(`file-${index}`, file, file.name);
+        files().forEach(file => {
+            imageData.append("file", file, file.name);
         });
         const uploadImage = async (): Promise<void> => {
             try {
@@ -95,9 +72,20 @@ const Gallery: Component = () => {
                 setError(error.message);
             }
         };
-        uploadImage();
+        await uploadImage();
         setFiles([]);
-    }, [files()]);
+    });
+
+    createEffect(async () => {
+        if (galleryUpdated()) {
+            const imagesAsBase64 = await useGrabGallery();
+            if (imagesAsBase64) {
+                setImages(imagesAsBase64);
+            } else {
+                setError(imagesAsBase64);
+            }
+        }
+    });
 
     const handleUploadClick = (): void => {
         if (inputRef !== null) {
