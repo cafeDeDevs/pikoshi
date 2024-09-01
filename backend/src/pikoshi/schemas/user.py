@@ -17,7 +17,7 @@ class UserCreate(UserBase):
     uuid: str
 
 
-class User(UserBase):
+class User(UserCreate):
     id: int
     is_active: bool
 

@@ -9,8 +9,8 @@ from fastapi import Depends, HTTPException
 from pydantic import EmailStr
 from sqlalchemy.orm import Session
 
-from ..config.redis_config import redis_instance as redis
 from ..dependencies import get_db
+from ..schemas.user import User
 from ..services.security_service import generate_salt, hash_value, verify_value
 from ..services.user_service import (
     create_user,
@@ -28,7 +28,7 @@ ALGORITHM = str(os.environ.get("ALGORITHM"))
 
 class JWTAuthService:
     @staticmethod
-    def get_user_tokens() -> Dict[str, str]:
+    def get_user_tokens(user_uuid: str) -> Dict[str, str]:
         # NOTE: Change each values to test invalidation of token logic
         access_token_expires = datetime.now(timezone.utc) + timedelta(
             hours=1
@@ -41,7 +41,7 @@ class JWTAuthService:
             {
                 "exp": access_token_expires,
                 "iat": datetime.now(timezone.utc),
-                "sub": "pikoshi jwt access token",
+                "sub": user_uuid,
             },
             SECRET_KEY,
             algorithm=ALGORITHM,
@@ -50,7 +50,7 @@ class JWTAuthService:
             {
                 "exp": refresh_token_expires,
                 "iat": datetime.now(timezone.utc),
-                "sub": "pikoshi jwt refresh token",
+                "sub": user_uuid,
             },
             SECRET_KEY,
             algorithm=ALGORITHM,
@@ -66,16 +66,13 @@ class JWTAuthService:
     async def signup_user_with_email(
         user_info,
         user_email: EmailStr,
-        access_token: str,
         db: Session = Depends(get_db),
-    ) -> None:
+    ) -> User:
         """
         - Creates a User instance in DB using fields grabbed from Front End Forms
         - Generates Unique Salt and stores it in DB.
         - Hashes,salts, and peppers the User's Inputted Password, and stores the
           hashed password and salt in the DB.
-        - Creates a user session in redis, using the access_token as the key,
-          and the new_user.id as the value. Lasts as long as the default access_token expiry.
         - Toggles the user's is_active field in the DB to True.
         """
         salt = generate_salt()
@@ -93,17 +90,14 @@ class JWTAuthService:
             )
 
         user_from_db = get_user_by_email(db, user_email)
-        user_id = user_from_db.id
-        await redis.set(
-            f"auth_session_{access_token}", user_id, ex=3600  # type:ignore
-        )
         set_user_as_active(db, user_from_db)
         update_user_last_login(db, user_from_db)
+        return new_user
 
     @staticmethod
     async def authenticate_user_with_jwt(
-        user_info, access_token: str, db: Session = Depends(get_db)
-    ) -> None:
+        user_info, db: Session = Depends(get_db)
+    ) -> User:
         """
         - Grabs the User's Email and Password From Front End Forms.
         - Grabs the User's hashed/salted/peppered password from the DB.
@@ -111,9 +105,6 @@ class JWTAuthService:
         - Verifies that the hashed/salted/peppered user_id matches the
           password retreived from the DB.
         - Grabs the User's Pikoshi DB id.
-        - Sets in the redis cache the session via the access_token as the key,
-          and the user id from the DB as the value. Lasts as long as the default
-          access_token expiry.
         - Toggles the user's is_active field in the DB to True.
         """
         user_email = user_info.email
@@ -133,9 +124,6 @@ class JWTAuthService:
             raise HTTPException(status_code=401, detail="Hashes in DB do not match")
 
         user_from_db = get_user_by_email(db, user_email)
-        user_id = user_from_db.id
-        await redis.set(
-            f"auth_session_{access_token}", user_id, ex=3600  # type:ignore
-        )
         set_user_as_active(db, user_from_db)
         update_user_last_login(db, user_from_db)
+        return user_from_db

@@ -4,13 +4,12 @@ from typing import Dict, List
 from fastapi import Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
-from ..config.redis_config import redis_instance as redis
 from ..dependencies import get_db
+from ..services.jwt_service import JWTAuthService
 from ..services.s3_service import S3Service
-from ..services.user_service import get_user
 from .exception_handler_service import ExceptionService
 from .s3_service import S3Service
-from .user_service import get_user
+from .user_service import get_user_by_uuid
 
 
 class GalleryService:
@@ -20,8 +19,11 @@ class GalleryService:
         db: Session = Depends(get_db),
     ) -> Dict[str, str]:
         try:
-            user_id = int(await redis.get(f"auth_session_{access_token}"))
-            user = get_user(db, user_id)
+            # TODO: put this logic in single auth service helper func
+            # NOTE: Look for other repeated instances of this logic
+            verified_token = JWTAuthService.verify_token(access_token)
+            user_uuid = verified_token.get("sub")  # type:ignore
+            user = get_user_by_uuid(db, user_uuid)
             user_uuid = str(user.uuid)
 
             user_bucket_index = S3Service.get_bucket_index(user_uuid)  # type:ignore
@@ -98,8 +100,10 @@ class GalleryService:
         album_name: str = "default",
     ) -> None:
         try:
-            user_id = int(await redis.get(f"auth_session_{access_token}"))
-            user = get_user(db, user_id)
+            verified_token = JWTAuthService.verify_token(access_token)
+            user_uuid = verified_token.get("sub")  # type:ignore
+            user = get_user_by_uuid(db, user_uuid)
+
             user_uuid = str(user.uuid)
             user_bucket_index = S3Service.get_bucket_index(user_uuid)
             bucket_name = f"user-bucket-{user_bucket_index}"

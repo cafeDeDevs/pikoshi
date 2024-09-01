@@ -65,13 +65,14 @@ async def email_onboarding(
             raise HTTPException(status_code=401, detail="Token not found or expired.")
         await redis.delete(f"signup_token_for_{user_info.token}")
 
-        user_tokens = JWTAuthService.get_user_tokens()
+        new_user = await JWTAuthService.signup_user_with_email(
+            user_info, user_email, db
+        )
+        user_uuid = new_user.uuid
+
+        user_tokens = JWTAuthService.get_user_tokens(user_uuid)
         access_token = user_tokens["access_token"]
         refresh_token = user_tokens["refresh_token"]
-
-        await JWTAuthService.signup_user_with_email(
-            user_info, user_email, access_token, db
-        )
 
         response = AuthService.set_authenticated_response(access_token, refresh_token)
         return response
@@ -88,11 +89,10 @@ async def email_login(
     user_info: UserInputEmailPass, db: Session = Depends(get_db)
 ) -> Response:
     try:
-        user_tokens = JWTAuthService.get_user_tokens()
+        user = await JWTAuthService.authenticate_user_with_jwt(user_info, db)
+        user_tokens = JWTAuthService.get_user_tokens(user.uuid)
         access_token = user_tokens["access_token"]
         refresh_token = user_tokens["refresh_token"]
-
-        await JWTAuthService.authenticate_user_with_jwt(user_info, access_token, db)
 
         response = AuthService.set_authenticated_response(access_token, refresh_token)
         return response

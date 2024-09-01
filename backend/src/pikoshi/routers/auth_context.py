@@ -24,16 +24,7 @@ async def check_auth_context(
                 status_code=401,
                 detail="No Authentication Tokens Submitted For Authentication.",
             )
-        if AuthService.is_jwt(access_token):
-            return await AuthService.authenticate_jwt(access_token, db)
-
-        elif AuthService.is_google_oauth_token(access_token):
-            return await AuthService.authenticate_google_oauth(access_token, db)
-
-        raise HTTPException(
-            status_code=401,
-            detail="Tokens passed are neither JWTs nor Google OAuth2 tokens.",
-        )
+        return await AuthService.authenticate(access_token, db)
 
     except HTTPException as http_e:
         return ExceptionService.handle_http_exception(http_e)

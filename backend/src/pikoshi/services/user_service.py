@@ -13,6 +13,10 @@ def get_user(db: Session, user_id: int) -> User:
     return db.query(User).filter(User.id == user_id).first()
 
 
+def get_user_by_uuid(db: Session, user_uuid: str) -> User:
+    return db.query(User).filter(User.uuid == user_uuid).first()
+
+
 def get_user_by_email(db: Session, email: str) -> User:
     return db.query(User).filter(User.email == email).first()
 
