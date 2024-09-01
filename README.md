@@ -25,21 +25,19 @@ git clone https://github.com/cafededevs/pikoshi &&\
 cd pikoshi
 ```
 
-Once in the root of the Pikoshi project, you can navigate to either the frontend
-or backend and consult the respective READMEs within those directories to follow
-further instructions on setup.
+Once in the root of the Pikoshi project, please read the
+[Initial Setup](./docs/initial_setup.md) documentation. This will instruct you
+on the necessary prerequisites before being able to start contributing to
+Pikoshi's codebase.
 
 ## Contributors
 
 Looking to Contribute to Pikoshi? That's great! Please reach out to the the
 [Project Lead](https://github.com/tomit4) to express an interest so we can send
-you an invite to our Discord Group! You are encouraged to follow the
-[Initial Setup](./docs/initial_setup.md)(NOTE: Docs Not Yet Written) to get your
-development environment set up properly.
+you an invite to our Discord Group!
 
 **TODO:**
 
-- [x] Change Name of Repository/Application based off of Decided Name
 - [ ] Create Logo For App
 - [ ] Completely rewrite this README once the base scaffolding of Pikoshi App is
       solidified.
