@@ -8,11 +8,10 @@ from ..services.user_service import UserService
 from ..utils.auth_cookies import remove_auth_cookies, set_auth_cookies
 from .jwt_service import JWTAuthService
 
+
 # TODO: Implement logic re: refreshing of access_token using refresh_token logic
 # NOTE: See fastapi-with-google POC for refresh_access_token logic for google-oauth2.
 # And also issue new access_token if refresh_token is still good (whether jwt or google-oauth2 token)
-
-
 class AuthService:
     @staticmethod
     def get_user_by_access_token(
