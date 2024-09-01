@@ -11,14 +11,8 @@ from sqlalchemy.orm import Session
 
 from ..dependencies import get_db
 from ..schemas.user import User
-from ..services.security_service import generate_salt, hash_value, verify_value
-from ..services.user_service import (
-    create_user,
-    generate_user_profile,
-    get_user_by_email,
-    set_user_as_active,
-    update_user_last_login,
-)
+from ..services.security_service import SecurityService
+from ..services.user_service import UserService
 
 load_dotenv()
 
@@ -75,23 +69,23 @@ class JWTAuthService:
           hashed password and salt in the DB.
         - Toggles the user's is_active field in the DB to True.
         """
-        salt = generate_salt()
+        salt = SecurityService.generate_salt()
         user_name = user_info.username
-        user_password = hash_value(user_info.password, salt)
+        user_password = SecurityService.hash_value(user_info.password, salt)
         uuid = str(uuid4())
-        new_user = generate_user_profile(
+        new_user = UserService.generate_user_profile(
             user_name, user_password, user_email, salt, uuid
         )
-        new_user = create_user(db, new_user)
+        new_user = UserService.create_user(db, new_user)
 
         if not new_user:
             raise HTTPException(
                 status_code=409, detail="Email has already been registered."
             )
 
-        user_from_db = get_user_by_email(db, user_email)
-        set_user_as_active(db, user_from_db)
-        update_user_last_login(db, user_from_db)
+        user_from_db = UserService.get_user_by_email(db, user_email)
+        UserService.set_user_as_active(db, user_from_db)
+        UserService.update_user_last_login(db, user_from_db)
         return new_user
 
     @staticmethod
@@ -110,20 +104,20 @@ class JWTAuthService:
         user_email = user_info.email
         user_password = user_info.password
 
-        user_from_db = get_user_by_email(db, user_email)
+        user_from_db = UserService.get_user_by_email(db, user_email)
         if not user_from_db:
             raise HTTPException(status_code=400, detail="No User By That Email Found")
 
         user_password_from_db = user_from_db.password
         user_salt = user_from_db.salt
-        user_is_verified = verify_value(
+        user_is_verified = SecurityService.verify_value(
             user_password, user_password_from_db, user_salt  # type:ignore
         )
 
         if not user_is_verified:
             raise HTTPException(status_code=401, detail="Hashes in DB do not match")
 
-        user_from_db = get_user_by_email(db, user_email)
-        set_user_as_active(db, user_from_db)
-        update_user_last_login(db, user_from_db)
+        user_from_db = UserService.get_user_by_email(db, user_email)
+        UserService.set_user_as_active(db, user_from_db)
+        UserService.update_user_last_login(db, user_from_db)
         return user_from_db

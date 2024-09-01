@@ -11,14 +11,8 @@ from sqlalchemy.orm import Session
 from ..dependencies import get_db
 from ..schemas.user import User
 from ..services.jwt_service import JWTAuthService
-from ..services.security_service import generate_salt, hash_value, verify_value
-from ..services.user_service import (
-    create_user,
-    generate_user_profile,
-    get_user_by_email,
-    set_user_as_active,
-    update_user_last_login,
-)
+from ..services.security_service import SecurityService
+from ..services.user_service import UserService
 
 load_dotenv()
 
@@ -65,7 +59,7 @@ class GoogleOAuthService:
         user_email = user_info.get("email")
         if not user_email:
             raise ValueError("No User Email Found by Access Token")
-        user = get_user_by_email(db, user_email)
+        user = UserService.get_user_by_email(db, user_email)
 
         if not user:
             raise ValueError("User not found in DB")
@@ -74,7 +68,7 @@ class GoogleOAuthService:
     @staticmethod
     def get_user_by_email_from_db(user_info, db: Session = Depends(get_db)) -> User:
         user_email = str(user_info.get("email"))
-        user_from_db = get_user_by_email(db, user_email)
+        user_from_db = UserService.get_user_by_email(db, user_email)
         if not user_from_db:
             raise HTTPException(status_code=400, detail="No User By That Email Found")
         return user_from_db
@@ -90,21 +84,21 @@ class GoogleOAuthService:
         - Toggles the user's is_active field in the DB to True.
         """
         user_id = str(user_info.get("id"))
-        salt = generate_salt()
+        salt = SecurityService.generate_salt()
         user_name = user_info.get("name")
         user_email = user_info.get("email")
-        user_password = hash_value(user_id, salt)
+        user_password = SecurityService.hash_value(user_id, salt)
         uuid = str(uuid4())
-        new_user = generate_user_profile(
+        new_user = UserService.generate_user_profile(
             user_name, user_password, user_email, salt, uuid
         )
-        new_user = create_user(db, new_user)
+        new_user = UserService.create_user(db, new_user)
         if not new_user:
             raise HTTPException(
                 status_code=409, detail="Email has already been registered."
             )
-        set_user_as_active(db, new_user)
-        update_user_last_login(db, new_user)
+        UserService.set_user_as_active(db, new_user)
+        UserService.update_user_last_login(db, new_user)
         return new_user
 
     @staticmethod
@@ -123,13 +117,15 @@ class GoogleOAuthService:
         user_id = str(user_info.get("id"))
         user_password = str(user_from_db.password)
         user_salt = str(user_from_db.salt)
-        user_is_verified = verify_value(user_id, user_password, user_salt)
+        user_is_verified = SecurityService.verify_value(
+            user_id, user_password, user_salt
+        )
         if not user_is_verified:
             raise HTTPException(status_code=401, detail="Hashes in DB do not match")
 
         user_id = user_from_db.id
         user_uuid = user_from_db.uuid
         user_tokens = JWTAuthService.get_user_tokens(user_uuid)
-        set_user_as_active(db, user_from_db)
-        update_user_last_login(db, user_from_db)
+        UserService.set_user_as_active(db, user_from_db)
+        UserService.update_user_last_login(db, user_from_db)
         return user_tokens

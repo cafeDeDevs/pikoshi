@@ -13,7 +13,7 @@ from ..services.auth_service import AuthService
 from ..services.email_service import EmailService
 from ..services.exception_handler_service import ExceptionService
 from ..services.jwt_service import JWTAuthService
-from ..services.user_service import get_user_by_email
+from ..services.user_service import UserService
 from ..utils.logger import logger
 
 router = APIRouter(prefix="/auth", tags=["auth"], route_class=TimedRoute)
@@ -27,7 +27,7 @@ async def signup_with_email(
 ) -> Response:
     try:
         user_email = user_input.email
-        user_from_db = get_user_by_email(db, user_email)
+        user_from_db = UserService.get_user_by_email(db, user_email)
         if user_from_db:
             raise HTTPException(
                 status_code=409, detail="Email has already been registered."

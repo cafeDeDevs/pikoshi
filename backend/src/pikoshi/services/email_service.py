@@ -7,7 +7,7 @@ from fastapi import BackgroundTasks
 from pydantic import EmailStr
 
 from ..config.redis_config import redis_instance as redis
-from ..services.security_service import generate_sha256_hash
+from ..services.security_service import SecurityService
 
 load_dotenv()
 resend.api_key = os.environ.get("RESEND_API_KEY")
@@ -31,7 +31,7 @@ class EmailService:
         user_email: EmailStr,
         background_tasks: BackgroundTasks,
     ) -> None:
-        token = generate_sha256_hash(user_input.email)
+        token = SecurityService.generate_sha256_hash(user_input.email)
         await redis.set(f"signup_token_for_{token}", user_email, ex=600)
 
         activation_link = f"http://localhost:5173/onboarding/?token={token}"
