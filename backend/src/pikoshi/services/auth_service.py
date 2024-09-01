@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from ..dependencies import get_db
+from ..schemas.user import User
 from ..services.user_service import get_user_by_uuid, set_user_as_inactive
 from ..utils.auth_cookies import remove_auth_cookies, set_auth_cookies
 from .jwt_service import JWTAuthService
@@ -15,17 +16,23 @@ from .jwt_service import JWTAuthService
 
 class AuthService:
     @staticmethod
+    def get_user_by_access_token(
+        access_token: str, db: Session = Depends(get_db)
+    ) -> User:
+        verified_token = JWTAuthService.verify_token(access_token)
+        user_uuid = verified_token.get("sub")  # type:ignore
+        return get_user_by_uuid(db, user_uuid)
+
+    @staticmethod
     async def authenticate(
         access_token: str,
         db: Session = Depends(get_db),
     ) -> JSONResponse:
-        verified_token = JWTAuthService.verify_token(access_token)
-        user_uuid = verified_token.get("sub")  # type:ignore
-        user = get_user_by_uuid(db, user_uuid)
-        if user and user.is_active:  # type:ignore
+        user = AuthService.get_user_by_access_token(access_token, db)
+        if user and user.is_active:
             return JSONResponse(
                 status_code=200,
-                content={"message": "User Is Authenticated With JWTs."},
+                content={"message": "User Is Authenticated."},
             )
         else:
             raise HTTPException(
@@ -46,9 +53,7 @@ class AuthService:
         access_token: str,
         db: Session = Depends(get_db),
     ) -> Response:
-        verified_token = JWTAuthService.verify_token(access_token)
-        user_uuid = verified_token.get("sub")  # type:ignore
-        user = get_user_by_uuid(db, user_uuid)
+        user = AuthService.get_user_by_access_token(access_token, db)
 
         set_user_as_inactive(db, user)
         response = JSONResponse(

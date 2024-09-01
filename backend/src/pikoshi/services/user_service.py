@@ -5,20 +5,20 @@ from uuid import uuid4
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
-from ..models.user import User
-from ..schemas.user import UserCreate
+from ..models.user import User as UserModel
+from ..schemas.user import User, UserCreate
 
 
 def get_user(db: Session, user_id: int) -> User:
-    return db.query(User).filter(User.id == user_id).first()
+    return db.query(UserModel).filter(UserModel.id == user_id).first()
 
 
 def get_user_by_uuid(db: Session, user_uuid: str) -> User:
-    return db.query(User).filter(User.uuid == user_uuid).first()
+    return db.query(UserModel).filter(UserModel.uuid == user_uuid).first()
 
 
 def get_user_by_email(db: Session, email: str) -> User:
-    return db.query(User).filter(User.email == email).first()
+    return db.query(UserModel).filter(UserModel.email == email).first()
 
 
 def get_users(db: Session, skip: int = 0, limit: int = 100) -> List[User]:
@@ -40,7 +40,7 @@ def create_user(db: Session, user: UserCreate) -> User | None:
     uuid = str(uuid4())
     if db_user:
         return None
-    db_user = User(
+    db_user = UserModel(
         created=func.now(),
         name=user.name,
         email=user.email,

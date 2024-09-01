@@ -5,11 +5,10 @@ from fastapi import Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from ..dependencies import get_db
-from ..services.jwt_service import JWTAuthService
+from ..services.auth_service import AuthService
 from ..services.s3_service import S3Service
 from .exception_handler_service import ExceptionService
 from .s3_service import S3Service
-from .user_service import get_user_by_uuid
 
 
 class GalleryService:
@@ -19,11 +18,7 @@ class GalleryService:
         db: Session = Depends(get_db),
     ) -> Dict[str, str]:
         try:
-            # TODO: put this logic in single auth service helper func
-            # NOTE: Look for other repeated instances of this logic
-            verified_token = JWTAuthService.verify_token(access_token)
-            user_uuid = verified_token.get("sub")  # type:ignore
-            user = get_user_by_uuid(db, user_uuid)
+            user = AuthService.get_user_by_access_token(access_token, db)
             user_uuid = str(user.uuid)
 
             user_bucket_index = S3Service.get_bucket_index(user_uuid)  # type:ignore
@@ -100,9 +95,7 @@ class GalleryService:
         album_name: str = "default",
     ) -> None:
         try:
-            verified_token = JWTAuthService.verify_token(access_token)
-            user_uuid = verified_token.get("sub")  # type:ignore
-            user = get_user_by_uuid(db, user_uuid)
+            user = AuthService.get_user_by_access_token(access_token, db)
 
             user_uuid = str(user.uuid)
             user_bucket_index = S3Service.get_bucket_index(user_uuid)
