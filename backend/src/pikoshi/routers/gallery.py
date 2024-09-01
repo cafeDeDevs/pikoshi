@@ -19,6 +19,11 @@ async def get_default_gallery(
     access_token: Annotated[str | None, Cookie()] = None,
     db: Session = Depends(get_db),
 ) -> Response:
+    """
+    - Creates new S3 bucket based off of UUID (from access_token),
+    - and establishes a default album(directory),
+    - and default image (default.jpg) in new bucket.
+    """
     try:
         s3_credentials = await GalleryService.create_new_user_bucket(
             str(access_token), db
@@ -58,6 +63,10 @@ async def upload_image_to_gallery(
     access_token: Annotated[str | None, Cookie()] = None,
     db: Session = Depends(get_db),
 ) -> Response:
+    """
+    - Uses User's UUID (from access_token) to upload new image
+    - to user's bucket/default album.
+    """
     try:
         await GalleryService.upload_new_image(str(access_token), file, db)
         # TODO: Utilize file meta data in s3 bucket

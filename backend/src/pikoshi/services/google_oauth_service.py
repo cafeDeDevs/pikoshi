@@ -15,16 +15,27 @@ from ..services.security_service import SecurityService
 from ..services.user_service import UserService
 
 load_dotenv()
+GOOGLE_OAUTH2_CLIENT_ID = os.environ.get("GOOGLE_OAUTH2_CLIENT_ID")
+GOOGLE_OAUTH2_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH2_CLIENT_SECRET")
+GOOGLE_OAUTH2_REDIRECT_URI = os.environ.get("GOOGLE_OAUTH2_REDIRECT_URI")
 
 
 class GoogleOAuthService:
     @staticmethod
     async def get_user_tokens(auth_code) -> Dict[str, str]:
+        """
+        - Prepares Google OAuth2 credentials as `data`.
+        - Sends `data` to Google's OAuth2 API.
+        - Should anything go wrong, raises a ValueError to be
+          caught by route's exception handlers.
+        - Returns OAuth2 tokens/authentication credentials,
+          including Google OAuth2 access_token, GoogleOAuth2 refresh_token.
+        """
         data = {
             "code": auth_code,
-            "client_id": os.environ.get("GOOGLE_OAUTH2_CLIENT_ID"),
-            "client_secret": os.environ.get("GOOGLE_OAUTH2_CLIENT_SECRET"),
-            "redirect_uri": os.environ.get("GOOGLE_OAUTH2_REDIRECT_URI"),
+            "client_id": GOOGLE_OAUTH2_CLIENT_ID,
+            "client_secret": GOOGLE_OAUTH2_CLIENT_SECRET,
+            "redirect_uri": GOOGLE_OAUTH2_REDIRECT_URI,
             "grant_type": "authorization_code",
         }
 
@@ -40,6 +51,10 @@ class GoogleOAuthService:
 
     @staticmethod
     async def get_user_info(access_token: str) -> Dict[str, str]:
+        """
+        - Uses Google OAuth2 access_token to grab more User Information
+          (including name, email, Google ID).
+        """
         user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
 
         async with httpx.AsyncClient() as client:
@@ -55,6 +70,13 @@ class GoogleOAuthService:
     async def get_user_from_db(
         access_token: str, db: Session = Depends(get_db)
     ) -> User:
+        """
+        - Grabs `user_info` from Google API.
+        - Grabs `user_email` from the returned `user_info`.
+        - If that information doesn't exist, raise a ValueError.
+        - Otherwise Use the `user_email` to grab the User from the DB,
+          and return that User.
+        """
         user_info = await GoogleOAuthService.get_user_info(access_token)
         user_email = user_info.get("email")
         if not user_email:
@@ -67,6 +89,10 @@ class GoogleOAuthService:
 
     @staticmethod
     def get_user_by_email_from_db(user_info, db: Session = Depends(get_db)) -> User:
+        """
+        - Grabs `user_email` from the returned `user_info` (via Google API).
+        - Queries the DB and returns a User based off the `user_email`.
+        """
         user_email = str(user_info.get("email"))
         user_from_db = UserService.get_user_by_email(db, user_email)
         if not user_from_db:

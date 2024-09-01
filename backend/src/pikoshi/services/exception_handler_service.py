@@ -6,6 +6,10 @@ from ..utils.logger import logger
 
 
 class ExceptionService:
+    """
+    - Shorthand wrappers around commonly thrown exceptions.
+    """
+
     @staticmethod
     def handle_http_exception(http_e: HTTPException) -> JSONResponse:
         logger.error(f"An error involving HTTP occurred: {str(http_e)}")

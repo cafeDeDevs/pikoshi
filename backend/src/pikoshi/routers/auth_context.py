@@ -18,6 +18,9 @@ async def check_auth_context(
     refresh_token: Annotated[str | None, Cookie()] = None,
     db: Session = Depends(get_db),
 ) -> Response:
+    """
+    - Authenticates user by verifying UUID contents of access_token JWT
+    """
     try:
         if not access_token or not refresh_token:
             raise HTTPException(
@@ -41,6 +44,10 @@ async def auth_logout(
     access_token: Annotated[str | None, Cookie()] = None,
     db: Session = Depends(get_db),
 ) -> Response:
+    """
+    - Logs Out User by removing their JWT tokens from HTTP only cookies
+      and Sets User's `is_active` field in DB to False.
+    """
     try:
         response = await AuthService.logout(str(access_token), db)
         return response

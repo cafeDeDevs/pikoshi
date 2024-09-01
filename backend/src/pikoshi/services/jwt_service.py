@@ -23,6 +23,13 @@ ALGORITHM = str(os.environ.get("ALGORITHM"))
 class JWTAuthService:
     @staticmethod
     def get_user_tokens(user_uuid: str) -> Dict[str, str]:
+        """
+        - Establishes respective expiry times for both JWT access_token and
+          JWT refresh_token.
+        - Encodes two new JWTs, one JWT access_token, one JWT refresh_token.
+        - Encodes the User's UUID into the `sub` field of both JWTs.
+        - Returns a dictionary with both JWT access_token and JWT refresh_token.
+        """
         # NOTE: Change each values to test invalidation of token logic
         access_token_expires = datetime.now(timezone.utc) + timedelta(
             hours=1
@@ -54,6 +61,10 @@ class JWTAuthService:
 
     @staticmethod
     def verify_token(token: str) -> None:
+        """
+        - Decodes the JWT and returns all values inside if successful
+          (i.e. JWT is not expired or corrupted).
+        """
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
     @staticmethod

@@ -17,6 +17,19 @@ class GalleryService:
         access_token: str,
         db: Session = Depends(get_db),
     ) -> Dict[str, str]:
+        """
+        - Grabs the User data from the database using the JWT
+          access_token's UUID.
+        - Grabs the UUID from the returned User's data from the DB.
+        - Hashes the User's UUID to determine which bucket index
+          to put User's Account (UUID) in (can only be number between 1 and 100).
+        - Establishes a bucket_name based off of returned index.
+        - Creates a new bucket if it doesn't exist, otherwise simply proceeds
+          with established bucket.
+        - Establishes user's UUID as a directory within bucket (amounting to all
+          of user's albums and images).
+        - Returns a dictionary containing the User's bucket_name and user_uuid.
+        """
         try:
             user = AuthService.get_user_by_access_token(access_token, db)
             user_uuid = str(user.uuid)
@@ -35,6 +48,13 @@ class GalleryService:
     def grab_file_list(
         bucket_name: str, user_uuid: str, album_name: str = "default"
     ) -> List[str]:
+        """
+        - Grabs The User's files within their '/default' Album.
+        - If there are no files within the '/default' Album, upload the
+          default.jpg image from the '/public' directory.
+        - Read the file_list again in case previous condition was True.
+        - Return the file_list (so it can be rendered to Client).
+        """
         try:
             file_list = S3Service.grab_file_list(bucket_name, user_uuid)
 
@@ -55,6 +75,10 @@ class GalleryService:
         bucket_name: str,
         user_uuid: str,
     ) -> None:
+        """
+        - Uploads the 'default.jpg' image from the '/public' folder
+          into the User's '/default' Album.
+        """
         try:
             S3Service.upload_file(
                 file=None,
@@ -71,6 +95,17 @@ class GalleryService:
     def grab_image_files(
         file_list, bucket_name: str, album_name: str = "default"
     ) -> List[str]:
+        """
+        - Establishes an empty `image_files` list.
+        - From the file_list array passed, check for if the path
+          of all the files, the string: `/{album_name}/` exists.
+          - If it does, then:
+              - Grab all those files from the User's S3 bucket/UUID directory,
+                convert them to Base64 encoded strings, and decode them as UTF-8.
+              - And Append those newly encoded image strings to the `image_files`
+                list.
+        - Return the `image_files` list.
+        """
         try:
             s3_client = S3Service.get_s3_client()
             image_files = []
@@ -94,6 +129,16 @@ class GalleryService:
         db: Session = Depends(get_db),
         album_name: str = "default",
     ) -> None:
+        """
+        - Grabs the User data from the database using the JWT
+          access_token's UUID.
+        - Grabs the UUID from the returned User's data from the DB.
+        - Hashes the User's UUID to determine which bucket index
+          to put User's Account (UUID) in (can only be number between 1 and 100).
+        - Establishes a bucket_name based off of returned index.
+        - Uploads the file to the User's appropriate
+          bucket/UUID-directory/album-directory.
+        """
         try:
             user = AuthService.get_user_by_access_token(access_token, db)
 

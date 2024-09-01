@@ -1,5 +1,4 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
-from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from jwt.exceptions import PyJWTError
 from sqlalchemy.orm import Session
@@ -25,6 +24,14 @@ async def signup_with_email(
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ) -> Response:
+    """
+    - Grabs the user's email from the Client's /signup input form.
+    - Checks to see if the user's email already exists within the DB.
+    - If the user already exists, throw a 409 response back to the Client.
+    - Otherwise Send a Transactional Email to the User using Resend,
+      see EmailService.send_transac_email for details.
+    - NOTE: send_transac_email sets hash token and user_email in redis cache.
+    """
     try:
         user_email = user_input.email
         user_from_db = UserService.get_user_by_email(db, user_email)
@@ -35,14 +42,28 @@ async def signup_with_email(
 
         await EmailService.send_transac_email(user_input, user_email, background_tasks)
 
-        jsonMsg = jsonable_encoder({"message": "email has been sent"})
-        return JSONResponse(status_code=200, content=jsonMsg)
+        return JSONResponse(
+            status_code=200, content={"message": "Email has been sent."}
+        )
     except Exception as e:
         return ExceptionService.handle_generic_exception(e)
 
 
 @router.post("/check-token/")
 async def check_token(request: TokenRequest) -> Response:
+    """
+    - Grabs the hashed token that was in the Client Side URL
+      (/onboarding?token=) from the request.
+    - Checks the redis cache to ensure the user initially signed
+      up via email via /email-signup/.
+    - If the redis cache does not have record of the token:
+      - The user either waited too long...
+      - Or never signed up to begin with...
+      - And we throw a 401 HTTP Response back to them
+        (i.e they need to sign up).
+    - Otherwise there is a record of them in the redis cache and
+      we throw an HTTP 200 OK back to the Client.
+    """
     try:
         token = request.token
         user_email = await redis.get(f"signup_token_for_{token}")
@@ -58,6 +79,20 @@ async def check_token(request: TokenRequest) -> Response:
 async def email_onboarding(
     user_info: UserInputPass, db: Session = Depends(get_db)
 ) -> Response:
+    """
+    - After the User fills out the onboarding form
+      (i.e. user establishes a name, email, password),
+      - We check the redis cache to be sure they didn't take too long
+        to fill out the form..
+      - If the user took too long, we throw back a HTTP 401 to the Client.
+      - Otherwise, the token is removed from the redis cache.
+    - A New User is then establised in the DB.
+    - And We grab the uuid from the New User from the DB.
+    - We then establish a new JWT access_token and a new JWT refresh_token
+      with the New User's UUID inside them.
+    - Sets the JWT access_token and JWT refresh_token in HTTP-Only Secure cookies,
+      and sends them back to Client.
+    """
     try:
         user_email = await redis.get(f"signup_token_for_{user_info.token}")
         if not user_email:
@@ -88,6 +123,16 @@ async def email_onboarding(
 async def email_login(
     user_info: UserInputEmailPass, db: Session = Depends(get_db)
 ) -> Response:
+    """
+    - Grabs the user_info from the Client side form
+      (i.e. user's inputted email and password).
+    - Uses the user_info to authenticate user (see `authenticate_user_with_jwt`),
+      which returns the User data from the DB.
+    - Uses the returned User Data from the DB to create JWT access_token and JWT
+      refresh_token with the User's UUID inside them.
+    - Sets the JWT access_token and JWT refresh_token in HTTP-Only Secure cookies,
+      and sends them back to Client.
+    """
     try:
         user = await JWTAuthService.authenticate_user_with_jwt(user_info, db)
         user_tokens = JWTAuthService.get_user_tokens(user.uuid)

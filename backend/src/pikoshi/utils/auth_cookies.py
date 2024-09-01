@@ -4,6 +4,10 @@ from fastapi import Response
 
 
 def set_auth_cookie(response: Response, key: str, value: str, expires: int) -> Response:
+    """
+    - Creates an HTTP Only Secure Cookie.
+    - NOTE: For use with JWT access_token and JWT refresh_token.
+    """
     expiration_time = datetime.now(timezone.utc) + timedelta(seconds=expires)
     response.set_cookie(
         key=key,
@@ -23,12 +27,22 @@ def set_auth_cookie(response: Response, key: str, value: str, expires: int) -> R
 def set_auth_cookies(
     response: Response, access_token: str, refresh_token: str
 ) -> Response:
+    """
+    - Sets both JWT access_token and JWT refresh_token in cookie headers,
+      establishing them with respective expiration times that should
+      reflect JWT's expiration times.
+    - Returns response with auth cookies.
+    """
     response = set_auth_cookie(response, "access_token", access_token, 3600)
     response = set_auth_cookie(response, "refresh_token", refresh_token, 86400)
     return response
 
 
 def remove_auth_cookies(response: Response) -> Response:
+    """
+    - Deletes both JWT access_token and JWT refresh_token from cookie headers.
+    - Returns response without auth cookies.
+    """
     response.delete_cookie(key="access_token")
     response.delete_cookie(key="refresh_token")
     return response

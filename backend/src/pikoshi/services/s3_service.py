@@ -19,7 +19,12 @@ class S3Service:
 
     @staticmethod
     def get_bucket_index(user_uuid: str, num_buckets: int = 100) -> int:
-        """Takes a user's uuid and returns the number index that user's albums will live in"""
+        """
+        - Takes a user's uuid and returns the number index
+          that user's albums will live in.
+        - NOTE: Returned index can only be number between 1 and 100
+          (max number of S3 buckets allowed on AWS).
+        """
         hash_digest = hashlib.sha256(user_uuid.encode()).hexdigest()
         return int(hash_digest, 16) % num_buckets
 
