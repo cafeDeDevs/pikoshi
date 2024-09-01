@@ -7,8 +7,8 @@ PG_HOST="127.0.0.1"
 PG_PORT=5936
 DB_PORT=5432
 PG_USER="admin"
-PG_DB="app_db"
-PG_CONTAINER_NAME="app_db"
+PG_DB="pikoshi_db"
+PG_CONTAINER_NAME="pikoshi_db"
 PG_PASS="postgres"
 
 # Redis Config
@@ -16,7 +16,7 @@ REDIS_HOST="127.0.0.1"
 REDIS_PORT=6380
 CACHE_PORT=6379
 REDIS_PASS="redis"
-REDIS_CONTAINER_NAME="app_cache"
+REDIS_CONTAINER_NAME="pikoshi_cache"
 
 # Google OAuth2 Credentials
 GOOGLE_OAUTH2_CLIENT_ID=""
