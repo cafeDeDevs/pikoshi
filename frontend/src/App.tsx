@@ -6,7 +6,7 @@ const App: Component = () => {
     return (
         <div class={styles.App}>
             <h1>Pikoshi</h1>
-            <a href='/login'>Login</a>
+            <a href="/login">Login</a>
         </div>
     );
 };

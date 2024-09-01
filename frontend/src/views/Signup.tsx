@@ -21,7 +21,7 @@ const Signup: Component = () => {
             </GoogleOAuthProvider>
             <br />
             <br />
-            <a href='/login'>Already have a Pikoshi account? Log in</a>
+            <a href="/login">Already have a Pikoshi account? Log in</a>
         </div>
     );
 };

@@ -108,12 +108,12 @@ const Gallery: Component = () => {
                 <div class={styles["upload-form"]}>
                     <input
                         class={styles["file-picker"]}
-                        type='file'
-                        accept='image/*'
+                        type="file"
+                        accept="image/*"
                         onChange={handleFileChange}
                         ref={el => (inputRef = el)}
                     />
-                    <button class='upload-btn' onClick={handleUploadClick}>
+                    <button class="upload-btn" onClick={handleUploadClick}>
                         Upload Image
                     </button>
                 </div>
@@ -132,7 +132,7 @@ const Gallery: Component = () => {
                         </For>
                     </Show>
                     <Show when={error().length > 0}>
-                        <p style='color: red;'>{error()}</p>
+                        <p style="color: red;">{error()}</p>
                     </Show>
                 </div>
             </Show>

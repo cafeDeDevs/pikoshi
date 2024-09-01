@@ -111,9 +111,9 @@ const Onboarding: Component = () => {
                         <label>Username:</label>
                         <br />
                         <input
-                            type='text'
-                            placeholder='John Doe'
-                            style='text-align: center;'
+                            type="text"
+                            placeholder="John Doe"
+                            style="text-align: center;"
                             value={username()}
                             onChange={e => setUsername(e.target.value)}
                             required
@@ -123,10 +123,10 @@ const Onboarding: Component = () => {
                         <label>Password:</label>
                         <br />
                         <input
-                            type='password'
+                            type="password"
                             value={password()}
-                            placeholder='Password1234!'
-                            style='text-align: center;'
+                            placeholder="Password1234!"
+                            style="text-align: center;"
                             onChange={e => setPassword(e.target.value)}
                             required
                         />
@@ -135,23 +135,23 @@ const Onboarding: Component = () => {
                         <label>Confirm Password:</label>
                         <br />
                         <input
-                            type='password'
-                            placeholder='Password1234!'
-                            style='text-align: center;'
+                            type="password"
+                            placeholder="Password1234!"
+                            style="text-align: center;"
                             value={confirmPassword()}
                             onChange={e => setConfirmPassword(e.target.value)}
                             required
                         />
                     </div>
                     <br />
-                    <button type='submit'>Complete Registration</button>
+                    <button type="submit">Complete Registration</button>
                 </form>
             </Show>
             <Show when={error().length > 0}>
-                <p style='color: red;'>{error()}</p>
+                <p style="color: red;">{error()}</p>
             </Show>
             <Show when={success().length > 0}>
-                <p style='color: green;'>{success()}</p>
+                <p style="color: green;">{success()}</p>
             </Show>
         </div>
     );

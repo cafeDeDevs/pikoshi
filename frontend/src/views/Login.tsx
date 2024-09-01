@@ -21,7 +21,7 @@ const Login: Component = () => {
             </GoogleOAuthProvider>
             <br />
             <br />
-            <a href='/signup'>Create an account</a>
+            <a href="/signup">Create an account</a>
         </div>
     );
 };

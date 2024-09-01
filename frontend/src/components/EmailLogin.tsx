@@ -48,13 +48,13 @@ const EmailLogin: Component = () => {
         <div>
             <form onSubmit={handleSubmit}>
                 <div>
-                    <label for='email-form'>email:</label>
+                    <label for="email-form">email:</label>
                     <br />
                     <input
-                        type='email'
-                        id='email-form'
-                        placeholder='johndoe@example.com'
-                        style='text-align: center;'
+                        type="email"
+                        id="email-form"
+                        placeholder="johndoe@example.com"
+                        style="text-align: center;"
                         value={email()}
                         onChange={e => setEmail(e.target.value)}
                         required
@@ -64,16 +64,16 @@ const EmailLogin: Component = () => {
                     <label>password:</label>
                     <br />
                     <input
-                        type='password'
+                        type="password"
                         value={password()}
-                        placeholder='Password1234!'
-                        style='text-align: center;'
+                        placeholder="Password1234!"
+                        style="text-align: center;"
                         onChange={e => setPassword(e.target.value)}
                         required
                     />
                 </div>
                 <br />
-                <button type='submit'>Continue</button>
+                <button type="submit">Continue</button>
             </form>
             <Show when={message().length}>
                 <p>{message()}</p>

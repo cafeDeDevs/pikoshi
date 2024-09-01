@@ -35,20 +35,20 @@ const EmailSignup: Component = () => {
     return (
         <div>
             <form onSubmit={handleSubmit}>
-                <label for='email-form'>email:</label>
+                <label for="email-form">email:</label>
                 <br />
                 <input
-                    type='email'
-                    id='email-form'
-                    placeholder='johndoe@example.com'
-                    style='text-align: center;'
+                    type="email"
+                    id="email-form"
+                    placeholder="johndoe@example.com"
+                    style="text-align: center;"
                     value={email()}
                     onChange={e => setEmail(e.target.value)}
                     required
                 />
                 <br />
                 <br />
-                <button type='submit'>Continue</button>
+                <button type="submit">Continue</button>
             </form>
             <Show when={message().length}>
                 <p>{message()}</p>

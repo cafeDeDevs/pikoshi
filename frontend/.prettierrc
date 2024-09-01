@@ -2,7 +2,7 @@ trailingComma: "all"
 tabWidth: 4
 printWidth: 80
 semi: true
-jsxSingleQuote: true
+jsxSingleQuote: false
 singleQuote: false
 bracketSpacing: true
 bracketSameLine: true

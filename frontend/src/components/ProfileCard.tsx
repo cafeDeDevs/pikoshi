@@ -42,7 +42,7 @@ const ProfileCard: Component = () => {
             <div class={styles.ProfileCard}>
                 <button
                     class={styles["logout-btn"]}
-                    type='button'
+                    type="button"
                     onClick={logout}>
                     Logout
                 </button>
