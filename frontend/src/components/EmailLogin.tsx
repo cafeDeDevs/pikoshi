@@ -30,7 +30,7 @@ const EmailLogin: Component = () => {
             });
             if (!res.ok) {
                 const jsonRes = await res.json();
-                throw new Error(jsonRes.message);
+                throw new Error(jsonRes.message || jsonRes.detail);
             } else {
                 const jsonRes = await res.json();
                 setMessage(jsonRes.message);

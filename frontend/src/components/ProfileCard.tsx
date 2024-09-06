@@ -23,7 +23,7 @@ const ProfileCard: Component = () => {
             });
             if (!response.ok) {
                 const jsonRes = await response.json();
-                throw new Error(jsonRes.message);
+                throw new Error(jsonRes.message || jsonRes.detail);
             }
             setSuccessMsg(
                 "You Have Successfully Logged Out! \nRedirecting you back home!",

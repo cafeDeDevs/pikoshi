@@ -2,11 +2,14 @@ import { createEffect, createSignal, Show, type Component } from "solid-js";
 
 import { useModalContext } from "../contexts/ModalContext";
 
+import { compressFiles } from "../utils/utils";
+
 import styles from "../css/UploadImageModal.module.css";
 
 import urls from "../config/urls";
 
 // TODO: Add image previwer in modal
+// TODO: compartmentalize out all SVG images
 const UploadImageModal: Component = () => {
     const [files, setFiles] = createSignal<File[]>([]);
     const [error, setError] = createSignal<string>("");
@@ -14,37 +17,39 @@ const UploadImageModal: Component = () => {
 
     const { isModalOpen, closeModal, reloadGallery } = useModalContext();
 
-    // NOTE: Antipattern? i.e. Just use a regular function...?
+    const uploadImage = async (imageData: FormData): Promise<void> => {
+        try {
+            const response = await fetch(
+                urls.BACKEND_GALLERY_UPLOAD_IMAGE_ROUTE,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    body: imageData,
+                },
+            );
+            const jsonRes = await response.json();
+            if (!response.ok) {
+                throw new Error(jsonRes.message || jsonRes.detail);
+            }
+            reloadGallery();
+            closeModal();
+        } catch (err) {
+            const error = err as Error;
+            console.error("ERROR :=>", error.message);
+            setError(error.message);
+        }
+    };
+
     createEffect(async () => {
         if (files().length === 0) return;
-        const imageData = new FormData();
-        files().forEach(file => {
-            imageData.append("file", file, file.name);
-        });
-        const uploadImage = async (): Promise<void> => {
-            try {
-                const response = await fetch(
-                    urls.BACKEND_GALLERY_UPLOAD_IMAGE_ROUTE,
-                    {
-                        method: "POST",
-                        credentials: "include",
-                        body: imageData,
-                    },
-                );
-                const jsonRes = await response.json();
-                if (!response.ok) {
-                    throw new Error(jsonRes.message);
-                }
-                reloadGallery();
-            } catch (err) {
-                const error = err as Error;
-                console.error("ERROR :=>", error.message);
-                setError(error.message);
-            }
-        };
-        await uploadImage();
-        setFiles([]);
-        reloadGallery();
+        const imageData = await compressFiles(files());
+        if (imageData) {
+            await uploadImage(imageData);
+            setFiles([]);
+            reloadGallery();
+        } else {
+            return setError("Error While Uploading Image.");
+        }
     });
 
     const handleUploadClick = (): void => {
@@ -58,7 +63,6 @@ const UploadImageModal: Component = () => {
         if (target.files) {
             setFiles([...files(), target.files[0]]);
         }
-        closeModal();
     };
 
     return (

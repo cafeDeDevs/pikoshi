@@ -18,11 +18,10 @@ const EmailSignup: Component = () => {
                 },
                 body: JSON.stringify({ email: email() }),
             });
+            const jsonRes = await res.json();
             if (!res.ok) {
-                const jsonRes = await res.json();
-                throw new Error(jsonRes.message);
+                throw new Error(jsonRes.message || jsonRes.detail);
             } else {
-                const jsonRes = await res.json();
                 setMessage(jsonRes.message);
             }
         } catch (err) {

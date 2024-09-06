@@ -91,7 +91,7 @@ const Onboarding: Component = () => {
                 }),
             });
             const jsonRes = await res.json();
-            if (!res.ok) throw new Error(jsonRes.message);
+            if (!res.ok) throw new Error(jsonRes.message || jsonRes.detail);
             setSuccess(jsonRes.message);
             await delay(3000);
             navigate("/gallery");

@@ -69,7 +69,7 @@ const Gallery: Component = () => {
                         <For each={images()}>
                             {(image, index) => (
                                 <img
-                                    src={`data:image/jpg;base64,${image}`}
+                                    src={`data:image/webp;base64,${image}`}
                                     alt={`Gallery Image ${index() + 1}`}
                                 />
                             )}
