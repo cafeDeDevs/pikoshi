@@ -30,8 +30,8 @@ const compressImage = (file: File): Promise<File> => {
             convertTypes: "image/webp",
             maxWidth: 1200,
             maxHeight: 800,
-            minWidth: 300,
-            minHeight: 300,
+            minWidth: 100,
+            minHeight: 100,
             success(result: Blob) {
                 const compressedFile = new File(
                     [result],
