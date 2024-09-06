@@ -1,29 +1,81 @@
-import { Show, type Component } from "solid-js";
+import { createEffect, createSignal, Show, type Component } from "solid-js";
+
 import { useModalContext } from "../contexts/ModalContext";
 
 import styles from "../css/TestModal.module.css";
 
-// TODO: Move Upload Image Logic Here.
-// NOTE: How to tell Gallery to reupload Gallery on image upload??
+import urls from "../config/urls";
 
 // TODO: Add image previwer in modal
 const TestModal: Component = () => {
-    const { isModalOpen, closeModal, handleUploadClick, handleFileChange } =
-        useModalContext();
+    const [files, setFiles] = createSignal<File[]>([]);
+    const [error, setError] = createSignal<string>("");
+    let inputRef: HTMLInputElement | null = null;
+
+    const { isModalOpen, closeModal, reloadGallery } = useModalContext();
+
+    // NOTE: Antipattern? i.e. Just use a regular function...?
+    createEffect(async () => {
+        if (files().length === 0) return;
+        const imageData = new FormData();
+        files().forEach(file => {
+            imageData.append("file", file, file.name);
+        });
+        const uploadImage = async (): Promise<void> => {
+            try {
+                const response = await fetch(
+                    urls.BACKEND_GALLERY_UPLOAD_IMAGE_ROUTE,
+                    {
+                        method: "POST",
+                        credentials: "include",
+                        body: imageData,
+                    },
+                );
+                const jsonRes = await response.json();
+                if (!response.ok) {
+                    throw new Error(jsonRes.message);
+                }
+                reloadGallery();
+            } catch (err) {
+                const error = err as Error;
+                console.error("ERROR :=>", error.message);
+                setError(error.message);
+            }
+        };
+        await uploadImage();
+        setFiles([]);
+        reloadGallery();
+    });
+
+    const handleUploadClick = (): void => {
+        if (inputRef !== null) {
+            inputRef.click();
+        }
+    };
+
+    const handleFileChange = (e: Event): void => {
+        const target = e.target as HTMLInputElement;
+        if (target.files) {
+            setFiles([...files(), target.files[0]]);
+        }
+        closeModal();
+    };
 
     return (
         <Show when={isModalOpen()}>
             <div class={styles.ModalOverlay}>
                 <div class={styles.TestModal}>
-                    <h1 class={styles["modal-header"]}>Upload an Image</h1>
+                    <h1 class={styles["modal-header"]}>Upload An Image</h1>
                     <input
-                        id="file-input"
+                        class={styles["file-picker"]}
                         type="file"
                         accept="image/*"
-                        style="display: none;"
                         onChange={handleFileChange}
+                        ref={el => (inputRef = el)}
                     />
-                    <button onClick={handleUploadClick}>Choose File</button>
+                    <button class="upload-btn" onClick={handleUploadClick}>
+                        Choose Image
+                    </button>
                     <button class={styles["close-btn"]} onClick={closeModal}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -36,6 +88,9 @@ const TestModal: Component = () => {
                             />
                         </svg>
                     </button>
+                    <Show when={error().length > 0}>
+                        <p style="color: red;">{error()}</p>
+                    </Show>
                 </div>
             </div>
         </Show>

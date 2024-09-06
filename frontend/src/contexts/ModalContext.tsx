@@ -1,17 +1,12 @@
-import {
-    createSignal,
-    createContext,
-    useContext,
-    type JSX,
-    type Accessor,
-} from "solid-js";
+import { createSignal, createContext, useContext } from "solid-js";
+import type { Accessor, JSX } from "solid-js";
 
 type ModalContextType = {
     isModalOpen: Accessor<boolean>;
+    shouldGalleryReload: Accessor<boolean>;
     openModal: () => void;
     closeModal: () => void;
-    handleUploadClick: () => void;
-    handleFileChange: (e: Event) => void;
+    reloadGallery: () => void;
 };
 
 const ModalContext = createContext<ModalContextType>();
@@ -20,29 +15,18 @@ export const ModalProvider = (props: {
     children: JSX.Element;
 }): JSX.Element => {
     const [isModalOpen, setIsModalOpen] = createSignal(false);
-    const [files, setFiles] = createSignal<File[]>([]);
+    const [shouldGalleryReload, setShouldGalleryReload] = createSignal(false);
 
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
-
-    const handleUploadClick = () => {
-        const input = document.getElementById("file-input") as HTMLInputElement;
-        if (input) input.click();
-    };
-
-    const handleFileChange = (e: Event) => {
-        const target = e.target as HTMLInputElement;
-        if (target.files) {
-            setFiles([...files(), target.files[0]]);
-        }
-    };
+    const reloadGallery = () => setShouldGalleryReload(!shouldGalleryReload());
 
     const value = {
-        isModalOpen,
+        isModalOpen: isModalOpen,
+        shouldGalleryReload: shouldGalleryReload,
         openModal,
         closeModal,
-        handleUploadClick,
-        handleFileChange,
+        reloadGallery,
     };
 
     return (

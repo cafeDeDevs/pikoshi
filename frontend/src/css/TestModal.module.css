@@ -27,6 +27,11 @@
     font-size: 180%;
 }
 
+.file-picker {
+    display: none;
+    color: transparent;
+}
+
 .close-btn {
     position: absolute;
     top: 0;

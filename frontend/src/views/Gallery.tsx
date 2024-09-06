@@ -9,12 +9,11 @@ import {
 import { useNavigate } from "@solidjs/router";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useGrabGallery } from "../hooks/useGrabGallery";
-import { ModalProvider } from "../contexts/ModalContext";
+import { useModalContext, ModalProvider } from "../contexts/ModalContext";
 
 import Navbar from "../components/Navbar";
 import TestModal from "../components/TestModal";
 
-import urls from "../config/urls";
 import { delay } from "../utils/utils";
 
 import styles from "../css/Gallery.module.css";
@@ -24,11 +23,8 @@ import styles from "../css/Gallery.module.css";
 const Gallery: Component = () => {
     const [isAuthenticated, setIsAuthenticated] = createSignal<boolean>(false);
     const [error, setError] = createSignal<string>("");
-    const [files, setFiles] = createSignal<File[]>([]);
     const [images, setImages] = createSignal<string[]>([]);
-    const [galleryUpdated, setGalleryUpdated] = createSignal<boolean>(false);
-
-    let inputRef: HTMLInputElement | null = null;
+    const { reloadGallery, shouldGalleryReload } = useModalContext();
 
     const navigate = useNavigate();
 
@@ -48,78 +44,23 @@ const Gallery: Component = () => {
     });
 
     createEffect(async () => {
-        if (files().length === 0) return;
-        const imageData = new FormData();
-        files().forEach(file => {
-            imageData.append("file", file, file.name);
-        });
-        const uploadImage = async (): Promise<void> => {
-            try {
-                const response = await fetch(
-                    urls.BACKEND_GALLERY_UPLOAD_IMAGE_ROUTE,
-                    {
-                        method: "POST",
-                        credentials: "include",
-                        body: imageData,
-                    },
-                );
-                const jsonRes = await response.json();
-                if (!response.ok) {
-                    throw new Error(jsonRes.message);
-                }
-                setGalleryUpdated(prev => !prev);
-            } catch (err) {
-                const error = err as Error;
-                console.error("ERROR :=>", error.message);
-                setError(error.message);
-            }
-        };
-        await uploadImage();
-        setFiles([]);
-    });
-
-    createEffect(async () => {
-        if (galleryUpdated()) {
+        if (shouldGalleryReload()) {
             const imagesAsBase64 = await useGrabGallery();
             if (imagesAsBase64) {
                 setImages(imagesAsBase64);
             } else {
                 setError(imagesAsBase64);
             }
+            reloadGallery();
         }
     });
 
-    const handleUploadClick = (): void => {
-        if (inputRef !== null) {
-            inputRef.click();
-        }
-    };
-
-    const handleFileChange = (e: Event): void => {
-        const target = e.target as HTMLInputElement;
-        if (target.files) {
-            setFiles([...files(), target.files[0]]);
-        }
-    };
-
     return (
-        <ModalProvider>
+        <>
             {/* TODO: Replace Loading... with GalleryLoading component */}
             <Show when={isAuthenticated()} fallback={<p>Loading...</p>}>
                 <Navbar />
                 <TestModal />
-                <div class={styles["upload-form"]}>
-                    <input
-                        class={styles["file-picker"]}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        ref={el => (inputRef = el)}
-                    />
-                    <button class="upload-btn" onClick={handleUploadClick}>
-                        Upload Image
-                    </button>
-                </div>
                 <div class={styles.Gallery}>
                     {/* TODO: Replace Loading... with ImageLoading Component */}
                     <Show
@@ -139,8 +80,16 @@ const Gallery: Component = () => {
                     </Show>
                 </div>
             </Show>
+        </>
+    );
+};
+
+const GalleryWrapper: Component = () => {
+    return (
+        <ModalProvider>
+            <Gallery />
         </ModalProvider>
     );
 };
 
-export default Gallery;
+export default GalleryWrapper;
