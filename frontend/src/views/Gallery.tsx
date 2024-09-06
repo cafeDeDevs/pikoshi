@@ -12,7 +12,7 @@ import { useGrabGallery } from "../hooks/useGrabGallery";
 import { useModalContext, ModalProvider } from "../contexts/ModalContext";
 
 import Navbar from "../components/Navbar";
-import TestModal from "../components/TestModal";
+import UploadImageModal from "../components/UploadImageModal";
 
 import { delay } from "../utils/utils";
 
@@ -60,7 +60,7 @@ const Gallery: Component = () => {
             {/* TODO: Replace Loading... with GalleryLoading component */}
             <Show when={isAuthenticated()} fallback={<p>Loading...</p>}>
                 <Navbar />
-                <TestModal />
+                <UploadImageModal />
                 <div class={styles.Gallery}>
                     {/* TODO: Replace Loading... with ImageLoading Component */}
                     <Show

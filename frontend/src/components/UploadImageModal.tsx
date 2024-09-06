@@ -2,12 +2,12 @@ import { createEffect, createSignal, Show, type Component } from "solid-js";
 
 import { useModalContext } from "../contexts/ModalContext";
 
-import styles from "../css/TestModal.module.css";
+import styles from "../css/UploadImageModal.module.css";
 
 import urls from "../config/urls";
 
 // TODO: Add image previwer in modal
-const TestModal: Component = () => {
+const UploadImageModal: Component = () => {
     const [files, setFiles] = createSignal<File[]>([]);
     const [error, setError] = createSignal<string>("");
     let inputRef: HTMLInputElement | null = null;
@@ -64,7 +64,7 @@ const TestModal: Component = () => {
     return (
         <Show when={isModalOpen()}>
             <div class={styles.ModalOverlay}>
-                <div class={styles.TestModal}>
+                <div class={styles.UploadImageModal}>
                     <h1 class={styles["modal-header"]}>Upload An Image</h1>
                     <input
                         class={styles["file-picker"]}
@@ -97,4 +97,4 @@ const TestModal: Component = () => {
     );
 };
 
-export default TestModal;
+export default UploadImageModal;
