@@ -61,7 +61,13 @@ const UploadImageModal: Component = () => {
     const handleFileChange = (e: Event): void => {
         const target = e.target as HTMLInputElement;
         if (target.files) {
-            setFiles([...files(), target.files[0]]);
+            const file = target.files[0];
+            if (!file.type.startsWith("image/")) {
+                console.error("ERROR :=> Uploaded file is not an image:", file);
+                setError("Please upload a valid image file.");
+                return;
+            }
+            setFiles([...files(), file]);
         }
     };
 
