@@ -9,8 +9,10 @@ import {
 import { useNavigate } from "@solidjs/router";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useGrabGallery } from "../hooks/useGrabGallery";
+import { ModalProvider } from "../contexts/ModalContext";
 
 import Navbar from "../components/Navbar";
+import TestModal from "../components/TestModal";
 
 import urls from "../config/urls";
 import { delay } from "../utils/utils";
@@ -101,10 +103,11 @@ const Gallery: Component = () => {
     };
 
     return (
-        <>
+        <ModalProvider>
             {/* TODO: Replace Loading... with GalleryLoading component */}
             <Show when={isAuthenticated()} fallback={<p>Loading...</p>}>
                 <Navbar />
+                <TestModal />
                 <div class={styles["upload-form"]}>
                     <input
                         class={styles["file-picker"]}
@@ -136,7 +139,7 @@ const Gallery: Component = () => {
                     </Show>
                 </div>
             </Show>
-        </>
+        </ModalProvider>
     );
 };
 

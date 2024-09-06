@@ -1,5 +1,5 @@
 import App from "../App.tsx";
-import Gallery from "../views/Gallery";
+import GalleryWrapper from "../views/Gallery";
 import Login from "../views/Login";
 import Onboarding from "../views/Onboarding";
 import Signup from "../views/Signup";
@@ -23,7 +23,7 @@ const routes = [
     },
     {
         path: "/gallery",
-        component: Gallery,
+        component: GalleryWrapper,
     },
 ];
 

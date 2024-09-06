@@ -14,10 +14,26 @@
     justify-content: right;
 }
 
-.hamburger-btn {
+.nav-list {
+    display: flex;
+    list-style-type: none;
+    margin-top: 0.5em;
+}
+
+.nav-list-element {
+    padding: 0 7vw 0 7vw;
+}
+
+
+.hamburger-btn,
+.upload-btn {
     border: none;
 }
-.hamburger-btn:hover {
+
+.hamburger-btn:hover,
+.upload-btn:hover {
     background-color: grey;
     cursor: pointer;
+    background-color: transparent;
+    scale: 1.2;
 }

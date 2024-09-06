@@ -1,0 +1,42 @@
+.ModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+
+}
+
+.TestModal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: -100px;
+    margin-left: -140px;
+    padding: 1em;
+    text-align: center;
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 5px;
+    z-index: 1100;
+}
+
+.modal-header {
+    font-size: 180%;
+}
+
+.close-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.65em;
+    border: none;
+}
+
+.close-btn:hover {
+    scale: 1.2;
+    cursor: pointer;
+    background-color: transparent;
+}
