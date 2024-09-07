@@ -36,7 +36,7 @@ class GalleryService:
 
             user_bucket_index = S3Service.get_bucket_index(user_uuid)  # type:ignore
             bucket_name = f"user-bucket-{user_bucket_index}"
-            S3Service.create_bucket(bucket_name, user_uuid, album_name="default")
+            S3Service.create_bucket(bucket_name, user_uuid, album_name="default_album")
             return {"bucket_name": bucket_name, "user_uuid": user_uuid}
         except Exception as e:
             raise HTTPException(
@@ -46,7 +46,7 @@ class GalleryService:
 
     @staticmethod
     def grab_file_list(
-        bucket_name: str, user_uuid: str, album_name: str = "default"
+        bucket_name: str, user_uuid: str, album_name: str = "default_album"
     ) -> List[str]:
         """
         - Grabs The User's files within their '/default' Album.
@@ -86,14 +86,14 @@ class GalleryService:
                 user_uuid=user_uuid,
                 object_name="default.webp",
                 file_name="./src/pikoshi/public/default.webp",
-                album_name="default",
+                album_name="default_album",
             )
         except Exception as e:
             ExceptionService.handle_generic_exception(e)
 
     @staticmethod
     def grab_image_files(
-        file_list, bucket_name: str, album_name: str = "default"
+        file_list, bucket_name: str, album_name: str = "default_album"
     ) -> List[str]:
         """
         - Establishes an empty `image_files` list.
@@ -127,7 +127,7 @@ class GalleryService:
         access_token: str,
         file: UploadFile,
         db: Session = Depends(get_db),
-        album_name: str = "default",
+        album_name: str = "default_album",
     ) -> None:
         """
         - Grabs the User data from the database using the JWT

@@ -30,6 +30,9 @@ class S3Service:
 
     @staticmethod
     def get_all_buckets() -> List[str]:
+        """
+        - Grabs All Existing Bucket Names from S3
+        """
         try:
             s3_client = boto3.client("s3", region_name=AWS_REGION)
             response = s3_client.list_buckets()
@@ -48,6 +51,13 @@ class S3Service:
         user_uuid: str,
         album_name: str,
     ) -> None:
+        """
+        - Grabs All Existing Bucket Names from S3
+        - If Bucket Doesn't exist, we create a new bucket
+          (name based off of hashed user's uuid).
+        - Creates a new directory named after user's uuid
+        - Creates a new album directory within user's uuid directory
+        """
         try:
             s3_client = boto3.client("s3", region_name=AWS_REGION)
             location = {"LocationConstraint": AWS_REGION}
@@ -60,6 +70,8 @@ class S3Service:
         except Exception as e:
             ExceptionService.handle_s3_exception(e)
 
+    # TODO: Probably don't need to delete bucket ever,
+    # but we WILL need to delete album
     @staticmethod
     def delete_bucket(bucket) -> None:
         try:
@@ -70,7 +82,7 @@ class S3Service:
 
     @staticmethod
     def grab_file_list(
-        bucket: str, user_uuid: str, album_name: str = "default"
+        bucket: str, user_uuid: str, album_name: str = "default_album"
     ) -> List[str]:
         try:
             file_list = []
@@ -95,23 +107,40 @@ class S3Service:
         user_uuid: str,
         object_name: str | None = None,
         file_name: str = "./src/pikoshi/public/default.webp",
-        album_name: str = "default",
+        album_name: str = "default_album",
     ) -> None:
+        """
+        - Uploads a file to the user's uuid directory in the
+          specified album_name (default if not defined)'.
+        - If `file` parameter is defined, file is new file,
+          and uses python-multipart's UploadFile object to upload
+          to S3.
+        - If `object_name` is defined, file is not defined and
+          therefore default.webp is uploaded.
+        - Otherwise, attempt is made to upload file without object
+          or file specified.
+        """
         try:
             s3_client = boto3.client("s3")
 
             gallery_name = f"{user_uuid}/{album_name}/"
 
             if file is not None:
-                object_name = os.path.join(gallery_name, str(file.filename))
+                object_name = os.path.join(
+                    gallery_name, str(file.filename), str(file.filename)
+                )
                 return s3_client.upload_fileobj(file.file, bucket_name, object_name)
 
             if object_name is not None:
-                object_name = os.path.join(gallery_name, os.path.basename(file_name))
+                object_name = os.path.join(
+                    gallery_name,
+                    os.path.basename(file_name),
+                    os.path.basename(file_name),
+                )
                 return s3_client.upload_file(file_name, bucket_name, object_name)
 
             else:
-                object_name = os.path.join(gallery_name, file_name)
+                object_name = os.path.join(gallery_name, file_name, file_name)
                 return s3_client.upload_fileobj(file_name, bucket_name, object_name)
         except Exception as e:
             ExceptionService.handle_s3_exception(e)

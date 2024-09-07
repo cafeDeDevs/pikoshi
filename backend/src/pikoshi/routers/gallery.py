@@ -32,11 +32,11 @@ async def get_default_gallery(
         user_uuid = str(s3_credentials.get("user_uuid"))
 
         file_list = GalleryService.grab_file_list(
-            bucket_name, user_uuid, album_name="default"
+            bucket_name, user_uuid, album_name="default_album"
         )
 
         image_files = GalleryService.grab_image_files(
-            file_list, bucket_name, album_name="default"
+            file_list, bucket_name, album_name="default_album"
         )
 
         if len(image_files) == 0:
@@ -75,6 +75,9 @@ async def upload_image_to_gallery(
         #  print("file.content_type :=>", file.content_type)
         #  print("file.file :=>", file.file)
 
-        return JSONResponse(status_code=200, content={"message": "HELLO WORLD!"})
+        return JSONResponse(
+            status_code=200,
+            content={"message": "New Image Uploaded To Album Successfully."},
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
