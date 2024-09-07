@@ -51,7 +51,7 @@ class GalleryService:
         """
         - Grabs The User's files within their '/default' Album.
         - If there are no files within the '/default' Album, upload the
-          default.jpg image from the '/public' directory.
+          default.webp image from the '/public' directory.
         - Read the file_list again in case previous condition was True.
         - Return the file_list (so it can be rendered to Client).
         """
@@ -76,7 +76,7 @@ class GalleryService:
         user_uuid: str,
     ) -> None:
         """
-        - Uploads the 'default.jpg' image from the '/public' folder
+        - Uploads the 'default.webp' image from the '/public' folder
           into the User's '/default' Album.
         """
         try:
@@ -84,8 +84,8 @@ class GalleryService:
                 file=None,
                 bucket_name=bucket_name,
                 user_uuid=user_uuid,
-                object_name="default.jpg",
-                file_name="./src/pikoshi/public/default.jpg",
+                object_name="default.webp",
+                file_name="./src/pikoshi/public/default.webp",
                 album_name="default",
             )
         except Exception as e:

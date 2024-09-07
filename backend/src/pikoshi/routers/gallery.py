@@ -22,7 +22,7 @@ async def get_default_gallery(
     """
     - Creates new S3 bucket based off of UUID (from access_token),
     - and establishes a default album(directory),
-    - and default image (default.jpg) in new bucket.
+    - and default image (default.webp) in new bucket.
     """
     try:
         s3_credentials = await GalleryService.create_new_user_bucket(

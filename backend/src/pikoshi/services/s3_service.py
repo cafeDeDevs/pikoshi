@@ -78,7 +78,7 @@ class S3Service:
         bucket_name: str,
         user_uuid: str,
         object_name: str | None = None,
-        file_name: str = "./src/pikoshi/public/default.jpg",
+        file_name: str = "./src/pikoshi/public/default.webp",
         album_name: str = "default",
     ) -> None:
         try:
