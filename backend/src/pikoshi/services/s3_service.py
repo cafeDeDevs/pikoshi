@@ -1,4 +1,5 @@
 import hashlib
+import io
 import os
 from typing import List
 
@@ -7,6 +8,7 @@ from dotenv import load_dotenv
 from fastapi import UploadFile
 
 from .exception_handler_service import ExceptionService
+from .security_service import SecurityService
 
 load_dotenv()
 AWS_REGION = str(os.environ.get("AWS_REGION"))
@@ -108,6 +110,7 @@ class S3Service:
         object_name: str | None = None,
         file_name: str = "./src/pikoshi/public/default.webp",
         album_name: str = "default_album",
+        file_data: io.BytesIO | None = None,
     ) -> None:
         """
         - Uploads a file to the user's uuid directory in the
@@ -124,6 +127,10 @@ class S3Service:
             s3_client = boto3.client("s3")
 
             gallery_name = f"{user_uuid}/{album_name}/"
+
+            if file_data is not None and object_name is not None:
+                object_name = os.path.join(gallery_name, object_name)
+                return s3_client.upload_fileobj(file_data, bucket_name, object_name)
 
             if file is not None:
                 object_name = os.path.join(

@@ -18,12 +18,17 @@ import { delay } from "../utils/utils";
 
 import styles from "../css/Gallery.module.css";
 
+interface ImageMetadata {
+    data: string; // Base64 encoded image data
+    type: string; // Metadata field, e.g. "original", "mobile"
+}
+
 // TODO: Figure out how to pass optional params (i.e. gallery/default)
 // And Then pass this param "default" as an album_name to the backend
 const Gallery: Component = () => {
     const [isAuthenticated, setIsAuthenticated] = createSignal<boolean>(false);
     const [error, setError] = createSignal<string>("");
-    const [images, setImages] = createSignal<string[]>([]);
+    const [images, setImages] = createSignal<ImageMetadata[]>([]);
     const { reloadGallery, shouldGalleryReload } = useModalContext();
 
     const navigate = useNavigate();
@@ -69,7 +74,7 @@ const Gallery: Component = () => {
                         <For each={images()}>
                             {(image, index) => (
                                 <img
-                                    src={`data:image/webp;base64,${image}`}
+                                    src={`data:image/webp;base64,${image.data}`}
                                     alt={`Gallery Image ${index() + 1}`}
                                 />
                             )}

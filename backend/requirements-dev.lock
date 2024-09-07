@@ -69,6 +69,8 @@ packaging==24.1
     # via pytest
 pathspec==0.12.1
     # via black
+pillow==10.4.0
+    # via pikoshi
 platformdirs==4.2.2
     # via black
 pluggy==1.5.0

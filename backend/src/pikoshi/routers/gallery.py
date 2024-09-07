@@ -1,6 +1,14 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, UploadFile
+from fastapi import (
+    APIRouter,
+    Body,
+    Cookie,
+    Depends,
+    HTTPException,
+    Response,
+    UploadFile,
+)
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -18,6 +26,7 @@ router = APIRouter(prefix="/gallery", tags=["gallery"], route_class=TimedRoute)
 async def get_default_gallery(
     access_token: Annotated[str | None, Cookie()] = None,
     db: Session = Depends(get_db),
+    dimensions: dict = Body(...),
 ) -> Response:
     """
     - Creates new S3 bucket based off of UUID (from access_token),
@@ -35,6 +44,7 @@ async def get_default_gallery(
             bucket_name, user_uuid, album_name="default_album"
         )
 
+        # TODO: Abstract this out into GalleryService that returns images_as_base64
         image_files = GalleryService.grab_image_files(
             file_list, bucket_name, album_name="default_album"
         )
@@ -43,6 +53,12 @@ async def get_default_gallery(
             raise HTTPException(
                 status_code=400, detail="No Images Found In Default Album."
             )
+
+        width = dimensions.get("width", 0)
+        if width < 768:
+            image_files = [img for img in image_files if img["type"] == "mobile"]
+        else:
+            image_files = [img for img in image_files if img["type"] == "original"]
 
         return JSONResponse(
             status_code=200,
@@ -69,11 +85,6 @@ async def upload_image_to_gallery(
     """
     try:
         await GalleryService.upload_new_image(str(access_token), file, db)
-        # TODO: Utilize file meta data in s3 bucket
-        #  print("file :=>", file)
-        #  print("file.filename :=>", file.filename)
-        #  print("file.content_type :=>", file.content_type)
-        #  print("file.file :=>", file.file)
 
         return JSONResponse(
             status_code=200,

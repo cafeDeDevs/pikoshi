@@ -37,14 +37,14 @@ class SecurityService:
         return os.urandom(16).hex()
 
     @staticmethod
-    def generate_sha256_hash(email) -> str:
+    def generate_sha256_hash(string: str) -> str:
         """
         - Generates a sha256 hash to be used for email onboarding.
         - NOTE: Is placed both in activation_link URL and redis cache.
         """
         secret_key = os.urandom(32)
         timestamp = str(int(time())).encode("utf-8")
-        message = email.encode("utf-8") + timestamp
+        message = string.encode("utf-8") + timestamp
         signature = hmac.new(secret_key, message, sha256).digest()
         token = urlsafe_b64encode(message + signature).decode("utf-8")
         return token
