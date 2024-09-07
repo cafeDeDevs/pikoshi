@@ -29,6 +29,20 @@ class S3Service:
         return int(hash_digest, 16) % num_buckets
 
     @staticmethod
+    def get_all_buckets() -> List[str]:
+        try:
+            s3_client = boto3.client("s3", region_name=AWS_REGION)
+            response = s3_client.list_buckets()
+            all_buckets = []
+            if response:
+                for bucket in response["Buckets"]:
+                    all_buckets.append(bucket.get("Name"))
+            return all_buckets
+        except Exception as e:
+            ExceptionService.handle_s3_exception(e)
+            return []
+
+    @staticmethod
     def create_bucket(
         bucket_name: str,
         user_uuid: str,
@@ -37,9 +51,11 @@ class S3Service:
         try:
             s3_client = boto3.client("s3", region_name=AWS_REGION)
             location = {"LocationConstraint": AWS_REGION}
-            s3_client.create_bucket(
-                Bucket=bucket_name, CreateBucketConfiguration=location
-            )
+            all_buckets = S3Service.get_all_buckets()
+            if bucket_name not in all_buckets:
+                s3_client.create_bucket(
+                    Bucket=bucket_name, CreateBucketConfiguration=location
+                )
             s3_client.put_object(Bucket=bucket_name, Key=f"{user_uuid}/{album_name}/")
         except Exception as e:
             ExceptionService.handle_s3_exception(e)
