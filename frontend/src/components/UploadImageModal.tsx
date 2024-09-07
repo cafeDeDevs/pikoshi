@@ -10,6 +10,8 @@ import urls from "../config/urls";
 
 // TODO: Add image previwer in modal
 // TODO: compartmentalize out all SVG images
+// TODO: Add input fields so that User can title, describe, etc. their image uploads
+// i.e. provide meta data for accessibility and file references (make some fields required).
 const UploadImageModal: Component = () => {
     const [files, setFiles] = createSignal<File[]>([]);
     const [error, setError] = createSignal<string>("");
