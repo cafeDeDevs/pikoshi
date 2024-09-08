@@ -117,8 +117,8 @@ class S3Service:
         - Uploads a file to the user's uuid directory in the
           specified album_name (default if not defined)'.
         - If `file_data` parameter is defined, file is new MOBILE file,
-          and works in conjunction with the second call to this function
-          from GalleryService's upload_new_image (needs refactor).
+          and works in conjunction with _prepare_mobile_image in
+          GalleryService.
         - If `file` parameter is defined, file is new file,
           and uses python-multipart's UploadFile object to upload
           to S3.

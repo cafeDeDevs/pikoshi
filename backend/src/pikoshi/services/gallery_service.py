@@ -1,7 +1,7 @@
 import io
 import os
 from base64 import b64encode
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from fastapi import Depends, HTTPException, UploadFile
 from PIL import Image
@@ -153,24 +153,23 @@ class GalleryService:
         - Establishes a bucket_name based off of returned index.
         - Uploads the image file to the User's appropriate
           bucket/UUID-directory/album-directory.
-        - Establishes image_data in RAM via io.
-        - Uses pillow's Image() to create mobile version of image in RAM.
-        - Uploads the mobile iamge file to the User's appropriate
+        - Establishes image_data in RAM via file.read() and io.BytesIO.
+        - Uses _prepare_mobile_image() _private function to prepare mobile version of image.
+        - Uploads the mobile image file to the User's appropriate
           bucket/UUID-directory/album-directory.
         """
         try:
-            # TODO: Consider refactor here as await.file.seek()
-            # is somewhat of an antipattern here...
             user = AuthService.get_user_by_access_token(access_token, db)
 
             user_uuid = str(user.uuid)
             user_bucket_index = S3Service.get_bucket_index(user_uuid)
             bucket_name = f"user-bucket-{user_bucket_index}"
 
+            # NOTE: file.seek() is necessary to read UploadFile from RAM again.
+            # IMPORTANT: Do NOT reorder where these calls are in this function,
+            # causes io errors.
             image_data = await file.read()
             image_bytes = io.BytesIO(image_data)
-
-            # NOTE: file.seek() is necessary to read UploadFile from RAM again.
             await file.seek(0)
 
             # Uploads Desktop Image
@@ -183,23 +182,13 @@ class GalleryService:
                 file_data=None,
             )
 
-            # TODO: Refactor: move this into a new GalleryService method
-            # Prepares Mobile Image
-            with Image.open(image_bytes) as img:
-                mobile_size = (480, 320)
+            # Uploads Mobile Image
+            mobile_size = (480, 320)
+            mobile_data = await GalleryService._prepare_mobile_image(
+                file, image_bytes, mobile_size
+            )
+            mobile_img_bytes, object_name = mobile_data
 
-                mobile_img = img.copy()
-                mobile_img.thumbnail(mobile_size)
-
-                mobile_img_bytes = io.BytesIO()
-                mobile_img.save(mobile_img_bytes, format="WEBP")
-                mobile_img_bytes.seek(0)
-                file_name = str(file.filename)
-                hashed_file_name = hash_string(file_name)
-                mobile_file_name = f"mobile_{hashed_file_name}"
-                object_name = os.path.join(file_name.split(".")[0], mobile_file_name)
-
-            # Uploades Mobile Image
             S3Service.upload_file(
                 file=None,
                 bucket_name=bucket_name,
@@ -208,6 +197,32 @@ class GalleryService:
                 album_name=album_name,
                 file_data=mobile_img_bytes,
             )
-
         except Exception as e:
             ExceptionService.handle_generic_exception(e)
+
+    @staticmethod
+    async def _prepare_mobile_image(
+        file: UploadFile, image_bytes: io.BytesIO, size: Tuple[int, int]
+    ) -> Tuple[io.BytesIO, str]:
+        """
+        - Uses pillow's Image() to create mobile version of image in RAM.
+        - Resizes image to mobile version.
+        - Saves the image in .webp format.
+        - Grabs the filename from the file object.
+        - Hashes the filename.
+        - Prepends `mobile_` to the hashedfile name for mobile_file_name.
+        - Prepares object_name based off of mobile_file_name.
+        - Returns tuple of both mobile_img_bytes and object_name.
+        """
+        with Image.open(image_bytes) as img:
+            mobile_img = img.copy()
+            mobile_img.thumbnail(size)
+
+            mobile_img_bytes = io.BytesIO()
+            mobile_img.save(mobile_img_bytes, format="WEBP")
+            mobile_img_bytes.seek(0)
+            file_name = str(file.filename)
+            hashed_file_name = hash_string(file_name)
+            mobile_file_name = f"mobile_{hashed_file_name}"
+            object_name = os.path.join(file_name.split(".")[0], mobile_file_name)
+        return mobile_img_bytes, object_name
