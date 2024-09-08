@@ -71,14 +71,16 @@ const Gallery: Component = () => {
                     <Show
                         when={images().length > 0}
                         fallback={<p>Loading...</p>}>
-                        <For each={images()}>
-                            {(image, index) => (
-                                <img
-                                    src={`data:image/webp;base64,${image.data}`}
-                                    alt={`Gallery Image ${index() + 1}`}
-                                />
-                            )}
-                        </For>
+                        <div class={styles["image-gallery"]}>
+                            <For each={images()}>
+                                {(image, index) => (
+                                    <img
+                                        src={`data:image/webp;base64,${image.data}`}
+                                        alt={`Gallery Image ${index() + 1}`}
+                                    />
+                                )}
+                            </For>
+                        </div>
                     </Show>
                     <Show when={error().length > 0}>
                         <p style="color: red;">{error()}</p>

@@ -6,14 +6,12 @@
     width: 80vw;
 }
 
-.upload-form {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 1em auto 0 auto;
+.image-gallery {
+    padding: 0.5em;
 }
 
-.file-picker {
-    display: none;
-    color: transparent;
+.image-gallery > img {
+    margin: 0 auto;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
 }
