@@ -8,8 +8,8 @@ from PIL import Image
 from sqlalchemy.orm import Session
 
 from ..dependencies import get_db
-from ..services.auth_service import AuthService
-from ..services.s3_service import S3Service
+from ..utils.hashers import hash_string
+from .auth_service import AuthService
 from .exception_handler_service import ExceptionService
 from .s3_service import S3Service
 
@@ -79,19 +79,29 @@ class GalleryService:
         user_uuid: str,
     ) -> None:
         """
-        - Uploads the 'default.webp' image from the '/public' folder
-          into the User's '/default' Album.
+        - Uploads the 'default.webp' image  and `mobile_default.webp`
+          from the '/public' folder into the User's '/default' Album.
         """
-        # TODO: establish new mobile version of default.webp as well
         try:
             S3Service.upload_file(
                 file=None,
                 bucket_name=bucket_name,
                 user_uuid=user_uuid,
-                object_name="default.webp",
+                object_name="default",
                 file_name="./src/pikoshi/public/default.webp",
                 album_name="default_album",
+                file_data=None,
             )
+            S3Service.upload_file(
+                file=None,
+                bucket_name=bucket_name,
+                user_uuid=user_uuid,
+                object_name="default",
+                file_name="./src/pikoshi/public/mobile_default.webp",
+                album_name="default_album",
+                file_data=None,
+            )
+
         except Exception as e:
             ExceptionService.handle_generic_exception(e)
 
@@ -162,15 +172,19 @@ class GalleryService:
 
             # NOTE: file.seek() is necessary to read UploadFile from RAM again.
             await file.seek(0)
+
+            # Uploads Desktop Image
             S3Service.upload_file(
                 file=file,
                 bucket_name=bucket_name,
                 user_uuid=user_uuid,
                 object_name=None,
                 album_name=album_name,
+                file_data=None,
             )
 
-            # TODO: Consider moving this into a new GalleryService method
+            # TODO: Refactor: move this into a new GalleryService method
+            # Prepares Mobile Image
             with Image.open(image_bytes) as img:
                 mobile_size = (480, 320)
 
@@ -180,10 +194,12 @@ class GalleryService:
                 mobile_img_bytes = io.BytesIO()
                 mobile_img.save(mobile_img_bytes, format="WEBP")
                 mobile_img_bytes.seek(0)
-                file_name = file.filename
-                mobile_file_name = f"mobile_{file_name}"
-                object_name = os.path.join(str(file_name), mobile_file_name)
+                file_name = str(file.filename)
+                hashed_file_name = hash_string(file_name)
+                mobile_file_name = f"mobile_{hashed_file_name}"
+                object_name = os.path.join(file_name.split(".")[0], mobile_file_name)
 
+            # Uploades Mobile Image
             S3Service.upload_file(
                 file=None,
                 bucket_name=bucket_name,

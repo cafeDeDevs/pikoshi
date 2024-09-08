@@ -7,8 +7,8 @@ import boto3
 from dotenv import load_dotenv
 from fastapi import UploadFile
 
+from ..utils.hashers import hash_string
 from .exception_handler_service import ExceptionService
-from .security_service import SecurityService
 
 load_dotenv()
 AWS_REGION = str(os.environ.get("AWS_REGION"))
@@ -112,9 +112,13 @@ class S3Service:
         album_name: str = "default_album",
         file_data: io.BytesIO | None = None,
     ) -> None:
+        # TODO: Refactor docstring once upload_new_image is refactored.
         """
         - Uploads a file to the user's uuid directory in the
           specified album_name (default if not defined)'.
+        - If `file_data` parameter is defined, file is new MOBILE file,
+          and works in conjunction with the second call to this function
+          from GalleryService's upload_new_image (needs refactor).
         - If `file` parameter is defined, file is new file,
           and uses python-multipart's UploadFile object to upload
           to S3.
@@ -128,27 +132,33 @@ class S3Service:
 
             gallery_name = f"{user_uuid}/{album_name}/"
 
+            # Mobile
             if file_data is not None and object_name is not None:
                 object_name = os.path.join(gallery_name, object_name)
                 return s3_client.upload_fileobj(file_data, bucket_name, object_name)
 
-            if file is not None:
-                object_name = os.path.join(
-                    gallery_name, str(file.filename), str(file.filename)
-                )
+            # New File
+            elif file is not None:
+                object_name = str(file.filename).split(".")[0]
+                hashed_file_name = hash_string(str(file.filename))
+                object_name = os.path.join(gallery_name, object_name, hashed_file_name)
                 return s3_client.upload_fileobj(file.file, bucket_name, object_name)
 
-            if object_name is not None:
+            # Default Files
+            elif object_name is not None:
+                hashed_file_name = ""
+                if "mobile_" in file_name:
+                    hashed_file_name = f"mobile_{hash_string(file_name)}"
+                else:
+                    hashed_file_name = hash_string(file_name)
                 object_name = os.path.join(
                     gallery_name,
-                    os.path.basename(file_name),
-                    os.path.basename(file_name),
+                    os.path.basename(object_name),
+                    os.path.basename(hashed_file_name),
                 )
                 return s3_client.upload_file(file_name, bucket_name, object_name)
-
             else:
-                object_name = os.path.join(gallery_name, file_name, file_name)
-                return s3_client.upload_fileobj(file_name, bucket_name, object_name)
+                raise ValueError("Unknown Error Occurred When Uploading File(s).")
         except Exception as e:
             ExceptionService.handle_s3_exception(e)
 
