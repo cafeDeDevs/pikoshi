@@ -15,6 +15,7 @@ const Navbar: Component = () => {
                     <ul class={styles["nav-list"]}>
                         <li class={styles["nav-list-element"]}>
                             <button
+                                title="Upload Image"
                                 onClick={openModal}
                                 class={styles["upload-btn"]}>
                                 <svg
@@ -30,6 +31,7 @@ const Navbar: Component = () => {
                         </li>
                         <li>
                             <button
+                                title="Menu"
                                 class={styles["hamburger-btn"]}
                                 onClick={() => {
                                     setProfileCard(!displayProfileCard());
