@@ -145,12 +145,18 @@ class S3Service:
                 return s3_client.upload_fileobj(file.file, bucket_name, object_name)
 
             # Default Files
+            #  myStr = "I am PFB. I provide free python tutorials for you to learn python."
+            #  substring = "python"
+            #  output_string = ""
+            #  str_list = myStr.split(substring)
+            #  for element in str_list:
+            #  output_string += element
             elif object_name is not None:
-                hashed_file_name = ""
+                hashed_file_name = hash_string(file_name)
                 if "mobile_" in file_name:
-                    hashed_file_name = f"mobile_{hash_string(file_name)}"
-                else:
+                    file_name = file_name.replace("mobile_", "")
                     hashed_file_name = hash_string(file_name)
+                    hashed_file_name = f"mobile_{hashed_file_name}"
                 object_name = os.path.join(
                     gallery_name,
                     os.path.basename(object_name),
