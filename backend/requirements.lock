@@ -59,7 +59,7 @@ markupsafe==2.1.5
     # via mako
 pillow==10.4.0
     # via pikoshi
-psycopg2==2.9.9
+psycopg2-binary==2.9.9
     # via pikoshi
 pydantic==2.8.2
     # via fastapi
