@@ -21,7 +21,6 @@ const useGrabGallery = async (): Promise<any> => {
             );
 
         const { imagesAsBase64 } = jsonRes;
-        // setImages(imagesAsBase64);
         if (imagesAsBase64) return imagesAsBase64;
     } catch (err) {
         const error = err as Error;
