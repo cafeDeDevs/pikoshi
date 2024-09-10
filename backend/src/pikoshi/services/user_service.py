@@ -55,7 +55,7 @@ def generate_user_profile(
     return new_user
 
 
-async def create_user(db_session: AsyncSession, user: UserCreate) -> User | None:
+async def create_user(db_session: AsyncSession, user: UserCreate) -> UserModel | None:
     """
     - Grabs the User By Email.
     - Establishes a new random UUID.
