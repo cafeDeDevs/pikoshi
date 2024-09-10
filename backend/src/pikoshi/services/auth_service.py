@@ -1,8 +1,8 @@
 from fastapi import Depends, HTTPException, Response
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..dependencies import get_db
+from ..dependencies import get_db_session
 from ..schemas.user import User
 from ..services.user_service import UserService
 from ..utils.auth_cookies import remove_auth_cookies, set_auth_cookies
@@ -14,8 +14,8 @@ from .jwt_service import JWTAuthService
 # And also issue new access_token if refresh_token is still good (whether jwt or google-oauth2 token)
 class AuthService:
     @staticmethod
-    def get_user_by_access_token(
-        access_token: str, db: Session = Depends(get_db)
+    async def get_user_by_access_token(
+        access_token: str, db_session: AsyncSession = Depends(get_db_session)
     ) -> User:
         """
         - Verifies both that the JWT access_token has not yet expired,
@@ -25,12 +25,12 @@ class AuthService:
         """
         verified_token = JWTAuthService.verify_token(access_token)
         user_uuid = verified_token.get("sub")  # type:ignore
-        return UserService.get_user_by_uuid(db, user_uuid)
+        return await UserService.get_user_by_uuid(db_session, user_uuid)
 
     @staticmethod
     async def authenticate(
         access_token: str,
-        db: Session = Depends(get_db),
+        db_session: AsyncSession = Depends(get_db_session),
     ) -> JSONResponse:
         """
         - Grabs the User from the DB based off of UUID returned from JWT access_token.
@@ -39,7 +39,7 @@ class AuthService:
         - Returns a HTTP 200 response back to the client if aforementioned is True,
           and returns a HTTP 401 response if either condition is False.
         """
-        user = AuthService.get_user_by_access_token(access_token, db)
+        user = await AuthService.get_user_by_access_token(access_token, db_session)
         if user and user.is_active:
             return JSONResponse(
                 status_code=200,
@@ -67,7 +67,7 @@ class AuthService:
     @staticmethod
     async def logout(
         access_token: str,
-        db: Session = Depends(get_db),
+        db_session: AsyncSession = Depends(get_db_session),
     ) -> Response:
         """
         - Grabs User from DB using UUID from JWT access_token.
@@ -76,9 +76,9 @@ class AuthService:
         - Removes JWT access_token and JWT refresh_token from Client's Cookie Storage.
         - Returns response to Client.
         """
-        user = AuthService.get_user_by_access_token(access_token, db)
+        user = await AuthService.get_user_by_access_token(access_token, db_session)
 
-        UserService.set_user_as_inactive(db, user)
+        await UserService.set_user_as_inactive(db_session, user)
         response = JSONResponse(
             status_code=200, content={"message": "User Logged Out Successfully."}
         )

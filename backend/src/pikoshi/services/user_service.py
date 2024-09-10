@@ -1,5 +1,7 @@
 from uuid import uuid4
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
@@ -9,25 +11,34 @@ from ..schemas.user import User, UserCreate
 
 class UserService:
     @staticmethod
-    def get_user(db: Session, user_id: int) -> User:
+    async def get_user(db_session: AsyncSession, user_id: int) -> UserModel:
         """
         - Grabs the user by PK id.
         """
-        return db.query(UserModel).filter(UserModel.id == user_id).first()
+        stmt = select(UserModel).filter(UserModel.id == user_id)
+        result = await db_session.execute(stmt)
+        user = result.scalars().first()
+        return user
 
     @staticmethod
-    def get_user_by_uuid(db: Session, user_uuid: str) -> User:
+    async def get_user_by_uuid(db_session: AsyncSession, user_uuid: str) -> UserModel:
         """
         - Grabs the user by UUID.
         """
-        return db.query(UserModel).filter(UserModel.uuid == user_uuid).first()
+        stmt = select(UserModel).filter(UserModel.uuid == user_uuid)
+        result = await db_session.execute(stmt)
+        user = result.scalars().first()
+        return user
 
     @staticmethod
-    def get_user_by_email(db: Session, email: str) -> User:
+    async def get_user_by_email(db_session: AsyncSession, email: str) -> UserModel:
         """
         - Grabs the User by Email.
         """
-        return db.query(UserModel).filter(UserModel.email == email).first()
+        stmt = select(UserModel).filter(UserModel.email == email)
+        result = await db_session.execute(stmt)
+        user = result.scalars().first()
+        return user
 
     # TODO: Add services (not in this file) related to generating first album, photo, and network
     @staticmethod
@@ -47,7 +58,7 @@ class UserService:
         return new_user
 
     @staticmethod
-    def create_user(db: Session, user: UserCreate) -> User | None:
+    async def create_user(db_session: AsyncSession, user: UserCreate) -> User | None:
         """
         - Grabs the User By Email.
         - Establishes a new random UUID.
@@ -56,7 +67,7 @@ class UserService:
         - Refresh DB via to ensure DB does not retain in memory data.
         - Return the new User from the DB.
         """
-        db_user = UserService.get_user_by_email(db, email=user.email)
+        db_user = await UserService.get_user_by_email(db_session, email=user.email)
         uuid = str(uuid4())
         if db_user:
             return None
@@ -70,37 +81,37 @@ class UserService:
             is_active=True,
             last_login=func.now(),
         )
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
+        db_session.add(db_user)
+        await db_session.commit()
+        await db_session.refresh(db_user)
         return db_user
 
     @staticmethod
-    def set_user_as_active(db: Session, user: User) -> None:
+    async def set_user_as_active(db_session: AsyncSession, user: User) -> None:
         """
         - Sets the User's `is_active` field to True.
         """
         user.__setattr__("is_active", True)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
 
     @staticmethod
-    def update_user_last_login(db: Session, user: User) -> None:
+    async def update_user_last_login(db_session: AsyncSession, user: User) -> None:
         """
         - Updates user's last_login to current time.
         """
         user.__setattr__("last_login", func.now())
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
 
     @staticmethod
-    def set_user_as_inactive(db: Session, user: User) -> None:
+    async def set_user_as_inactive(db_session: AsyncSession, user: User) -> None:
         """
         - Sets the User's `is_active` field to False.
         """
         user.__setattr__("is_active", False)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)

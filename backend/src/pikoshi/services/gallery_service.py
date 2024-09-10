@@ -5,9 +5,9 @@ from typing import Dict, List, Tuple
 
 from fastapi import Depends, HTTPException, UploadFile
 from PIL import Image
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..dependencies import get_db
+from ..dependencies import get_db_session
 from ..utils.hashers import hash_string
 from .auth_service import AuthService
 from .exception_handler_service import ExceptionService
@@ -18,7 +18,7 @@ class GalleryService:
     @staticmethod
     async def create_new_user_bucket(
         access_token: str,
-        db: Session = Depends(get_db),
+        db_session: AsyncSession = Depends(get_db_session),
     ) -> Dict[str, str]:
         """
         - Grabs the User data from the database using the JWT
@@ -34,7 +34,7 @@ class GalleryService:
         - Returns a dictionary containing the User's bucket_name and user_uuid.
         """
         try:
-            user = AuthService.get_user_by_access_token(access_token, db)
+            user = await AuthService.get_user_by_access_token(access_token, db_session)
             user_uuid = str(user.uuid)
 
             user_bucket_index = S3Service.get_bucket_index(user_uuid)  # type:ignore
@@ -141,7 +141,7 @@ class GalleryService:
     async def upload_new_image(
         access_token: str,
         file: UploadFile,
-        db: Session = Depends(get_db),
+        db_session: AsyncSession = Depends(get_db_session),
         album_name: str = "default_album",
     ) -> None:
         """
@@ -159,7 +159,7 @@ class GalleryService:
           bucket/UUID-directory/album-directory.
         """
         try:
-            user = AuthService.get_user_by_access_token(access_token, db)
+            user = await AuthService.get_user_by_access_token(access_token, db_session)
 
             user_uuid = str(user.uuid)
             user_bucket_index = S3Service.get_bucket_index(user_uuid)

@@ -1,9 +1,14 @@
-from .database import SessionLocal
+from typing import Annotated
+
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .database import sessionmanager
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db_session():
+    async with sessionmanager.session() as session:
+        yield session
+
+
+DBSessionDep = Annotated[AsyncSession, Depends(get_db_session)]

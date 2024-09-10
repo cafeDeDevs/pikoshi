@@ -20,7 +20,7 @@ dependencies = [
     "boto3>=1.35.10",
     "python-multipart>=0.0.9",
     "pillow>=10.4.0",
-    "psycopg2-binary>=2.9.9",
+    "asyncpg>=0.29.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -31,7 +31,12 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = ["pytest>=8.3.2", "black>=24.8.0", "isort>=5.13.2"]
+dev-dependencies = [
+    "pytest>=8.3.2",
+    "black>=24.8.0",
+    "isort>=5.13.2",
+    "pytest-asyncio>=0.24.0",
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -41,6 +46,9 @@ packages = ["src/pikoshi"]
 
 [tool.rye.scripts]
 dev = "uvicorn pikoshi.main:app --host :: --port 8000 --reload"
+upgrade = "alembic --config ./src/pikoshi/alembic.ini upgrade"
+downgrade = "alembic --config ./src/pikoshi/alembic.ini downgrade"
+generate = "alembic --config ./src/pikoshi/alembic.ini revision --autogenerate -m"
 
 [project.scripts]
 start = "pikoshi.main:main"

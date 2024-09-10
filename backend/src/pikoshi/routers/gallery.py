@@ -10,9 +10,9 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..dependencies import get_db
+from ..dependencies import get_db_session
 from ..middlewares.logger import TimedRoute
 from ..services.exception_handler_service import ExceptionService
 from ..services.gallery_service import GalleryService
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/gallery", tags=["gallery"], route_class=TimedRoute)
 @router.post("/default/")
 async def get_default_gallery(
     access_token: Annotated[str | None, Cookie()] = None,
-    db: Session = Depends(get_db),
+    db_session: AsyncSession = Depends(get_db_session),
     dimensions: dict = Body(...),
 ) -> Response:
     """
@@ -35,7 +35,7 @@ async def get_default_gallery(
     """
     try:
         s3_credentials = await GalleryService.create_new_user_bucket(
-            str(access_token), db
+            str(access_token), db_session
         )
         bucket_name = str(s3_credentials.get("bucket_name"))
         user_uuid = str(s3_credentials.get("user_uuid"))
@@ -77,14 +77,14 @@ async def get_default_gallery(
 async def upload_image_to_gallery(
     file: UploadFile,
     access_token: Annotated[str | None, Cookie()] = None,
-    db: Session = Depends(get_db),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> Response:
     """
     - Uses User's UUID (from access_token) to upload new image
     - to user's bucket/default album.
     """
     try:
-        await GalleryService.upload_new_image(str(access_token), file, db)
+        await GalleryService.upload_new_image(str(access_token), file, db_session)
 
         return JSONResponse(
             status_code=200,

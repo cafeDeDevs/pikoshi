@@ -17,6 +17,8 @@ annotated-types==0.7.0
 anyio==4.4.0
     # via httpx
     # via starlette
+asyncpg==0.29.0
+    # via pikoshi
 black==24.8.0
 boto3==1.35.10
     # via pikoshi
@@ -75,8 +77,6 @@ platformdirs==4.2.2
     # via black
 pluggy==1.5.0
     # via pytest
-psycopg2-binary==2.9.9
-    # via pikoshi
 pydantic==2.8.2
     # via fastapi
     # via pikoshi
@@ -85,6 +85,8 @@ pydantic-core==2.20.1
 pyjwt==2.9.0
     # via pikoshi
 pytest==8.3.2
+    # via pytest-asyncio
+pytest-asyncio==0.24.0
 python-dateutil==2.9.0.post0
     # via botocore
 python-dotenv==1.0.1

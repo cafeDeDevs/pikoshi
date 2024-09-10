@@ -1,10 +1,10 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 from fastapi.responses import JSONResponse
 from jwt.exceptions import PyJWTError
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config.redis_config import redis_instance as redis
-from ..dependencies import get_db
+from ..dependencies import get_db_session
 from ..middlewares.logger import TimedRoute
 from ..schemas.auth import TokenRequest
 from ..schemas.user import UserInput, UserInputEmailPass, UserInputPass
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/auth", tags=["auth"], route_class=TimedRoute)
 async def signup_with_email(
     user_input: UserInput,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
+    db_session: AsyncSession = Depends(get_db_session),
 ) -> Response:
     """
     - Grabs the user's email from the Client's /signup input form.
@@ -34,7 +34,7 @@ async def signup_with_email(
     """
     try:
         user_email = user_input.email
-        user_from_db = UserService.get_user_by_email(db, user_email)
+        user_from_db = await UserService.get_user_by_email(db_session, user_email)
         if user_from_db:
             raise HTTPException(
                 status_code=409, detail="Email has already been registered."
@@ -77,7 +77,7 @@ async def check_token(request: TokenRequest) -> Response:
 
 @router.post("/email-onboarding/")
 async def email_onboarding(
-    user_info: UserInputPass, db: Session = Depends(get_db)
+    user_info: UserInputPass, db_session: AsyncSession = Depends(get_db_session)
 ) -> Response:
     """
     - After the User fills out the onboarding form
@@ -101,7 +101,7 @@ async def email_onboarding(
         await redis.delete(f"signup_token_for_{user_info.token}")
 
         new_user = await JWTAuthService.signup_user_with_email(
-            user_info, user_email, db
+            user_info, user_email, db_session
         )
         user_uuid = new_user.uuid
 
@@ -121,7 +121,7 @@ async def email_onboarding(
 
 @router.post("/email-login/")
 async def email_login(
-    user_info: UserInputEmailPass, db: Session = Depends(get_db)
+    user_info: UserInputEmailPass, db_session: AsyncSession = Depends(get_db_session)
 ) -> Response:
     """
     - Grabs the user_info from the Client side form
@@ -134,7 +134,7 @@ async def email_login(
       and sends them back to Client.
     """
     try:
-        user = await JWTAuthService.authenticate_user_with_jwt(user_info, db)
+        user = await JWTAuthService.authenticate_user_with_jwt(user_info, db_session)
         user_tokens = JWTAuthService.get_user_tokens(user.uuid)
         access_token = user_tokens["access_token"]
         refresh_token = user_tokens["refresh_token"]

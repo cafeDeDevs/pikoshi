@@ -17,6 +17,8 @@ annotated-types==0.7.0
 anyio==4.4.0
     # via httpx
     # via starlette
+asyncpg==0.29.0
+    # via pikoshi
 boto3==1.35.10
     # via pikoshi
 botocore==1.35.10
@@ -58,8 +60,6 @@ mako==1.3.5
 markupsafe==2.1.5
     # via mako
 pillow==10.4.0
-    # via pikoshi
-psycopg2-binary==2.9.9
     # via pikoshi
 pydantic==2.8.2
     # via fastapi

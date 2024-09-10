@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..dependencies import get_db
+from ..dependencies import get_db_session
 from ..middlewares.logger import TimedRoute
 from ..schemas.auth import AuthCodeRequest
 from ..services.auth_service import AuthService
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/auth", tags=["auth"], route_class=TimedRoute)
 
 @router.post("/google-signup/")
 async def signup_with_google(
-    request: AuthCodeRequest, db: Session = Depends(get_db)
+    request: AuthCodeRequest, db_session: AsyncSession = Depends(get_db_session)
 ) -> Response:
     """
     - Grabs the auth-code from
@@ -34,7 +34,9 @@ async def signup_with_google(
         # google_refresh_token = str(user_tokens.get("refresh_token"))
 
         user_info = await GoogleOAuthService.get_user_info(google_access_token)
-        new_user = await GoogleOAuthService.signup_user_with_google(user_info, db)
+        new_user = await GoogleOAuthService.signup_user_with_google(
+            user_info, db_session
+        )
         user_uuid = new_user.uuid
         user_tokens = JWTAuthService.get_user_tokens(user_uuid)
         access_token = user_tokens["access_token"]
@@ -53,7 +55,7 @@ async def signup_with_google(
 
 @router.post("/google-login/")
 async def login_with_google(
-    request: AuthCodeRequest, db: Session = Depends(get_db)
+    request: AuthCodeRequest, db_session: AsyncSession = Depends(get_db_session)
 ) -> Response:
     """
     - Grabs the auth-code from
@@ -74,10 +76,12 @@ async def login_with_google(
         #  google_refresh_token = str(user_tokens.get("refresh_token"))
 
         user_info = await GoogleOAuthService.get_user_info(google_access_token)
-        user_from_db = GoogleOAuthService.get_user_by_email_from_db(user_info, db)
+        user_from_db = await GoogleOAuthService.get_user_by_email_from_db(
+            user_info, db_session
+        )
 
         user_tokens = await GoogleOAuthService.authenticate_user_with_google(
-            user_info, user_from_db, db
+            user_info, user_from_db, db_session
         )
         access_token = user_tokens["access_token"]
         refresh_token = user_tokens["refresh_token"]

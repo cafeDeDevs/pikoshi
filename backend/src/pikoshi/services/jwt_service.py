@@ -7,9 +7,10 @@ import jwt
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException
 from pydantic import EmailStr
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
-from ..dependencies import get_db
+from ..dependencies import get_db_session
 from ..schemas.user import User
 from ..services.security_service import SecurityService
 from ..services.user_service import UserService
@@ -71,7 +72,7 @@ class JWTAuthService:
     async def signup_user_with_email(
         user_info,
         user_email: EmailStr,
-        db: Session = Depends(get_db),
+        db_session: AsyncSession = Depends(get_db_session),
     ) -> User:
         """
         - Creates a User instance in DB using fields grabbed from Front End Forms
@@ -87,21 +88,21 @@ class JWTAuthService:
         new_user = UserService.generate_user_profile(
             user_name, user_password, user_email, salt, uuid
         )
-        new_user = UserService.create_user(db, new_user)
+        new_user = await UserService.create_user(db_session, new_user)
 
         if not new_user:
             raise HTTPException(
                 status_code=409, detail="Email has already been registered."
             )
 
-        user_from_db = UserService.get_user_by_email(db, user_email)
-        UserService.set_user_as_active(db, user_from_db)
-        UserService.update_user_last_login(db, user_from_db)
+        user_from_db = await UserService.get_user_by_email(db_session, user_email)
+        await UserService.set_user_as_active(db_session, user_from_db)
+        await UserService.update_user_last_login(db_session, user_from_db)
         return new_user
 
     @staticmethod
     async def authenticate_user_with_jwt(
-        user_info, db: Session = Depends(get_db)
+        user_info, db_session: AsyncSession = Depends(get_db_session)
     ) -> User:
         """
         - Grabs the User's Email and Password From Front End Forms.
@@ -115,7 +116,7 @@ class JWTAuthService:
         user_email = user_info.email
         user_password = user_info.password
 
-        user_from_db = UserService.get_user_by_email(db, user_email)
+        user_from_db = await UserService.get_user_by_email(db_session, user_email)
         if not user_from_db:
             raise HTTPException(status_code=400, detail="No User By That Email Found")
 
@@ -128,7 +129,7 @@ class JWTAuthService:
         if not user_is_verified:
             raise HTTPException(status_code=401, detail="Hashes in DB do not match")
 
-        user_from_db = UserService.get_user_by_email(db, user_email)
-        UserService.set_user_as_active(db, user_from_db)
-        UserService.update_user_last_login(db, user_from_db)
+        user_from_db = await UserService.get_user_by_email(db_session, user_email)
+        await UserService.set_user_as_active(db_session, user_from_db)
+        await UserService.update_user_last_login(db_session, user_from_db)
         return user_from_db

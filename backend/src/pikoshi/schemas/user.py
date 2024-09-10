@@ -21,8 +21,7 @@ class User(UserCreate):
     id: int
     is_active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserInput(BaseModel):
@@ -51,8 +50,7 @@ class UserInputEmailPass(BaseModel):
             raise ValueError("Password must contain at least one special character")
         return value
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserInputPass(BaseModel):
@@ -77,5 +75,4 @@ class UserInputPass(BaseModel):
             raise ValueError("Password must contain at least one special character")
         return value
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

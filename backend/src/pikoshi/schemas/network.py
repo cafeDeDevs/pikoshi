@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class NetworkBase(BaseModel):
@@ -14,5 +14,4 @@ class NetworkCreate(NetworkBase):
 class Network(NetworkBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

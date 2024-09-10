@@ -6,9 +6,9 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..dependencies import get_db
+from ..dependencies import get_db_session
 from ..schemas.user import User
 from ..services.jwt_service import JWTAuthService
 from ..services.security_service import SecurityService
@@ -68,7 +68,7 @@ class GoogleOAuthService:
 
     @staticmethod
     async def get_user_from_db(
-        access_token: str, db: Session = Depends(get_db)
+        access_token: str, db_session: AsyncSession = Depends(get_db_session)
     ) -> User:
         """
         - Grabs `user_info` from Google API.
@@ -81,26 +81,30 @@ class GoogleOAuthService:
         user_email = user_info.get("email")
         if not user_email:
             raise ValueError("No User Email Found by Access Token")
-        user = UserService.get_user_by_email(db, user_email)
+        user = await UserService.get_user_by_email(db_session, user_email)
 
         if not user:
             raise ValueError("User not found in DB")
         return user
 
     @staticmethod
-    def get_user_by_email_from_db(user_info, db: Session = Depends(get_db)) -> User:
+    async def get_user_by_email_from_db(
+        user_info, db_session: AsyncSession = Depends(get_db_session)
+    ) -> User:
         """
         - Grabs `user_email` from the returned `user_info` (via Google API).
         - Queries the DB and returns a User based off the `user_email`.
         """
         user_email = str(user_info.get("email"))
-        user_from_db = UserService.get_user_by_email(db, user_email)
+        user_from_db = await UserService.get_user_by_email(db_session, user_email)
         if not user_from_db:
             raise HTTPException(status_code=400, detail="No User By That Email Found")
         return user_from_db
 
     @staticmethod
-    async def signup_user_with_google(user_info, db: Session = Depends(get_db)) -> User:
+    async def signup_user_with_google(
+        user_info, db_session: AsyncSession = Depends(get_db_session)
+    ) -> User:
         """
         - Creates a User instance in DB using fields grabbed from Google OAuth2 Services.
         - Generates Unique Salt and stores it in DB.
@@ -118,18 +122,18 @@ class GoogleOAuthService:
         new_user = UserService.generate_user_profile(
             user_name, user_password, user_email, salt, uuid
         )
-        new_user = UserService.create_user(db, new_user)
+        new_user = await UserService.create_user(db_session, new_user)
         if not new_user:
             raise HTTPException(
                 status_code=409, detail="Email has already been registered."
             )
-        UserService.set_user_as_active(db, new_user)
-        UserService.update_user_last_login(db, new_user)
+        await UserService.set_user_as_active(db_session, new_user)
+        await UserService.update_user_last_login(db_session, new_user)
         return new_user
 
     @staticmethod
     async def authenticate_user_with_google(
-        user_info, user_from_db, db: Session = Depends(get_db)
+        user_info, user_from_db, db_session: AsyncSession = Depends(get_db_session)
     ) -> Dict[str, str]:
         """
         - Grabs the User's Google Id from Google OAuth2 Services.
@@ -152,6 +156,6 @@ class GoogleOAuthService:
         user_id = user_from_db.id
         user_uuid = user_from_db.uuid
         user_tokens = JWTAuthService.get_user_tokens(user_uuid)
-        UserService.set_user_as_active(db, user_from_db)
-        UserService.update_user_last_login(db, user_from_db)
+        await UserService.set_user_as_active(db_session, user_from_db)
+        await UserService.update_user_last_login(db_session, user_from_db)
         return user_tokens
