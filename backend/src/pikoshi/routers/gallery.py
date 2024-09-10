@@ -14,8 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..dependencies import get_db_session
 from ..middlewares.logger import TimedRoute
-from ..services.exception_handler_service import ExceptionService
-from ..services.gallery_service import GalleryService
+from ..services import exception_handler_service as ExceptionService
+from ..services import gallery_service as GalleryService
 
 router = APIRouter(prefix="/gallery", tags=["gallery"], route_class=TimedRoute)
 

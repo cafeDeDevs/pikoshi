@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..dependencies import get_db_session
 from ..middlewares.logger import TimedRoute
-from ..services.auth_service import AuthService
-from ..services.exception_handler_service import ExceptionService
+from ..services import auth_service as AuthService
+from ..services import exception_handler_service as ExceptionService
 
 router = APIRouter(prefix="/auth", tags=["auth"], route_class=TimedRoute)
 

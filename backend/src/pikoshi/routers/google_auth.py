@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..dependencies import get_db_session
 from ..middlewares.logger import TimedRoute
 from ..schemas.auth import AuthCodeRequest
-from ..services.auth_service import AuthService
-from ..services.exception_handler_service import ExceptionService
-from ..services.google_oauth_service import GoogleOAuthService
-from ..services.jwt_service import JWTAuthService
+from ..services import auth_service as AuthService
+from ..services import exception_handler_service as ExceptionService
+from ..services import google_oauth_service as GoogleOAuthService
+from ..services import jwt_service as JWTAuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"], route_class=TimedRoute)
 

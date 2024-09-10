@@ -8,11 +8,11 @@ from ..dependencies import get_db_session
 from ..middlewares.logger import TimedRoute
 from ..schemas.auth import TokenRequest
 from ..schemas.user import UserInput, UserInputEmailPass, UserInputPass
-from ..services.auth_service import AuthService
-from ..services.email_service import EmailService
-from ..services.exception_handler_service import ExceptionService
-from ..services.jwt_service import JWTAuthService
-from ..services.user_service import UserService
+from ..services import auth_service as AuthService
+from ..services import email_service as EmailService
+from ..services import exception_handler_service as ExceptionService
+from ..services import jwt_service as JWTAuthService
+from ..services import user_service as UserService
 from ..utils.logger import logger
 
 router = APIRouter(prefix="/auth", tags=["auth"], route_class=TimedRoute)
