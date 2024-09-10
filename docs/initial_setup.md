@@ -156,16 +156,10 @@ environment:
 source .venv/bin/activate
 ```
 
-After that, navigate into the `/src/pikoshi` directory:
+You can then migrate the initial tables using a custom script using `rye`:
 
 ```sh
-cd src/pikoshi
-```
-
-From within this directory, you can migrate the initial tables using `alembic`:
-
-```sh
-alembic upgrade head
+rye run upgrade head
 ```
 
 This will set up the initial SQL tables. You should see a small amount of output
