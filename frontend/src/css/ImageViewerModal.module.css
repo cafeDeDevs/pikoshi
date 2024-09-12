@@ -14,7 +14,7 @@
 .ImageViewerModal {
     position: relative;
     background-color: white;
-    padding: 1em;
+    padding: 1.5em;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
@@ -28,4 +28,29 @@
     max-width: 100%;
     max-height: 70vh;
     object-fit: contain;
+}
+
+.close-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.65em;
+    border: none;
+    background-color: transparent;
+}
+
+.close-btn:hover {
+    scale: 1.2;
+    cursor: pointer;
+}
+
+/* Mobile specific css */
+@media only screen and (max-width: 32.5em) {
+    .ImageViewerModal {
+        padding: 1em;
+    }
+    .close-btn {
+        top: -0.4em;
+        right: -0.4em;
+    }
 }
