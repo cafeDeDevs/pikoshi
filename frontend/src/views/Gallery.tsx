@@ -13,6 +13,7 @@ import { useModalContext, ModalProvider } from "../contexts/ModalContext";
 
 import Navbar from "../components/Navbar";
 import UploadImageModal from "../components/UploadImageModal";
+import ImageViewerModal from "../components/ImageViewerModal";
 
 import { delay } from "../utils/utils";
 
@@ -29,7 +30,8 @@ const Gallery: Component = () => {
     const [isAuthenticated, setIsAuthenticated] = createSignal<boolean>(false);
     const [error, setError] = createSignal<string>("");
     const [images, setImages] = createSignal<ImageMetadata[]>([]);
-    const { reloadGallery, shouldGalleryReload } = useModalContext();
+    const { openImageModal, reloadGallery, shouldGalleryReload } =
+        useModalContext();
 
     const navigate = useNavigate();
 
@@ -60,12 +62,18 @@ const Gallery: Component = () => {
         }
     });
 
+    const handleImgClick = (index: number) => {
+        const image = images()[index];
+        openImageModal(image);
+    };
+
     return (
         <>
             {/* TODO: Replace Loading... with GalleryLoading component */}
             <Show when={isAuthenticated()} fallback={<p>Loading...</p>}>
                 <Navbar />
                 <UploadImageModal />
+                <ImageViewerModal />
                 <div class={styles.Gallery}>
                     {/* TODO: Replace Loading... with ImageLoading Component */}
                     <Show
@@ -77,6 +85,7 @@ const Gallery: Component = () => {
                                     <img
                                         src={`data:image/webp;base64,${image.data}`}
                                         alt={`Gallery Image ${index() + 1}`}
+                                        onClick={() => handleImgClick(index())}
                                     />
                                 )}
                             </For>
