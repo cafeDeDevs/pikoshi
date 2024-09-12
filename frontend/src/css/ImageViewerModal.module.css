@@ -48,6 +48,8 @@
 @media only screen and (max-width: 32.5em) {
     .ImageViewerModal {
         padding: 1em;
+        max-width: 90vw;
+        max-height: 90vh;
     }
     .close-btn {
         top: -0.4em;
