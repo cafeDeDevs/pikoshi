@@ -5,6 +5,7 @@
     height: 20em;
     width: 15em;
     background-color: white;
+    z-index: 1;
 }
 
 .ProfileCard > .logout-btn {
