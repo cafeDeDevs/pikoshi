@@ -71,7 +71,7 @@ const Gallery: Component = () => {
                     <Show
                         when={images().length > 0}
                         fallback={<p>Loading...</p>}>
-                        <div class={styles["image-gallery"]}>
+                        <div class={styles["gallery"]}>
                             <For each={images()}>
                                 {(image, index) => (
                                     <img
