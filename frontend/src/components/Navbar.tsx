@@ -10,6 +10,7 @@ const Navbar: Component = () => {
     const { openModal } = useModalContext();
     return (
         <>
+            <span class={styles["spacer"]}></span>
             <header class={styles.NavContainer}>
                 <nav class={styles.Navbar}>
                     <ul class={styles["nav-list"]}>
