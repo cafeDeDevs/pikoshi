@@ -4,6 +4,7 @@ import type { Accessor, JSX } from "solid-js";
 interface ImageMetadata {
     data: string; // Base64 encoded image data
     type: string; // Metadata field, e.g. "original", "mobile"
+    file_name: string; // Name of File
 }
 
 type ModalContextType = {

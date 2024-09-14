@@ -22,11 +22,10 @@ router = APIRouter(prefix="/gallery", tags=["gallery"], route_class=TimedRoute)
 
 # TODO: Figure out how to get parameters which will lead to the album name
 # NOTE: IF parameter album_name == None, then default it to "default"
-@router.post("/default/")
+@router.post("/default-gallery/")
 async def get_default_gallery(
     access_token: Annotated[str | None, Cookie()] = None,
     db_session: AsyncSession = Depends(get_db_session),
-    dimensions: dict = Body(...),
 ) -> Response:
     """
     - Creates new S3 bucket based off of UUID (from access_token),
@@ -44,7 +43,6 @@ async def get_default_gallery(
             bucket_name, user_uuid, album_name="default_album"
         )
 
-        # TODO: Abstract this out into GalleryService that returns images_as_base64
         image_files = GalleryService.grab_image_files(
             file_list, bucket_name, album_name="default_album"
         )
@@ -54,11 +52,7 @@ async def get_default_gallery(
                 status_code=400, detail="No Images Found In Default Album."
             )
 
-        width = dimensions.get("width", 0)
-        if width < 768:
-            image_files = [img for img in image_files if img["type"] == "mobile"]
-        else:
-            image_files = [img for img in image_files if img["type"] == "original"]
+        image_files = [img for img in image_files if img["type"] == "thumbnail"]
 
         return JSONResponse(
             status_code=200,
@@ -71,6 +65,57 @@ async def get_default_gallery(
         return ExceptionService.handle_http_exception(http_e)
     except Exception as e:
         return ExceptionService.handle_s3_exception(e)
+
+
+# TODO: again, pass from URL param that
+@router.post("/default-single/")
+async def grab_single_image(
+    access_token: Annotated[str | None, Cookie()] = None,
+    db_session: AsyncSession = Depends(get_db_session),
+    body: dict = Body(...),
+) -> Response:
+    width = body.get("width", 0)
+    file_name = body.get("file_name", "")
+
+    s3_credentials = await GalleryService.grab_s3_credentials(
+        str(access_token), db_session
+    )
+    bucket_name = str(s3_credentials.get("bucket_name"))
+    user_uuid = str(s3_credentials.get("user_uuid"))
+
+    file_list = GalleryService.grab_file_list(
+        bucket_name, user_uuid, album_name="default_album"
+    )
+
+    image_files = GalleryService.grab_image_files(
+        file_list, bucket_name, album_name="default_album"
+    )
+
+    if len(image_files) == 0:
+        raise HTTPException(status_code=400, detail="No Images Found In Default Album.")
+
+    if len(file_name) == 0:
+        raise HTTPException(status_code=400, detail="No file_name passed")
+
+    if width < 768:
+        image_files = [img for img in image_files if img["type"] == "mobile"]
+    else:
+        image_files = [img for img in image_files if img["type"] == "original"]
+
+    image_file = next(
+        (img for img in image_files if img["file_name"] == file_name), None
+    )
+
+    if image_file is None:
+        raise HTTPException(status_code=400, detail="No Image Found In Default Album.")
+
+    return JSONResponse(
+        status_code=200,
+        content={
+            "message": "Images Retrieved From S3 And Sent To Client Successfully.",
+            "imageAsBase64": image_file,
+        },
+    )
 
 
 @router.post("/upload/")

@@ -2,8 +2,6 @@ import urls from "../config/urls";
 
 const useGrabGallery = async (): Promise<any> => {
     try {
-        const windowWidth = window.innerWidth;
-
         const response = await fetch(urls.BACKEND_GALLERY_INITIAL_ROUTE, {
             method: "POST",
             headers: {
@@ -11,7 +9,6 @@ const useGrabGallery = async (): Promise<any> => {
                 "Content-Type": "application/json",
             },
             credentials: "include",
-            body: JSON.stringify({ width: windowWidth }),
         });
         const jsonRes = await response.json();
 

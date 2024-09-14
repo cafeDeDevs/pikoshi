@@ -22,6 +22,7 @@ import styles from "../css/Gallery.module.css";
 interface ImageMetadata {
     data: string; // Base64 encoded image data
     type: string; // Metadata field, e.g. "original", "mobile"
+    file_name: string; // Name of File
 }
 
 // TODO: Figure out how to pass optional params (i.e. gallery/default)
@@ -85,6 +86,7 @@ const Gallery: Component = () => {
                                     <img
                                         src={`data:image/webp;base64,${image.data}`}
                                         alt={`Gallery Image ${index() + 1}`}
+                                        data-name={image.file_name}
                                         onClick={() => handleImgClick(index())}
                                     />
                                 )}

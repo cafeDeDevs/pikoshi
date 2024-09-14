@@ -46,6 +46,23 @@ async def create_new_user_bucket(
         )
 
 
+async def grab_s3_credentials(
+    access_token: str, db_session: AsyncSession = Depends(get_db_session)
+) -> Dict[str, str]:
+    try:
+        user = await AuthService.get_user_by_access_token(access_token, db_session)
+        user_uuid = str(user.uuid)
+
+        user_bucket_index = S3Service.get_bucket_index(user_uuid)  # type:ignore
+        bucket_name = f"user-bucket-{user_bucket_index}"
+        return {"bucket_name": bucket_name, "user_uuid": user_uuid}
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unable To Access User S3 Credentials: {e}",
+        )
+
+
 def grab_file_list(
     bucket_name: str, user_uuid: str, album_name: str = "default_album"
 ) -> List[str]:
@@ -99,7 +116,15 @@ def upload_default_image(
             album_name="default_album",
             file_data=None,
         )
-
+        S3Service.upload_file(
+            file=None,
+            bucket_name=bucket_name,
+            user_uuid=user_uuid,
+            object_name="default",
+            file_name="./src/pikoshi/public/thumbnail_default.webp",
+            album_name="default_album",
+            file_data=None,
+        )
     except Exception as e:
         ExceptionService.handle_generic_exception(e)
 
@@ -125,10 +150,22 @@ def grab_image_files(
         # TODO: Once album_name is grabbed from parameters, change this
         for file_name in file_list:
             if f"/{album_name}/" in file_name:
+                orig_file_name = file_name.split("/")[-2]
                 file_obj = s3_client.get_object(Bucket=bucket_name, Key=file_name)
                 image_data = b64encode(file_obj["Body"].read()).decode("utf-8")
-                image_type = "mobile" if "mobile" in file_name else "original"
-                image_files.append({"data": image_data, "type": image_type})
+                if "mobile" in file_name:
+                    image_type = "mobile"
+                elif "thumbnail" in file_name:
+                    image_type = "thumbnail"
+                else:
+                    image_type = "original"
+                image_files.append(
+                    {
+                        "data": image_data,
+                        "type": image_type,
+                        "file_name": orig_file_name,
+                    }
+                )
 
         return image_files
     except Exception as e:
@@ -182,8 +219,10 @@ async def upload_new_image(
 
         # Uploads Mobile Image
         mobile_size = (480, 320)
-        mobile_data = await _prepare_mobile_image(file, image_bytes, mobile_size)
-        mobile_img_bytes, object_name = mobile_data
+        mobile_data = await _resize_image(
+            file, image_bytes, mobile_size, file_type="mobile"
+        )
+        img_bytes, object_name = mobile_data
 
         S3Service.upload_file(
             file=None,
@@ -191,34 +230,50 @@ async def upload_new_image(
             user_uuid=user_uuid,
             object_name=object_name,
             album_name=album_name,
-            file_data=mobile_img_bytes,
+            file_data=img_bytes,
         )
+
+        # Uploads Thumbnail Image
+        thumbnail_size = (300, 200)
+        thumbnail_data = await _resize_image(
+            file, image_bytes, thumbnail_size, file_type="thumbnail"
+        )
+        img_bytes, object_name = thumbnail_data
+        S3Service.upload_file(
+            file=None,
+            bucket_name=bucket_name,
+            user_uuid=user_uuid,
+            object_name=object_name,
+            album_name=album_name,
+            file_data=img_bytes,
+        )
+
     except Exception as e:
         ExceptionService.handle_generic_exception(e)
 
 
-async def _prepare_mobile_image(
-    file: UploadFile, image_bytes: io.BytesIO, size: Tuple[int, int]
+async def _resize_image(
+    file: UploadFile, image_bytes: io.BytesIO, size: Tuple[int, int], file_type: str
 ) -> Tuple[io.BytesIO, str]:
     """
-    - Uses pillow's Image() to create mobile version of image in RAM.
-    - Resizes image to mobile version.
+    - Uses pillow's Image() to create mobile/thumbnail version of image in RAM.
+    - Resizes image to mobile/thumbnail version.
     - Saves the image in .webp format.
     - Grabs the filename from the file object.
     - Hashes the filename.
-    - Prepends `mobile_` to the hashedfile name for mobile_file_name.
-    - Prepares object_name based off of mobile_file_name.
-    - Returns tuple of both mobile_img_bytes and object_name.
+    - Prepends `mobile` or `thumbnail` to the hashedfile name for file_name.
+    - Prepares object_name based off of file_name.
+    - Returns tuple of both img_bytes and object_name.
     """
     with Image.open(image_bytes) as img:
-        mobile_img = img.copy()
-        mobile_img.thumbnail(size)
+        img = img.copy()
+        img.thumbnail(size)
 
-        mobile_img_bytes = io.BytesIO()
-        mobile_img.save(mobile_img_bytes, format="WEBP")
-        mobile_img_bytes.seek(0)
+        img_bytes = io.BytesIO()
+        img.save(img_bytes, format="WEBP")
+        img_bytes.seek(0)
         file_name = str(file.filename)
         hashed_file_name = hash_string(file_name)
-        mobile_file_name = f"mobile_{hashed_file_name}"
-        object_name = os.path.join(file_name.split(".")[0], mobile_file_name)
-    return mobile_img_bytes, object_name
+        resized_file_name = f"{file_type}_{hashed_file_name}"
+        object_name = os.path.join(file_name.split(".")[0], resized_file_name)
+    return img_bytes, object_name
