@@ -87,6 +87,8 @@ def grab_file_list(
     try:
         file_list = []
         s3 = boto3.client("s3")
+        # TODO: Use pagination techniques here in conjunction with DB/frontend cache
+        # to determine how many S3 objects to pull in at a time.
         response = s3.list_objects_v2(
             Bucket=bucket, Prefix=f"{user_uuid}/{album_name}/"
         )

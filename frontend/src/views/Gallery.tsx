@@ -53,6 +53,8 @@ const Gallery: Component = () => {
 
     createEffect(async () => {
         if (shouldGalleryReload()) {
+            // TODO: Implement caching strategy here so you
+            // can instantly load gallery thumbnails from cache
             const imagesAsBase64 = await useGrabGallery();
             if (imagesAsBase64) {
                 setImages(imagesAsBase64);
