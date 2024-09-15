@@ -46,7 +46,9 @@ const ImageViewerModal: Component = () => {
         );
         const jsonRes = await response.json();
         if (!response.ok)
-            console.warn("An Error Occurred While Trying To Retrieve Image");
+            return console.warn(
+                "An Error Occurred While Trying To Retrieve Image",
+            );
         setImage(jsonRes.imageAsBase64);
         await addImageToDB(jsonRes.imageAsBase64);
     });
