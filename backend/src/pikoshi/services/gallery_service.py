@@ -176,6 +176,7 @@ def grab_image_files(
 def grab_single_image(
     bucket_name: str, user_uuid: str, file_name: str
 ) -> List[dict[str, str]]:
+    orig_file_name = file_name
     prefix = f"{user_uuid}/default_album/{file_name}/"
     s3_client = S3Service.get_s3_client()
     result = s3_client.list_objects(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
@@ -198,7 +199,7 @@ def grab_single_image(
             image_type = "original"
 
         images_as_base64.append(
-            {"data": data, "file_name": file_name, "type": image_type}
+            {"data": data, "file_name": orig_file_name, "type": image_type}
         )
 
     return images_as_base64
