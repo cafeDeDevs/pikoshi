@@ -10,7 +10,7 @@ interface ImageMetadata {
     file_name?: string; // Name of File
 }
 
-import { addImageToDB, getImageFromDB, clearDB } from "../utils/indexdb-views";
+import { addImageToDB, getImageFromDB } from "../utils/indexdb-views";
 
 const ImageViewerModal: Component = () => {
     const [image, setImage] = createSignal<ImageMetadata>({});
