@@ -10,6 +10,8 @@ interface ImageMetadata {
     file_name?: string; // Name of File
 }
 
+import { addImageToDB, getImageFromDB, clearDB } from "../utils/indexdb-views";
+
 const ImageViewerModal: Component = () => {
     const [image, setImage] = createSignal<ImageMetadata>({});
     const { isImageModalOpen, selectedImage, closeImageModal } =
@@ -18,10 +20,16 @@ const ImageViewerModal: Component = () => {
     createEffect(async () => {
         const fileName = selectedImage()?.file_name;
         if (!fileName) return;
-        // TODO: Check if image is in Cache (index db??)
-        // If it is, then just set the image to the cached image and return
-        // Otherwise, continue
-        setImage({});
+
+        const cachedImage = await getImageFromDB(fileName);
+
+        if (cachedImage) {
+            setImage(cachedImage);
+            return;
+        } else {
+            setImage({});
+        }
+
         const windowWidth = window.innerWidth;
 
         const response = await fetch(
@@ -43,6 +51,7 @@ const ImageViewerModal: Component = () => {
         if (!response.ok)
             console.warn("An Error Occurred While Trying To Retrieve Image");
         setImage(jsonRes.imageAsBase64);
+        await addImageToDB(jsonRes.imageAsBase64);
     });
 
     return (
