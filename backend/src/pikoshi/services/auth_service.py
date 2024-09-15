@@ -43,12 +43,17 @@ async def authenticate(
         user = await get_user_by_access_token(refresh_token, db_session)
 
         if user and user.is_active:
+            
             new_access_token = JWTAuthService.create_access_token(user.uuid)
 
             response = set_authenticated_response(new_access_token, refresh_token)
             return response 
     
     if not user or not user.is_active:
+
+        if user:
+            await UserService.set_user_as_inactive(db_session, user)
+
         raise HTTPException(
             status_code=401,
             detail="No valid authentication tokens provided."
