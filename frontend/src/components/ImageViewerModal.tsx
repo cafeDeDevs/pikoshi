@@ -23,12 +23,9 @@ const ImageViewerModal: Component = () => {
 
         const cachedImage = await getImageFromDB(fileName);
 
-        if (cachedImage) {
-            setImage(cachedImage);
-            return;
-        } else {
-            setImage({});
-        }
+        if (cachedImage) return setImage(cachedImage);
+
+        setImage({});
 
         const windowWidth = window.innerWidth;
 
