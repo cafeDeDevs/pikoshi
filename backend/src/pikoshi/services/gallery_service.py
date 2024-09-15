@@ -173,6 +173,37 @@ def grab_image_files(
         return []
 
 
+def grab_single_image(
+    bucket_name: str, user_uuid: str, file_name: str
+) -> List[dict[str, str]]:
+    prefix = f"{user_uuid}/default_album/{file_name}/"
+    s3_client = S3Service.get_s3_client()
+    result = s3_client.list_objects(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
+    if "Contents" not in result:
+        raise ValueError("No objects found by that file_name")
+    images_as_base64 = []
+    for obj in result["Contents"]:
+        key = obj["Key"]
+
+        s3_object = s3_client.get_object(Bucket=bucket_name, Key=key)
+        file_content = s3_object["Body"].read()
+
+        data = b64encode(file_content).decode("utf-8")
+        file_name = key.split("/")[-1]
+        if "mobile" in file_name:
+            image_type = "mobile"
+        elif "thumbnail" in file_name:
+            image_type = "thumbnail"
+        else:
+            image_type = "original"
+
+        images_as_base64.append(
+            {"data": data, "file_name": file_name, "type": image_type}
+        )
+
+    return images_as_base64
+
+
 async def upload_new_image(
     access_token: str,
     file: UploadFile,

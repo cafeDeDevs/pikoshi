@@ -83,13 +83,7 @@ async def grab_single_image(
     bucket_name = str(s3_credentials.get("bucket_name"))
     user_uuid = str(s3_credentials.get("user_uuid"))
 
-    file_list = GalleryService.grab_file_list(
-        bucket_name, user_uuid, album_name="default_album"
-    )
-
-    image_files = GalleryService.grab_image_files(
-        file_list, bucket_name, album_name="default_album"
-    )
+    image_files = GalleryService.grab_single_image(bucket_name, user_uuid, file_name)
 
     if len(image_files) == 0:
         raise HTTPException(status_code=400, detail="No Images Found In Default Album.")
@@ -98,13 +92,9 @@ async def grab_single_image(
         raise HTTPException(status_code=400, detail="No file_name passed")
 
     if width < 768:
-        image_files = [img for img in image_files if img["type"] == "mobile"]
+        image_file = next((img for img in image_files if img["type"] == "mobile"))
     else:
-        image_files = [img for img in image_files if img["type"] == "original"]
-
-    image_file = next(
-        (img for img in image_files if img["file_name"] == file_name), None
-    )
+        image_file = next((img for img in image_files if img["type"] == "original"))
 
     if image_file is None:
         raise HTTPException(status_code=400, detail="No Image Found In Default Album.")
