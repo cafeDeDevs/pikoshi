@@ -1,5 +1,6 @@
 const DB_NAME = "PikoshiGalleryDB";
 const STORE_NAME = "Thumbnails";
+
 interface ImageMetadata {
     data: string; // Base64 encoded image data
     type: string; // Metadata field, e.g. "original", "mobile"
@@ -30,7 +31,7 @@ const openDB = (): Promise<IDBDatabase> => {
     });
 };
 
-export const addImagesToDB = async (images: Array<ImageMetadata>) => {
+export const addThumbnailsToDB = async (images: Array<ImageMetadata>) => {
     const db = await openDB();
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
@@ -49,7 +50,7 @@ export const addImagesToDB = async (images: Array<ImageMetadata>) => {
     };
 };
 
-export const getImagesFromDB = async (): Promise<Array<ImageMetadata>> => {
+export const getThumbnailsFromDB = async (): Promise<Array<ImageMetadata>> => {
     const db = await openDB();
     const tx = db.transaction(STORE_NAME, "readonly");
     const store = tx.objectStore(STORE_NAME);

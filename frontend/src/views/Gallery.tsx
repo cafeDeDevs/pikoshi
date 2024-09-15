@@ -17,7 +17,11 @@ import UploadImageModal from "../components/UploadImageModal";
 import ImageViewerModal from "../components/ImageViewerModal";
 
 import { delay } from "../utils/utils";
-import { addImagesToDB, getImagesFromDB, clearDB } from "../utils/indexdb";
+import {
+    addThumbnailsToDB,
+    getThumbnailsFromDB,
+    clearDB,
+} from "../utils/indexdb";
 
 import styles from "../css/Gallery.module.css";
 
@@ -47,7 +51,7 @@ const Gallery: Component = () => {
             return navigate("/");
         }
 
-        const cachedImages = await getImagesFromDB();
+        const cachedImages = await getThumbnailsFromDB();
         if (cachedImages && cachedImages.length > 0) {
             setImages(cachedImages);
         } else {
@@ -55,7 +59,7 @@ const Gallery: Component = () => {
             if (imagesAsBase64) {
                 setImages(imagesAsBase64);
                 await clearDB();
-                await addImagesToDB(imagesAsBase64);
+                await addThumbnailsToDB(imagesAsBase64);
             } else {
                 setError(imagesAsBase64);
             }
@@ -68,7 +72,7 @@ const Gallery: Component = () => {
             const imagesAsBase64 = await useGrabGallery();
             if (imagesAsBase64) {
                 await clearDB();
-                await addImagesToDB(imagesAsBase64);
+                await addThumbnailsToDB(imagesAsBase64);
                 setImages(imagesAsBase64);
             } else {
                 setError(imagesAsBase64);
