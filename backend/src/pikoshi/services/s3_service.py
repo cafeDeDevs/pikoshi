@@ -135,7 +135,6 @@ def upload_file(
         # Mobile
         if file_data is not None and object_name is not None:
             object_name = os.path.join(gallery_name, object_name)
-            print("#Mobile object_name :=>", object_name)
             return s3_client.upload_fileobj(file_data, bucket_name, object_name)
 
         # New File
@@ -143,7 +142,6 @@ def upload_file(
             object_name = str(file.filename).split(".")[0]
             hashed_file_name = hash_string(str(file.filename))
             object_name = os.path.join(gallery_name, object_name, hashed_file_name)
-            print("#New File object_name :=>", object_name)
             return s3_client.upload_fileobj(file.file, bucket_name, object_name)
 
         # Default Files
@@ -162,8 +160,6 @@ def upload_file(
                 os.path.basename(object_name),
                 os.path.basename(hashed_file_name),
             )
-            print("object_name :=>", object_name)
-            # ERROR: no such file or directory {file_name}
             return s3_client.upload_file(orig_file_name, bucket_name, object_name)
         else:
             raise ValueError("Unknown Error Occurred When Uploading File(s).")

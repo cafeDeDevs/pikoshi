@@ -48,7 +48,6 @@ const UploadImageModal: Component = () => {
         if (imageData) {
             await uploadImage(imageData);
             setFiles([]);
-            reloadGallery();
         } else {
             return setError("Error While Uploading Image.");
         }

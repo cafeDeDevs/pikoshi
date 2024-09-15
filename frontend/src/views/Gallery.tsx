@@ -2,6 +2,7 @@ import {
     createSignal,
     createEffect,
     For,
+    onMount,
     Show,
     type Component,
 } from "solid-js";
@@ -16,6 +17,7 @@ import UploadImageModal from "../components/UploadImageModal";
 import ImageViewerModal from "../components/ImageViewerModal";
 
 import { delay } from "../utils/utils";
+import { addImagesToDB, getImagesFromDB, clearDB } from "../utils/indexdb";
 
 import styles from "../css/Gallery.module.css";
 
@@ -36,27 +38,37 @@ const Gallery: Component = () => {
 
     const navigate = useNavigate();
 
-    createEffect(async () => {
+    // TODO: Wrap in try/catch/throws
+    onMount(async () => {
         const authContext = await useAuthContext();
         setIsAuthenticated(authContext);
         if (!isAuthenticated()) {
             await delay(3000);
             return navigate("/");
         }
-        const imagesAsBase64 = await useGrabGallery();
-        if (imagesAsBase64) {
-            setImages(imagesAsBase64);
+
+        const cachedImages = await getImagesFromDB();
+        if (cachedImages && cachedImages.length > 0) {
+            setImages(cachedImages);
         } else {
-            setError(imagesAsBase64);
+            const imagesAsBase64 = await useGrabGallery();
+            if (imagesAsBase64) {
+                setImages(imagesAsBase64);
+                await clearDB();
+                await addImagesToDB(imagesAsBase64);
+            } else {
+                setError(imagesAsBase64);
+            }
         }
     });
 
+    // TODO: Wrap in try/catch/throws
     createEffect(async () => {
         if (shouldGalleryReload()) {
-            // TODO: Implement caching strategy here so you
-            // can instantly load gallery thumbnails from cache
             const imagesAsBase64 = await useGrabGallery();
             if (imagesAsBase64) {
+                await clearDB();
+                await addImagesToDB(imagesAsBase64);
                 setImages(imagesAsBase64);
             } else {
                 setError(imagesAsBase64);
