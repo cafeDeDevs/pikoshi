@@ -126,3 +126,19 @@ async def authenticate_user_with_jwt(
     await UserService.set_user_as_active(db_session, user_from_db)
     await UserService.update_user_last_login(db_session, user_from_db)
     return user_from_db
+
+
+
+def create_access_token(user_uuid: str) -> str:
+    #todo: confirm timedelta expiration 
+    access_token_expires = datetime.now(timezone.utc) + timedelta(hours=1) 
+    access_token = jwt.encode(
+        {
+            "exp": access_token_expires,
+            "iat": datetime.now(timezone.utc),
+            "sub": user_uuid,
+        },
+        SECRET_KEY,
+        algorithm=ALGORITHM,
+    )
+    return access_token

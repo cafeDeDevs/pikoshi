@@ -33,24 +33,32 @@ async def authenticate(
 ) -> JSONResponse:
     """
     - Grabs the User from the DB based off of UUID returned from JWT access_token.
-    - Checks to see of the User exists,
-      and if User's `is_active` field is set to True.
-    - Returns a HTTP 200 response back to the client if aforementioned is True,
+    - Checks to see if the User exists and if User's `is_active` field is set to True.
+    - Returns a HTTP 200 response back to the client if the aforementioned is True,
       and returns a HTTP 401 response if either condition is False.
     """
-user = await get_user_by_access_token(access_token, db_session)
-if not user or not user.is_active:
-    user = await get_user_by_access_token(refresh_token, db_session)
+    user = await get_user_by_access_token(access_token, db_session)
+    
+    if not user or not user.is_active:
+        user = await get_user_by_access_token(refresh_token, db_session)
 
-if user and user.is_active:
+        if user and user.is_active:
+            new_access_token = JWTAuthService.create_access_token(user.uuid)
+
+            response = set_authenticated_response(new_access_token, refresh_token)
+            return response 
+    
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=401,
+            detail="No valid authentication tokens provided."
+        )
+    
     return JSONResponse(
         status_code=200,
         content={"message": "User Is Authenticated."},
     )
-else:
-    raise HTTPException(
-        status_code=401, detail="No User Found Within DB or User Not Active"
-    )
+
 
 
 
