@@ -12,6 +12,7 @@ import { useAuthContext } from "../hooks/useAuthContext";
 import { useGrabGallery } from "../hooks/useGrabGallery";
 import { useModalContext, ModalProvider } from "../contexts/ModalContext";
 
+import urls from "../config/urls";
 import Navbar from "../components/Navbar";
 import UploadImageModal from "../components/UploadImageModal";
 import ImageViewerModal from "../components/ImageViewerModal";
@@ -68,7 +69,6 @@ const Gallery: Component = () => {
 
     // TODO: Wrap in try/catch/throws
     createEffect(async () => {
-        console.log("images().length :=>", images().length);
         if (shouldGalleryReload()) {
             const imagesAsBase64 = await useGrabGallery();
             if (imagesAsBase64) {
@@ -87,6 +87,36 @@ const Gallery: Component = () => {
         openImageModal(image);
     };
 
+    const handleLoadMore = async () => {
+        // TODO: set this out as a hook or util function
+        try {
+            const response = await fetch(
+                urls.BACKEND_GALLERY_LOAD_MORE_IMAGES_ROUTE,
+                {
+                    method: "POST",
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                },
+            );
+            if (!response.ok)
+                throw new Error(
+                    "An Error Occurred While Trying To Retrieve More Images",
+                );
+            const jsonRes = await response.json();
+            const { imagesAsBase64 } = jsonRes;
+            await clearDB();
+            const prevImages = images();
+            await addThumbnailsToDB([...prevImages, ...imagesAsBase64]);
+            setImages([...prevImages, ...imagesAsBase64]);
+        } catch (err) {
+            const error = err as Error;
+            return error.message || "Unknown error";
+        }
+    };
+
     return (
         <>
             {/* TODO: Replace Loading... with GalleryLoading component */}
@@ -94,6 +124,12 @@ const Gallery: Component = () => {
                 <Navbar />
                 <UploadImageModal />
                 <ImageViewerModal />
+                {/* TODO: Replace button with Intersection Observer scroll event */}
+                <button
+                    style="background-color: lime;"
+                    onClick={handleLoadMore}>
+                    Load More Images
+                </button>
                 <div class={styles.Gallery}>
                     {/* TODO: Replace Loading... with ImageLoading Component */}
                     <Show

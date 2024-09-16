@@ -1,3 +1,4 @@
+from re import A
 from typing import Annotated
 
 from fastapi import (
@@ -16,6 +17,7 @@ from ..dependencies import get_db_session
 from ..middlewares.logger import TimedRoute
 from ..services import exception_handler_service as ExceptionService
 from ..services import gallery_service as GalleryService
+from ..utils.auth_cookies import set_s3_continuation_token
 
 router = APIRouter(prefix="/gallery", tags=["gallery"], route_class=TimedRoute)
 
@@ -50,7 +52,7 @@ async def get_default_gallery(
         )
 
         file_list = s3_response["file_list"]
-        next_token = s3_response["continuation_token"]
+        next_token = str(s3_response["continuation_token"])
 
         image_files = GalleryService.grab_image_files(
             file_list, bucket_name, album_name="default_album"
@@ -63,18 +65,70 @@ async def get_default_gallery(
 
         image_files = [img for img in image_files if img["type"] == "thumbnail"]
 
-        return JSONResponse(
+        response = JSONResponse(
             status_code=200,
             content={
                 "message": "Images Retrieved From S3 And Sent To Client Successfully.",
                 "imagesAsBase64": image_files,
-                "nextContinuationToken": next_token,
             },
         )
+
+        response = set_s3_continuation_token(response, next_token)
+        return response
     except HTTPException as http_e:
         return ExceptionService.handle_http_exception(http_e)
     except Exception as e:
         return ExceptionService.handle_s3_exception(e)
+
+
+@router.post("/default-load-more/")
+async def load_next_page_of_images(
+    access_token: Annotated[str | None, Cookie()] = None,
+    s3_continuation_token: Annotated[str | None, Cookie()] = None,
+    db_session: AsyncSession = Depends(get_db_session),
+    max_keys: int = 90,
+):
+    try:
+        s3_credentials = await GalleryService.create_new_user_bucket(
+            str(access_token), db_session
+        )
+        bucket_name = str(s3_credentials.get("bucket_name"))
+        user_uuid = str(s3_credentials.get("user_uuid"))
+
+        s3_response = GalleryService.grab_file_list(
+            bucket_name,
+            user_uuid,
+            album_name="default_album",
+            max_keys=max_keys,
+            continuation_token=s3_continuation_token,
+        )
+
+        file_list = s3_response["file_list"]
+        next_token = str(s3_response["continuation_token"])
+
+        image_files = GalleryService.grab_image_files(
+            file_list, bucket_name, album_name="default_album"
+        )
+
+        if len(image_files) == 0:
+            raise HTTPException(
+                status_code=400, detail="No More Images Found In Default Album."
+            )
+
+        image_files = [img for img in image_files if img["type"] == "thumbnail"]
+
+        response = JSONResponse(
+            status_code=200,
+            content={
+                "message": "Images Retrieved From S3 And Sent To Client Successfully.",
+                "imagesAsBase64": image_files,
+            },
+        )
+
+        response = set_s3_continuation_token(response, next_token)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # TODO: again, pass from URL param that
@@ -84,38 +138,47 @@ async def grab_single_image(
     db_session: AsyncSession = Depends(get_db_session),
     body: dict = Body(...),
 ) -> Response:
-    width = body.get("width", 0)
-    file_name = body.get("file_name", "")
+    try:
+        width = body.get("width", 0)
+        file_name = body.get("file_name", "")
 
-    s3_credentials = await GalleryService.grab_s3_credentials(
-        str(access_token), db_session
-    )
-    bucket_name = str(s3_credentials.get("bucket_name"))
-    user_uuid = str(s3_credentials.get("user_uuid"))
+        s3_credentials = await GalleryService.grab_s3_credentials(
+            str(access_token), db_session
+        )
+        bucket_name = str(s3_credentials.get("bucket_name"))
+        user_uuid = str(s3_credentials.get("user_uuid"))
 
-    image_files = GalleryService.grab_single_image(bucket_name, user_uuid, file_name)
+        image_files = GalleryService.grab_single_image(
+            bucket_name, user_uuid, file_name
+        )
 
-    if len(image_files) == 0:
-        raise HTTPException(status_code=400, detail="No Images Found In Default Album.")
+        if len(image_files) == 0:
+            raise HTTPException(
+                status_code=400, detail="No Images Found In Default Album."
+            )
 
-    if len(file_name) == 0:
-        raise HTTPException(status_code=400, detail="No file_name passed")
+        if len(file_name) == 0:
+            raise HTTPException(status_code=400, detail="No file_name passed")
 
-    if width < 768:
-        image_file = next((img for img in image_files if img["type"] == "mobile"))
-    else:
-        image_file = next((img for img in image_files if img["type"] == "original"))
+        if width < 768:
+            image_file = next((img for img in image_files if img["type"] == "mobile"))
+        else:
+            image_file = next((img for img in image_files if img["type"] == "original"))
 
-    if image_file is None:
-        raise HTTPException(status_code=400, detail="No Image Found In Default Album.")
+        if image_file is None:
+            raise HTTPException(
+                status_code=400, detail="No Image Found In Default Album."
+            )
 
-    return JSONResponse(
-        status_code=200,
-        content={
-            "message": "Images Retrieved From S3 And Sent To Client Successfully.",
-            "imageAsBase64": image_file,
-        },
-    )
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Images Retrieved From S3 And Sent To Client Successfully.",
+                "imageAsBase64": image_file,
+            },
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/upload/")

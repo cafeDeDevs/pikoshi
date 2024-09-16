@@ -3,6 +3,21 @@ from datetime import datetime, timedelta, timezone
 from fastapi import Response
 
 
+def set_s3_continuation_token(response: Response, continuation_token: str) -> Response:
+    """
+    - Sets the s3 continuation_token in an HTTP Only Secure Cookie.
+    """
+    response.set_cookie(
+        key="s3_continuation_token",
+        value=continuation_token,
+        httponly=True,
+        samesite="none",
+        secure=True,
+        path="/",
+    )
+    return response
+
+
 def set_auth_cookie(response: Response, key: str, value: str, expires: int) -> Response:
     """
     - Creates an HTTP Only Secure Cookie.
@@ -45,4 +60,5 @@ def remove_auth_cookies(response: Response) -> Response:
     """
     response.delete_cookie(key="access_token")
     response.delete_cookie(key="refresh_token")
+    response.delete_cookie(key="s3_continuation_token")
     return response

@@ -5,7 +5,7 @@ from typing import Any, List
 
 import boto3
 from dotenv import load_dotenv
-from fastapi import UploadFile
+from fastapi import HTTPException, UploadFile
 
 from ..utils.hashers import hash_string
 from . import exception_handler_service as ExceptionService

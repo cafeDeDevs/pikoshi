@@ -13,4 +13,6 @@ export default {
     BACKEND_GALLERY_GRAB_SINGLE_IMAGE_ROUTE:
         "http://localhost:8000/gallery/default-single/",
     BACKEND_GALLERY_UPLOAD_IMAGE_ROUTE: "http://localhost:8000/gallery/upload/",
+    BACKEND_GALLERY_LOAD_MORE_IMAGES_ROUTE:
+        "http://localhost:8000/gallery/default-load-more/",
 };
