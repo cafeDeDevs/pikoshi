@@ -40,6 +40,7 @@ async def authenticate(
     user = await get_user_by_access_token(access_token, db_session)
     
     if not user or not user.is_active:
+        #todo: Rename function as get_use
         user = await get_user_by_access_token(refresh_token, db_session)
 
         if user and user.is_active:
@@ -48,17 +49,15 @@ async def authenticate(
 
             response = set_authenticated_response(new_access_token, refresh_token)
             return response 
-    
-    if not user or not user.is_active:
 
-        if user:
+        else: 
             await UserService.set_user_as_inactive(db_session, user)
 
-        raise HTTPException(
-            status_code=401,
-            detail="No valid authentication tokens provided."
-        )
-    
+            raise HTTPException(
+                status_code=401,
+                detail="No valid authentication tokens provided."
+            )
+        
     return JSONResponse(
         status_code=200,
         content={"message": "User Is Authenticated."},

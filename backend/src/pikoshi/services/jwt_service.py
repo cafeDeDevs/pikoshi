@@ -130,8 +130,7 @@ async def authenticate_user_with_jwt(
 
 
 def create_access_token(user_uuid: str) -> str:
-    #todo: confirm timedelta expiration 
-    access_token_expires = datetime.now(timezone.utc) + timedelta(hours=1) 
+    access_token_expires = datetime.now(timezone.utc) + timedelta(minutes=3) 
     access_token = jwt.encode(
         {
             "exp": access_token_expires,
