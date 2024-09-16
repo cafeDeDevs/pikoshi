@@ -1,7 +1,7 @@
 import io
 import os
 from base64 import b64encode
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from fastapi import Depends, HTTPException, UploadFile
 from PIL import Image
@@ -64,8 +64,12 @@ async def grab_s3_credentials(
 
 
 def grab_file_list(
-    bucket_name: str, user_uuid: str, album_name: str = "default_album"
-) -> List[str]:
+    bucket_name: str,
+    user_uuid: str,
+    album_name: str = "default_album",
+    max_keys: int = 90,
+    continuation_token: str | None = None,
+) -> dict[str, str | List[Any] | None]:
     """
     - Grabs The User's files within their '/default' Album.
     - If there are no files within the '/default' Album, upload the
@@ -74,19 +78,28 @@ def grab_file_list(
     - Return the file_list (so it can be rendered to Client).
     """
     try:
-        file_list = S3Service.grab_file_list(bucket_name, user_uuid)
-
-        if len(file_list) == 0:
-            upload_default_image(bucket_name, user_uuid)
-
-        file_list = S3Service.grab_file_list(
-            bucket_name, user_uuid, album_name=album_name
+        s3_response = S3Service.grab_file_list(
+            bucket_name, user_uuid, album_name, max_keys, continuation_token
         )
 
-        return file_list
+        file_list = s3_response["file_list"]
+
+        if file_list is not None and len(file_list) == 0:
+            upload_default_image(bucket_name, user_uuid)
+            s3_response = S3Service.grab_file_list(
+                bucket_name, user_uuid, album_name, max_keys, continuation_token
+            )
+
+        return {
+            "file_list": s3_response["file_list"],
+            "continuation_token": s3_response.get("continuation_token", None),
+        }
     except Exception as e:
         ExceptionService.handle_generic_exception(e)
-        return []
+        return {
+            "file_list": [],
+            "continuation_token": None,
+        }
 
 
 def upload_default_image(

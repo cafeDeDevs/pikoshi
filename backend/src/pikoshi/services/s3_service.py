@@ -1,7 +1,7 @@
 import hashlib
 import io
 import os
-from typing import List
+from typing import Any, List
 
 import boto3
 from dotenv import load_dotenv
@@ -82,25 +82,45 @@ def delete_bucket(bucket) -> None:
 
 
 def grab_file_list(
-    bucket: str, user_uuid: str, album_name: str = "default_album"
-) -> List[str]:
+    bucket: str,
+    user_uuid: str,
+    album_name: str = "default_album",
+    max_keys: int = 90,
+    continuation_token: str | None = None,
+) -> dict[str, str | List[Any] | None]:
     try:
-        file_list = []
         s3 = boto3.client("s3")
-        # TODO: Use pagination techniques here in conjunction with DB/frontend cache
-        # to determine how many S3 objects to pull in at a time.
-        response = s3.list_objects_v2(
-            Bucket=bucket, Prefix=f"{user_uuid}/{album_name}/"
-        )
-        if response:
+        file_list = []
+
+        params = {
+            "Bucket": bucket,
+            "Prefix": f"{user_uuid}/{album_name}",
+            "MaxKeys": max_keys,
+        }
+
+        if continuation_token is not None:
+            params["ContinuationToken"] = continuation_token
+
+        response = s3.list_objects_v2(**params)
+
+        if response and "Contents" in response:
             for contents in response["Contents"]:
                 key = contents["Key"]
                 if not key.endswith("/"):
                     file_list.append(key)
-        return file_list
+
+        next_continuation_token = response.get("NextContinuationToken", None)
+
+        return {
+            "file_list": file_list,
+            "continuation_token": next_continuation_token,
+        }
     except Exception as e:
         ExceptionService.handle_s3_exception(e)
-        return []
+        return {
+            "file_list": [],
+            "continuation_token": None,
+        }
 
 
 def upload_file(

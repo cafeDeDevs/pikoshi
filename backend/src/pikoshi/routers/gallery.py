@@ -26,6 +26,8 @@ router = APIRouter(prefix="/gallery", tags=["gallery"], route_class=TimedRoute)
 async def get_default_gallery(
     access_token: Annotated[str | None, Cookie()] = None,
     db_session: AsyncSession = Depends(get_db_session),
+    continuation_token: str | None = None,
+    max_keys: int = 90,
 ) -> Response:
     """
     - Creates new S3 bucket based off of UUID (from access_token),
@@ -39,9 +41,16 @@ async def get_default_gallery(
         bucket_name = str(s3_credentials.get("bucket_name"))
         user_uuid = str(s3_credentials.get("user_uuid"))
 
-        file_list = GalleryService.grab_file_list(
-            bucket_name, user_uuid, album_name="default_album"
+        s3_response = GalleryService.grab_file_list(
+            bucket_name,
+            user_uuid,
+            album_name="default_album",
+            max_keys=max_keys,
+            continuation_token=continuation_token,
         )
+
+        file_list = s3_response["file_list"]
+        next_token = s3_response["continuation_token"]
 
         image_files = GalleryService.grab_image_files(
             file_list, bucket_name, album_name="default_album"
@@ -59,6 +68,7 @@ async def get_default_gallery(
             content={
                 "message": "Images Retrieved From S3 And Sent To Client Successfully.",
                 "imagesAsBase64": image_files,
+                "nextContinuationToken": next_token,
             },
         )
     except HTTPException as http_e:

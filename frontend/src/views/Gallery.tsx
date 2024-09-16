@@ -68,6 +68,7 @@ const Gallery: Component = () => {
 
     // TODO: Wrap in try/catch/throws
     createEffect(async () => {
+        console.log("images().length :=>", images().length);
         if (shouldGalleryReload()) {
             const imagesAsBase64 = await useGrabGallery();
             if (imagesAsBase64) {

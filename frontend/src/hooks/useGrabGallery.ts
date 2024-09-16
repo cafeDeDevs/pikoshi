@@ -11,6 +11,7 @@ const useGrabGallery = async (): Promise<any> => {
             credentials: "include",
         });
         const jsonRes = await response.json();
+        console.log("jsonRes :=>", jsonRes);
 
         if (!response.ok)
             throw new Error(
