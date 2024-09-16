@@ -143,6 +143,8 @@ const Gallery: Component = () => {
                                         alt={`Gallery Image ${index() + 1}`}
                                         data-name={image.file_name}
                                         onClick={() => handleImgClick(index())}
+                                        loading="lazy"
+                                        decoding="async"
                                     />
                                 )}
                             </For>

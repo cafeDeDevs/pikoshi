@@ -315,7 +315,7 @@ async def _resize_image(
         img.thumbnail(size)
 
         img_bytes = io.BytesIO()
-        img.save(img_bytes, format="WEBP")
+        img.save(img_bytes, format="WEBP", quality=85, optimize=True)
         img_bytes.seek(0)
         file_name = str(file.filename)
         hashed_file_name = hash_string(file_name)
