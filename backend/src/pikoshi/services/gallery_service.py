@@ -86,7 +86,12 @@ async def grab_file_list(
     """
     try:
         s3_response = await S3Service.grab_file_list(
-            bucket_name, user_uuid, album_name, max_keys, continuation_token
+            bucket_name,
+            user_uuid,
+            album_name,
+            max_keys,
+            continuation_token,
+            file_format=file_format,
         )
 
         file_list = s3_response["file_list"]
