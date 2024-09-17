@@ -85,7 +85,7 @@ def grab_file_list(
     bucket: str,
     user_uuid: str,
     album_name: str = "album_default",
-    max_keys: int = 90,
+    max_keys: int = 30,
     continuation_token: str | None = None,
     file_format: str = "thumbnail",
 ) -> dict[str, str | List[Any] | None]:

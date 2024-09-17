@@ -29,7 +29,7 @@ async def get_default_gallery(
     access_token: Annotated[str | None, Cookie()] = None,
     db_session: AsyncSession = Depends(get_db_session),
     continuation_token: str | None = None,
-    max_keys: int = 90,
+    max_keys: int = 30,
     file_format: str = "thumbnail",
 ) -> Response:
     """
@@ -86,7 +86,7 @@ async def load_next_page_of_images(
     access_token: Annotated[str | None, Cookie()] = None,
     s3_continuation_token: Annotated[str | None, Cookie()] = None,
     db_session: AsyncSession = Depends(get_db_session),
-    max_keys: int = 90,
+    max_keys: int = 30,
     file_format="thumbnail",
 ):
     try:
