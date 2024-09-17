@@ -3,19 +3,16 @@ import io
 import os
 from typing import Any, List
 
-import boto3
+from aiobotocore.session import get_session
 from dotenv import load_dotenv
-from fastapi import HTTPException, UploadFile
+from fastapi import UploadFile
 
 from ..utils.hashers import hash_string
 from . import exception_handler_service as ExceptionService
 
 load_dotenv()
 AWS_REGION = str(os.environ.get("AWS_REGION"))
-
-
-def get_s3_client():
-    return boto3.client("s3")
+session = get_session()
 
 
 def get_bucket_index(user_uuid: str, num_buckets: int = 100) -> int:
@@ -29,24 +26,24 @@ def get_bucket_index(user_uuid: str, num_buckets: int = 100) -> int:
     return int(hash_digest, 16) % num_buckets
 
 
-def get_all_buckets() -> List[str]:
+async def get_all_buckets() -> List[str]:
     """
     - Grabs All Existing Bucket Names from S3
     """
     try:
-        s3_client = boto3.client("s3", region_name=AWS_REGION)
-        response = s3_client.list_buckets()
-        all_buckets = []
-        if response:
-            for bucket in response["Buckets"]:
-                all_buckets.append(bucket.get("Name"))
-        return all_buckets
+        async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
+            response = await s3_client.list_buckets()
+            all_buckets = []
+            if response:
+                for bucket in response["Buckets"]:
+                    all_buckets.append(bucket.get("Name"))
+            return all_buckets
     except Exception as e:
         ExceptionService.handle_s3_exception(e)
         return []
 
 
-def create_bucket(
+async def create_bucket(
     bucket_name: str,
     user_uuid: str,
     album_name: str,
@@ -59,29 +56,31 @@ def create_bucket(
     - Creates a new album directory within user's uuid directory
     """
     try:
-        s3_client = boto3.client("s3", region_name=AWS_REGION)
-        location = {"LocationConstraint": AWS_REGION}
-        all_buckets = get_all_buckets()
-        if bucket_name not in all_buckets:
-            s3_client.create_bucket(
-                Bucket=bucket_name, CreateBucketConfiguration=location
-            )
-            s3_client.put_object(Bucket=bucket_name, Key=f"{user_uuid}/{album_name}/")
+        async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
+            location = {"LocationConstraint": AWS_REGION}
+            all_buckets = await get_all_buckets()
+            if bucket_name not in all_buckets:
+                await s3_client.create_bucket(
+                    Bucket=bucket_name, CreateBucketConfiguration=location
+                )
+                await s3_client.put_object(
+                    Bucket=bucket_name, Key=f"{user_uuid}/{album_name}/"
+                )
     except Exception as e:
         ExceptionService.handle_s3_exception(e)
 
 
 # TODO: Probably don't need to delete bucket ever,
 # but we WILL need to delete album
-def delete_bucket(bucket) -> None:
+async def delete_bucket(bucket) -> None:
     try:
-        s3_client = boto3.client("s3")
-        s3_client.delete_bucket(Bucket=bucket)
+        async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
+            await s3_client.delete_bucket(Bucket=bucket)
     except Exception as e:
         ExceptionService.handle_s3_exception(e)
 
 
-def grab_file_list(
+async def grab_file_list(
     bucket: str,
     user_uuid: str,
     album_name: str = "album_default",
@@ -90,32 +89,32 @@ def grab_file_list(
     file_format: str = "thumbnail",
 ) -> dict[str, str | List[Any] | None]:
     try:
-        s3 = boto3.client("s3")
-        file_list = []
+        async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
+            file_list = []
 
-        params = {
-            "Bucket": bucket,
-            "Prefix": f"{user_uuid}/{album_name}/{file_format}",
-            "MaxKeys": max_keys,
-        }
+            params = {
+                "Bucket": bucket,
+                "Prefix": f"{user_uuid}/{album_name}/{file_format}",
+                "MaxKeys": max_keys,
+            }
 
-        if continuation_token is not None:
-            params["ContinuationToken"] = continuation_token
+            if continuation_token is not None:
+                params["ContinuationToken"] = continuation_token
 
-        response = s3.list_objects_v2(**params)
+            response = await s3_client.list_objects_v2(**params)
 
-        if response and "Contents" in response:
-            for contents in response["Contents"]:
-                key = contents["Key"]
-                if not key.endswith("/"):
-                    file_list.append(key)
+            if response and "Contents" in response:
+                for contents in response["Contents"]:
+                    key = contents["Key"]
+                    if not key.endswith("/"):
+                        file_list.append(key)
 
-        next_continuation_token = response.get("NextContinuationToken", None)
+            next_continuation_token = response.get("NextContinuationToken", None)
 
-        return {
-            "file_list": file_list,
-            "continuation_token": next_continuation_token,
-        }
+            return {
+                "file_list": file_list,
+                "continuation_token": next_continuation_token,
+            }
     except Exception as e:
         ExceptionService.handle_s3_exception(e)
         return {
@@ -124,7 +123,7 @@ def grab_file_list(
         }
 
 
-def upload_file(
+async def upload_file(
     file: UploadFile | None,
     bucket_name: str,
     user_uuid: str,
@@ -150,50 +149,56 @@ def upload_file(
       or file specified.
     """
     try:
-        s3_client = boto3.client("s3")
+        async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
 
-        gallery_name = f"{user_uuid}/{album_name}/{file_format}"
+            gallery_name = f"{user_uuid}/{album_name}/{file_format}"
 
-        # Mobile
-        if file_data is not None and object_name is not None:
-            object_name = os.path.join(gallery_name, object_name)
-            return s3_client.upload_fileobj(file_data, bucket_name, object_name)
+            # Mobile
+            if file_data is not None and object_name is not None:
+                object_name = os.path.join(gallery_name, object_name)
+                return await s3_client.upload_fileobj(
+                    file_data, bucket_name, object_name
+                )
 
-        # New File
-        elif file is not None:
-            object_name = str(file.filename).split(".")[0]
-            hashed_file_name = hash_string(str(file.filename))
-            object_name = os.path.join(gallery_name, object_name, hashed_file_name)
-            return s3_client.upload_fileobj(file.file, bucket_name, object_name)
+            # New File
+            elif file is not None:
+                object_name = str(file.filename).split(".")[0]
+                hashed_file_name = hash_string(str(file.filename))
+                object_name = os.path.join(gallery_name, object_name, hashed_file_name)
+                return await s3_client.upload_fileobj(
+                    file.file, bucket_name, object_name
+                )
 
-        # Default Files
-        elif object_name is not None:
-            orig_file_name = file_name
-            file_name = file_name.split("/")[-1]
-            hashed_file_name = hash_string(file_name)
-            object_name = os.path.join(
-                gallery_name,
-                os.path.basename(object_name),
-                os.path.basename(hashed_file_name),
-            )
-            return s3_client.upload_file(orig_file_name, bucket_name, object_name)
-        else:
-            raise ValueError("Unknown Error Occurred When Uploading File(s).")
+            # Default Files
+            elif object_name is not None:
+                orig_file_name = file_name
+                file_name = file_name.split("/")[-1]
+                hashed_file_name = hash_string(file_name)
+                object_name = os.path.join(
+                    gallery_name,
+                    os.path.basename(object_name),
+                    os.path.basename(hashed_file_name),
+                )
+                return await s3_client.upload_file(
+                    orig_file_name, bucket_name, object_name
+                )
+            else:
+                raise ValueError("Unknown Error Occurred When Uploading File(s).")
     except Exception as e:
         ExceptionService.handle_s3_exception(e)
 
 
-def download_file(file_name, bucket, object_name) -> None:
+async def download_file(file_name, bucket, object_name) -> None:
     try:
-        s3_client = boto3.client("s3")
-        s3_client.download_file(bucket, object_name, file_name)
+        async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
+            s3_client.download_file(bucket, object_name, file_name)
     except Exception as e:
         ExceptionService.handle_s3_exception(e)
 
 
-def delete_file(bucket, key_name) -> None:
+async def delete_file(bucket, key_name) -> None:
     try:
-        s3_client = boto3.client("s3")
-        s3_client.delete_object(Bucket=bucket, Key=key_name)
+        async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
+            s3_client.delete_object(Bucket=bucket, Key=key_name)
     except Exception as e:
         ExceptionService.handle_s3_exception(e)

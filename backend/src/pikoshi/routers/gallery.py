@@ -1,4 +1,3 @@
-from re import A
 from typing import Annotated
 
 from fastapi import (
@@ -44,7 +43,7 @@ async def get_default_gallery(
         bucket_name = str(s3_credentials.get("bucket_name"))
         user_uuid = str(s3_credentials.get("user_uuid"))
 
-        s3_response = GalleryService.grab_file_list(
+        s3_response = await GalleryService.grab_file_list(
             bucket_name,
             user_uuid,
             album_name="album_default",
@@ -56,7 +55,7 @@ async def get_default_gallery(
         file_list = s3_response["file_list"]
         next_token = str(s3_response["continuation_token"])
 
-        image_files = GalleryService.grab_image_files(
+        image_files = await GalleryService.grab_image_files(
             file_list, bucket_name, album_name="album_default", file_format=file_format
         )
 
@@ -96,7 +95,7 @@ async def load_next_page_of_images(
         bucket_name = str(s3_credentials.get("bucket_name"))
         user_uuid = str(s3_credentials.get("user_uuid"))
 
-        s3_response = GalleryService.grab_file_list(
+        s3_response = await GalleryService.grab_file_list(
             bucket_name,
             user_uuid,
             album_name="album_default",
@@ -108,7 +107,7 @@ async def load_next_page_of_images(
         file_list = s3_response["file_list"]
         next_token = str(s3_response["continuation_token"])
 
-        image_files = GalleryService.grab_image_files(
+        image_files = await GalleryService.grab_image_files(
             file_list, bucket_name, album_name="album_default", file_format=file_format
         )
 

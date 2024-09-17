@@ -3,6 +3,7 @@ import os
 from base64 import b64encode
 from typing import Any, Dict, List, Tuple
 
+from aiobotocore.session import get_session
 from fastapi import Depends, HTTPException, UploadFile
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +13,9 @@ from ..utils.hashers import hash_string
 from . import auth_service as AuthService
 from . import exception_handler_service as ExceptionService
 from . import s3_service as S3Service
+
+AWS_REGION = str(os.environ.get("AWS_REGION"))
+session = get_session()
 
 
 async def create_new_user_bucket(
@@ -37,7 +41,9 @@ async def create_new_user_bucket(
 
         user_bucket_index = S3Service.get_bucket_index(user_uuid)  # type:ignore
         bucket_name = f"user-bucket-{user_bucket_index}"
-        S3Service.create_bucket(bucket_name, user_uuid, album_name="album_default")
+        await S3Service.create_bucket(
+            bucket_name, user_uuid, album_name="album_default"
+        )
         return {"bucket_name": bucket_name, "user_uuid": user_uuid}
     except Exception as e:
         raise HTTPException(
@@ -63,7 +69,7 @@ async def grab_s3_credentials(
         )
 
 
-def grab_file_list(
+async def grab_file_list(
     bucket_name: str,
     user_uuid: str,
     album_name: str = "album_default",
@@ -79,15 +85,15 @@ def grab_file_list(
     - Return the file_list (so it can be rendered to Client).
     """
     try:
-        s3_response = S3Service.grab_file_list(
+        s3_response = await S3Service.grab_file_list(
             bucket_name, user_uuid, album_name, max_keys, continuation_token
         )
 
         file_list = s3_response["file_list"]
 
         if file_list is not None and len(file_list) == 0:
-            upload_default_image(bucket_name, user_uuid)
-            s3_response = S3Service.grab_file_list(
+            await upload_default_image(bucket_name, user_uuid)
+            s3_response = await S3Service.grab_file_list(
                 bucket_name,
                 user_uuid,
                 album_name,
@@ -108,7 +114,7 @@ def grab_file_list(
         }
 
 
-def upload_default_image(
+async def upload_default_image(
     bucket_name: str,
     user_uuid: str,
 ) -> None:
@@ -117,7 +123,7 @@ def upload_default_image(
       from the '/public' folder into the User's '/default' Album.
     """
     try:
-        S3Service.upload_file(
+        await S3Service.upload_file(
             file=None,
             bucket_name=bucket_name,
             user_uuid=user_uuid,
@@ -127,7 +133,7 @@ def upload_default_image(
             file_data=None,
             file_format="original",
         )
-        S3Service.upload_file(
+        await S3Service.upload_file(
             file=None,
             bucket_name=bucket_name,
             user_uuid=user_uuid,
@@ -137,7 +143,7 @@ def upload_default_image(
             file_data=None,
             file_format="mobile",
         )
-        S3Service.upload_file(
+        await S3Service.upload_file(
             file=None,
             bucket_name=bucket_name,
             user_uuid=user_uuid,
@@ -151,7 +157,7 @@ def upload_default_image(
         ExceptionService.handle_generic_exception(e)
 
 
-def grab_image_files(
+async def grab_image_files(
     file_list,
     bucket_name: str,
     album_name: str = "album_default",
@@ -169,48 +175,53 @@ def grab_image_files(
     - Return the `image_files` list.
     """
     try:
-        s3_client = S3Service.get_s3_client()
-        image_files = []
+        async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
+            image_files = []
 
-        # TODO: Once album_name is grabbed from parameters, change this
-        for file_name in file_list:
-            if f"/{album_name}/{file_format}" in file_name:
-                print("file_name :=>", file_name)
-                orig_file_name = file_name.split("/")[-2]
-                file_obj = s3_client.get_object(Bucket=bucket_name, Key=file_name)
-                image_data = b64encode(file_obj["Body"].read()).decode("utf-8")
-                image_files.append(
-                    {
-                        "data": image_data,
-                        "file_name": orig_file_name,
-                    }
-                )
+            # TODO: Once album_name is grabbed from parameters, change this
+            for file_name in file_list:
+                if f"/{album_name}/{file_format}" in file_name:
+                    orig_file_name = file_name.split("/")[-2]
+                    file_obj = await s3_client.get_object(
+                        Bucket=bucket_name, Key=file_name
+                    )
+                    image_data = b64encode(await file_obj["Body"].read()).decode(
+                        "utf-8"
+                    )
+                    image_files.append(
+                        {
+                            "data": image_data,
+                            "file_name": orig_file_name,
+                        }
+                    )
 
-        return image_files
+            return image_files
     except Exception as e:
         ExceptionService.handle_generic_exception(e)
         return []
 
 
-def grab_single_image(
+async def grab_single_image(
     bucket_name: str, user_uuid: str, file_name: str, file_format: str
 ) -> dict[str, str]:
-    prefix = f"{user_uuid}/album_default/{file_format}/{file_name}/"
-    s3_client = S3Service.get_s3_client()
-    result = s3_client.list_objects(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
-    if "Contents" not in result:
-        raise ValueError("No objects found by that file_name")
-    image_as_base64 = {}
-    for obj in result["Contents"]:
-        key = obj["Key"]
+    async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
+        prefix = f"{user_uuid}/album_default/{file_format}/{file_name}/"
+        result = s3_client.list_objects(
+            Bucket=bucket_name, Prefix=prefix, Delimiter="/"
+        )
+        if "Contents" not in result:
+            raise ValueError("No objects found by that file_name")
+        image_as_base64 = {}
+        for obj in result["Contents"]:
+            key = obj["Key"]
 
-        s3_object = s3_client.get_object(Bucket=bucket_name, Key=key)
-        file_content = s3_object["Body"].read()
+            s3_object = s3_client.get_object(Bucket=bucket_name, Key=key)
+            file_content = s3_object["Body"].read()
 
-        data = b64encode(file_content).decode("utf-8")
-        image_as_base64 = {"data": data, "file_name": file_name}
+            data = b64encode(file_content).decode("utf-8")
+            image_as_base64 = {"data": data, "file_name": file_name}
 
-    return image_as_base64
+        return image_as_base64
 
 
 async def upload_new_image(
@@ -248,7 +259,7 @@ async def upload_new_image(
         await file.seek(0)
 
         # Uploads Desktop Image
-        S3Service.upload_file(
+        await S3Service.upload_file(
             file=file,
             bucket_name=bucket_name,
             user_uuid=user_uuid,
@@ -263,7 +274,7 @@ async def upload_new_image(
         mobile_data = await _resize_image(file, image_bytes, mobile_size)
         img_bytes, object_name = mobile_data
 
-        S3Service.upload_file(
+        await S3Service.upload_file(
             file=None,
             bucket_name=bucket_name,
             user_uuid=user_uuid,
@@ -277,7 +288,7 @@ async def upload_new_image(
         thumbnail_size = (300, 200)
         thumbnail_data = await _resize_image(file, image_bytes, thumbnail_size)
         img_bytes, object_name = thumbnail_data
-        S3Service.upload_file(
+        await S3Service.upload_file(
             file=None,
             bucket_name=bucket_name,
             user_uuid=user_uuid,
