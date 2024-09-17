@@ -30,6 +30,7 @@ async def get_default_gallery(
     db_session: AsyncSession = Depends(get_db_session),
     continuation_token: str | None = None,
     max_keys: int = 90,
+    file_format: str = "thumbnail",
 ) -> Response:
     """
     - Creates new S3 bucket based off of UUID (from access_token),
@@ -46,24 +47,23 @@ async def get_default_gallery(
         s3_response = GalleryService.grab_file_list(
             bucket_name,
             user_uuid,
-            album_name="default_album",
+            album_name="album_default",
             max_keys=max_keys,
             continuation_token=continuation_token,
+            file_format=file_format,
         )
 
         file_list = s3_response["file_list"]
         next_token = str(s3_response["continuation_token"])
 
         image_files = GalleryService.grab_image_files(
-            file_list, bucket_name, album_name="default_album"
+            file_list, bucket_name, album_name="album_default", file_format=file_format
         )
 
         if len(image_files) == 0:
             raise HTTPException(
                 status_code=400, detail="No Images Found In Default Album."
             )
-
-        image_files = [img for img in image_files if img["type"] == "thumbnail"]
 
         response = JSONResponse(
             status_code=200,
@@ -87,6 +87,7 @@ async def load_next_page_of_images(
     s3_continuation_token: Annotated[str | None, Cookie()] = None,
     db_session: AsyncSession = Depends(get_db_session),
     max_keys: int = 90,
+    file_format="thumbnail",
 ):
     try:
         s3_credentials = await GalleryService.create_new_user_bucket(
@@ -98,24 +99,23 @@ async def load_next_page_of_images(
         s3_response = GalleryService.grab_file_list(
             bucket_name,
             user_uuid,
-            album_name="default_album",
+            album_name="album_default",
             max_keys=max_keys,
             continuation_token=s3_continuation_token,
+            file_format=file_format,
         )
 
         file_list = s3_response["file_list"]
         next_token = str(s3_response["continuation_token"])
 
         image_files = GalleryService.grab_image_files(
-            file_list, bucket_name, album_name="default_album"
+            file_list, bucket_name, album_name="album_default", file_format=file_format
         )
 
         if len(image_files) == 0:
             raise HTTPException(
                 status_code=400, detail="No More Images Found In Default Album."
             )
-
-        image_files = [img for img in image_files if img["type"] == "thumbnail"]
 
         response = JSONResponse(
             status_code=200,
@@ -141,6 +141,7 @@ async def grab_single_image(
     try:
         width = body.get("width", 0)
         file_name = body.get("file_name", "")
+        file_format = "mobile" if width < 768 else "original"
 
         s3_credentials = await GalleryService.grab_s3_credentials(
             str(access_token), db_session
@@ -148,27 +149,17 @@ async def grab_single_image(
         bucket_name = str(s3_credentials.get("bucket_name"))
         user_uuid = str(s3_credentials.get("user_uuid"))
 
-        image_files = GalleryService.grab_single_image(
-            bucket_name, user_uuid, file_name
+        image_file = GalleryService.grab_single_image(
+            bucket_name, user_uuid, file_name, file_format=file_format
         )
 
-        if len(image_files) == 0:
+        if image_file is False:
             raise HTTPException(
-                status_code=400, detail="No Images Found In Default Album."
+                status_code=400, detail="No Image Found In Default Album."
             )
 
         if len(file_name) == 0:
             raise HTTPException(status_code=400, detail="No file_name passed")
-
-        if width < 768:
-            image_file = next((img for img in image_files if img["type"] == "mobile"))
-        else:
-            image_file = next((img for img in image_files if img["type"] == "original"))
-
-        if image_file is None:
-            raise HTTPException(
-                status_code=400, detail="No Image Found In Default Album."
-            )
 
         return JSONResponse(
             status_code=200,

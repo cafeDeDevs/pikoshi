@@ -84,9 +84,10 @@ def delete_bucket(bucket) -> None:
 def grab_file_list(
     bucket: str,
     user_uuid: str,
-    album_name: str = "default_album",
+    album_name: str = "album_default",
     max_keys: int = 90,
     continuation_token: str | None = None,
+    file_format: str = "thumbnail",
 ) -> dict[str, str | List[Any] | None]:
     try:
         s3 = boto3.client("s3")
@@ -94,7 +95,7 @@ def grab_file_list(
 
         params = {
             "Bucket": bucket,
-            "Prefix": f"{user_uuid}/{album_name}",
+            "Prefix": f"{user_uuid}/{album_name}/{file_format}",
             "MaxKeys": max_keys,
         }
 
@@ -129,8 +130,9 @@ def upload_file(
     user_uuid: str,
     object_name: str | None = None,
     file_name: str = "./src/pikoshi/public/default.webp",
-    album_name: str = "default_album",
+    album_name: str = "album_default",
     file_data: io.BytesIO | None = None,
+    file_format: str = "thumbnail",
 ) -> None:
     # TODO: Refactor docstring once upload_new_image is refactored.
     """
@@ -150,7 +152,7 @@ def upload_file(
     try:
         s3_client = boto3.client("s3")
 
-        gallery_name = f"{user_uuid}/{album_name}/"
+        gallery_name = f"{user_uuid}/{album_name}/{file_format}"
 
         # Mobile
         if file_data is not None and object_name is not None:
@@ -169,12 +171,6 @@ def upload_file(
             orig_file_name = file_name
             file_name = file_name.split("/")[-1]
             hashed_file_name = hash_string(file_name)
-            if "mobile_" in file_name:
-                file_name = file_name.replace("mobile_", "")
-                hashed_file_name = f"mobile_{hash_string(file_name)}"
-            elif "thumbnail_" in file_name:
-                file_name = file_name.replace("thumbnail_", "")
-                hashed_file_name = f"thumbnail_{hash_string(file_name)}"
             object_name = os.path.join(
                 gallery_name,
                 os.path.basename(object_name),

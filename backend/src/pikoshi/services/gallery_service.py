@@ -37,7 +37,7 @@ async def create_new_user_bucket(
 
         user_bucket_index = S3Service.get_bucket_index(user_uuid)  # type:ignore
         bucket_name = f"user-bucket-{user_bucket_index}"
-        S3Service.create_bucket(bucket_name, user_uuid, album_name="default_album")
+        S3Service.create_bucket(bucket_name, user_uuid, album_name="album_default")
         return {"bucket_name": bucket_name, "user_uuid": user_uuid}
     except Exception as e:
         raise HTTPException(
@@ -66,9 +66,10 @@ async def grab_s3_credentials(
 def grab_file_list(
     bucket_name: str,
     user_uuid: str,
-    album_name: str = "default_album",
+    album_name: str = "album_default",
     max_keys: int = 90,
     continuation_token: str | None = None,
+    file_format: str = "thumbnail",
 ) -> dict[str, str | List[Any] | None]:
     """
     - Grabs The User's files within their '/default' Album.
@@ -87,7 +88,12 @@ def grab_file_list(
         if file_list is not None and len(file_list) == 0:
             upload_default_image(bucket_name, user_uuid)
             s3_response = S3Service.grab_file_list(
-                bucket_name, user_uuid, album_name, max_keys, continuation_token
+                bucket_name,
+                user_uuid,
+                album_name,
+                max_keys,
+                continuation_token,
+                file_format=file_format,
             )
 
         return {
@@ -117,8 +123,9 @@ def upload_default_image(
             user_uuid=user_uuid,
             object_name="default",
             file_name="./src/pikoshi/public/default.webp",
-            album_name="default_album",
+            album_name="album_default",
             file_data=None,
+            file_format="original",
         )
         S3Service.upload_file(
             file=None,
@@ -126,8 +133,9 @@ def upload_default_image(
             user_uuid=user_uuid,
             object_name="default",
             file_name="./src/pikoshi/public/mobile_default.webp",
-            album_name="default_album",
+            album_name="album_default",
             file_data=None,
+            file_format="mobile",
         )
         S3Service.upload_file(
             file=None,
@@ -135,15 +143,19 @@ def upload_default_image(
             user_uuid=user_uuid,
             object_name="default",
             file_name="./src/pikoshi/public/thumbnail_default.webp",
-            album_name="default_album",
+            album_name="album_default",
             file_data=None,
+            file_format="thumbnail",
         )
     except Exception as e:
         ExceptionService.handle_generic_exception(e)
 
 
 def grab_image_files(
-    file_list, bucket_name: str, album_name: str = "default_album"
+    file_list,
+    bucket_name: str,
+    album_name: str = "album_default",
+    file_format="thumbnail",
 ) -> List[dict]:
     """
     - Establishes an empty `image_files` list.
@@ -162,20 +174,14 @@ def grab_image_files(
 
         # TODO: Once album_name is grabbed from parameters, change this
         for file_name in file_list:
-            if f"/{album_name}/" in file_name:
+            if f"/{album_name}/{file_format}" in file_name:
+                print("file_name :=>", file_name)
                 orig_file_name = file_name.split("/")[-2]
                 file_obj = s3_client.get_object(Bucket=bucket_name, Key=file_name)
                 image_data = b64encode(file_obj["Body"].read()).decode("utf-8")
-                if "mobile" in file_name:
-                    image_type = "mobile"
-                elif "thumbnail" in file_name:
-                    image_type = "thumbnail"
-                else:
-                    image_type = "original"
                 image_files.append(
                     {
                         "data": image_data,
-                        "type": image_type,
                         "file_name": orig_file_name,
                     }
                 )
@@ -187,15 +193,14 @@ def grab_image_files(
 
 
 def grab_single_image(
-    bucket_name: str, user_uuid: str, file_name: str
-) -> List[dict[str, str]]:
-    orig_file_name = file_name
-    prefix = f"{user_uuid}/default_album/{file_name}/"
+    bucket_name: str, user_uuid: str, file_name: str, file_format: str
+) -> dict[str, str]:
+    prefix = f"{user_uuid}/album_default/{file_format}/{file_name}/"
     s3_client = S3Service.get_s3_client()
     result = s3_client.list_objects(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
     if "Contents" not in result:
         raise ValueError("No objects found by that file_name")
-    images_as_base64 = []
+    image_as_base64 = {}
     for obj in result["Contents"]:
         key = obj["Key"]
 
@@ -203,26 +208,16 @@ def grab_single_image(
         file_content = s3_object["Body"].read()
 
         data = b64encode(file_content).decode("utf-8")
-        file_name = key.split("/")[-1]
-        if "mobile" in file_name:
-            image_type = "mobile"
-        elif "thumbnail" in file_name:
-            image_type = "thumbnail"
-        else:
-            image_type = "original"
+        image_as_base64 = {"data": data, "file_name": file_name}
 
-        images_as_base64.append(
-            {"data": data, "file_name": orig_file_name, "type": image_type}
-        )
-
-    return images_as_base64
+    return image_as_base64
 
 
 async def upload_new_image(
     access_token: str,
     file: UploadFile,
     db_session: AsyncSession = Depends(get_db_session),
-    album_name: str = "default_album",
+    album_name: str = "album_default",
 ) -> None:
     """
     - Grabs the User data from the database using the JWT
@@ -260,13 +255,12 @@ async def upload_new_image(
             object_name=None,
             album_name=album_name,
             file_data=None,
+            file_format="original",
         )
 
         # Uploads Mobile Image
         mobile_size = (480, 320)
-        mobile_data = await _resize_image(
-            file, image_bytes, mobile_size, file_type="mobile"
-        )
+        mobile_data = await _resize_image(file, image_bytes, mobile_size)
         img_bytes, object_name = mobile_data
 
         S3Service.upload_file(
@@ -276,13 +270,12 @@ async def upload_new_image(
             object_name=object_name,
             album_name=album_name,
             file_data=img_bytes,
+            file_format="mobile",
         )
 
         # Uploads Thumbnail Image
         thumbnail_size = (300, 200)
-        thumbnail_data = await _resize_image(
-            file, image_bytes, thumbnail_size, file_type="thumbnail"
-        )
+        thumbnail_data = await _resize_image(file, image_bytes, thumbnail_size)
         img_bytes, object_name = thumbnail_data
         S3Service.upload_file(
             file=None,
@@ -291,6 +284,7 @@ async def upload_new_image(
             object_name=object_name,
             album_name=album_name,
             file_data=img_bytes,
+            file_format="thumbnail",
         )
 
     except Exception as e:
@@ -298,7 +292,7 @@ async def upload_new_image(
 
 
 async def _resize_image(
-    file: UploadFile, image_bytes: io.BytesIO, size: Tuple[int, int], file_type: str
+    file: UploadFile, image_bytes: io.BytesIO, size: Tuple[int, int]
 ) -> Tuple[io.BytesIO, str]:
     """
     - Uses pillow's Image() to create mobile/thumbnail version of image in RAM.
@@ -319,6 +313,6 @@ async def _resize_image(
         img_bytes.seek(0)
         file_name = str(file.filename)
         hashed_file_name = hash_string(file_name)
-        resized_file_name = f"{file_type}_{hashed_file_name}"
+        resized_file_name = hashed_file_name
         object_name = os.path.join(file_name.split(".")[0], resized_file_name)
     return img_bytes, object_name
