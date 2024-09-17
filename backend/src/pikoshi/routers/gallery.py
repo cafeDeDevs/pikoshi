@@ -148,7 +148,7 @@ async def grab_single_image(
         bucket_name = str(s3_credentials.get("bucket_name"))
         user_uuid = str(s3_credentials.get("user_uuid"))
 
-        image_file = GalleryService.grab_single_image(
+        image_file = await GalleryService.grab_single_image(
             bucket_name, user_uuid, file_name, file_format=file_format
         )
 

@@ -206,7 +206,7 @@ async def grab_single_image(
 ) -> dict[str, str]:
     async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
         prefix = f"{user_uuid}/album_default/{file_format}/{file_name}/"
-        result = s3_client.list_objects(
+        result = await s3_client.list_objects(
             Bucket=bucket_name, Prefix=prefix, Delimiter="/"
         )
         if "Contents" not in result:
@@ -215,8 +215,8 @@ async def grab_single_image(
         for obj in result["Contents"]:
             key = obj["Key"]
 
-            s3_object = s3_client.get_object(Bucket=bucket_name, Key=key)
-            file_content = s3_object["Body"].read()
+            s3_object = await s3_client.get_object(Bucket=bucket_name, Key=key)
+            file_content = await s3_object["Body"].read()
 
             data = b64encode(file_content).decode("utf-8")
             image_as_base64 = {"data": data, "file_name": file_name}

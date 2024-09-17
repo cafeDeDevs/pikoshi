@@ -74,7 +74,7 @@ async def create_bucket(
 # but we WILL need to delete album
 async def delete_bucket(bucket) -> None:
     try:
-        async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
+        async with session.create_client("s3") as s3_client:
             await s3_client.delete_bucket(Bucket=bucket)
     except Exception as e:
         ExceptionService.handle_s3_exception(e)
@@ -155,9 +155,10 @@ async def upload_file(
 
             # Mobile
             if file_data is not None and object_name is not None:
+                file_data.seek(0)
                 object_name = os.path.join(gallery_name, object_name)
-                return await s3_client.upload_fileobj(
-                    file_data, bucket_name, object_name
+                return await s3_client.put_object(
+                    Bucket=bucket_name, Key=object_name, Body=file_data.read()
                 )
 
             # New File
@@ -165,23 +166,24 @@ async def upload_file(
                 object_name = str(file.filename).split(".")[0]
                 hashed_file_name = hash_string(str(file.filename))
                 object_name = os.path.join(gallery_name, object_name, hashed_file_name)
-                return await s3_client.upload_fileobj(
-                    file.file, bucket_name, object_name
+                return await s3_client.put_object(
+                    Bucket=bucket_name, Key=object_name, Body=await file.read()
                 )
 
             # Default Files
             elif object_name is not None:
-                orig_file_name = file_name
-                file_name = file_name.split("/")[-1]
-                hashed_file_name = hash_string(file_name)
-                object_name = os.path.join(
-                    gallery_name,
-                    os.path.basename(object_name),
-                    os.path.basename(hashed_file_name),
-                )
-                return await s3_client.upload_file(
-                    orig_file_name, bucket_name, object_name
-                )
+                with open(file_name, "rb") as f:
+                    orig_file_name = file_name
+                    file_name = file_name.split("/")[-1]
+                    hashed_file_name = hash_string(file_name)
+                    object_name = os.path.join(
+                        gallery_name,
+                        os.path.basename(object_name),
+                        os.path.basename(hashed_file_name),
+                    )
+                    return await s3_client.put_object(
+                        Bucket=bucket_name, Key=object_name, Body=f.read()
+                    )
             else:
                 raise ValueError("Unknown Error Occurred When Uploading File(s).")
     except Exception as e:
