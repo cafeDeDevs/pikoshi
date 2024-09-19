@@ -15,6 +15,7 @@ const openDB = (): Promise<IDBDatabase> => {
             const db = (event.target as IDBOpenDBRequest).result;
             if (!db.objectStoreNames.contains(STORE_NAME)) {
                 db.createObjectStore(STORE_NAME, {
+                    keyPath: "file_name",
                     autoIncrement: true,
                 });
             }
