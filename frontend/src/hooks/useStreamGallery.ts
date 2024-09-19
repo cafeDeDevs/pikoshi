@@ -1,5 +1,3 @@
-import urls from "../config/urls";
-
 interface ImageMetadata {
     data: string; // Base64 encoded image data
     type: string; // Metadata field, e.g. "original", "mobile"
@@ -20,7 +18,8 @@ const useStreamGallery = async function* (
         signal: abortController.signal,
     });
 
-    const reader = response.body!.getReader();
+    const reader = response.body?.getReader();
+    if (!reader) return;
     const boundary = response.headers.get("X-Boundary");
     const decoder = new TextDecoder();
     let done = false;

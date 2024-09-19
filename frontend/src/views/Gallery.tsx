@@ -53,15 +53,6 @@ const Gallery: Component = () => {
 
     const abortController = new AbortController();
 
-    const streamGallery = useStreamGallery(
-        urls.BACKEND_GALLERY_INITIAL_ROUTE,
-        abortController,
-    );
-    const streamMoreGallery = useStreamGallery(
-        urls.BACKEND_GALLERY_LOAD_MORE_IMAGES_ROUTE,
-        abortController,
-    );
-
     // TODO: Wrap in try/catch/throws
     onMount(async () => {
         const authContext = await useAuthContext();
@@ -78,6 +69,11 @@ const Gallery: Component = () => {
             const imageCount = await useGrabImageCount();
             if (imageCount) {
                 setLoadingStates(Array(imageCount).fill(true));
+
+                const streamGallery = useStreamGallery(
+                    urls.BACKEND_GALLERY_INITIAL_ROUTE,
+                    abortController,
+                );
 
                 for await (const imageMetaData of streamGallery) {
                     setImages(prev => [...prev, imageMetaData]);
@@ -113,7 +109,11 @@ const Gallery: Component = () => {
             const imageCount = await useGrabImageCount();
             setLoadingStates(Array(imageCount).fill(true));
 
-            await clearDB();
+            const streamMoreGallery = useStreamGallery(
+                urls.BACKEND_GALLERY_LOAD_MORE_IMAGES_ROUTE,
+                abortController,
+            );
+
             for await (const imageMetaData of streamMoreGallery) {
                 setImages(prev => [...prev, imageMetaData]);
                 setLoadingStates(prev => {
@@ -122,6 +122,7 @@ const Gallery: Component = () => {
                     return newState;
                 });
             }
+            await clearDB();
             await addThumbnailsToDB(images());
         } catch (err) {
             const error = err as Error;

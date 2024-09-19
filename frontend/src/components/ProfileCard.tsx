@@ -3,7 +3,8 @@ import { useNavigate } from "@solidjs/router";
 
 import urls from "../config/urls";
 import { delay } from "../utils/utils";
-import { clearDB } from "../utils/indexdb";
+import { clearDB as clearDB1 } from "../utils/indexdb";
+import { clearDB as clearDB2 } from "../utils/indexdb-views";
 
 import styles from "../css/ProfileCard.module.css";
 
@@ -26,7 +27,8 @@ const ProfileCard: Component = () => {
                 const jsonRes = await response.json();
                 throw new Error(jsonRes.message || jsonRes.detail);
             }
-            await clearDB();
+            await clearDB1();
+            await clearDB2();
             setSuccessMsg(
                 "You Have Successfully Logged Out! \nRedirecting you back home!",
             );

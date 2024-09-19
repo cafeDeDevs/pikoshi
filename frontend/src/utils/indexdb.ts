@@ -15,7 +15,6 @@ const openDB = (): Promise<IDBDatabase> => {
             const db = (event.target as IDBOpenDBRequest).result;
             if (!db.objectStoreNames.contains(STORE_NAME)) {
                 db.createObjectStore(STORE_NAME, {
-                    keyPath: "file_name",
                     autoIncrement: true,
                 });
             }
@@ -36,7 +35,9 @@ export const addThumbnailsToDB = async (images: Array<ImageMetadata>) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
     for (const image of images) {
+        // console.log("image :=>", image);
         const request = store.add(image);
+        // store.
         request.onerror = event => {
             console.error(
                 `Error adding image ${image.file_name} to IndexeDB!: `,
