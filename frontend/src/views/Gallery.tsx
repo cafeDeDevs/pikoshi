@@ -12,7 +12,6 @@ import urls from "../config/urls";
 
 import { useNavigate } from "@solidjs/router";
 import { useAuthContext } from "../hooks/useAuthContext";
-import { useGrabGallery } from "../hooks/useGrabGallery";
 import { useStreamGallery } from "../hooks/useStreamGallery";
 import { useGrabImageCount } from "../hooks/useGrabImageCount";
 import { useModalContext, ModalProvider } from "../contexts/ModalContext";
@@ -73,31 +72,38 @@ const Gallery: Component = () => {
             setImages(cachedImages);
         } else {
             const imageCount = await useGrabImageCount();
-            setLoadingStates(Array(imageCount).fill(true));
+            if (imageCount) {
+                setLoadingStates(Array(imageCount).fill(true));
 
-            for await (const imageMetaData of streamGallery) {
-                setImages(prev => [...prev, imageMetaData]);
-                setLoadingStates(prev => {
-                    const newState = [...prev];
-                    newState.shift();
-                    return newState;
-                });
+                for await (const imageMetaData of streamGallery) {
+                    setImages(prev => [...prev, imageMetaData]);
+                    setLoadingStates(prev => {
+                        const newState = [...prev];
+                        newState.shift();
+                        return newState;
+                    });
+                }
+
+                await addThumbnailsToDB(images());
             }
-            await addThumbnailsToDB(images());
         }
     });
 
     // TODO: Rewrite to accommmodate new streaming strategy
     createEffect(async () => {
         if (shouldGalleryReload()) {
-            const imagesAsBase64 = await useGrabGallery();
-            if (imagesAsBase64) {
-                await clearDB();
-                await addThumbnailsToDB(imagesAsBase64);
-                setImages(imagesAsBase64);
-            } else {
-                setError(imagesAsBase64);
-            }
+            // NOTE: A bit complex here...
+            //
+            // for await (const imageMetaData of streamMoreGallery) {
+            // setImages(prev => [...prev, imageMetaData]);
+            // setLoadingStates(prev => {
+            // const newState = [...prev];
+            // newState.shift();
+            // return newState;
+            // });
+            // }
+            // await clearDB();
+            // await addThumbnailsToDB(images());
             reloadGallery();
         }
     });

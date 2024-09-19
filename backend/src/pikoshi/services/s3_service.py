@@ -90,6 +90,8 @@ async def grab_file_list(
 ) -> dict[str, str | List[Any] | None]:
     try:
         async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
+            if continuation_token == "None":
+                return {"file_list": None}
             file_list = []
 
             params = {

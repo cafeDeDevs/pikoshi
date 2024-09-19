@@ -47,8 +47,9 @@ async def get_default_image_count(
         )
         file_list = s3_response["file_list"]
         if file_list is None:
-            raise HTTPException(
-                status_code=400, detail="No More Images Found In Default Album."
+            return JSONResponse(
+                status_code=204,
+                content={"message": "No more images in this album.", "image_count": 0},
             )
 
         return JSONResponse(
@@ -149,6 +150,10 @@ async def load_next_page_of_images(
 
         file_list = s3_response["file_list"]
         next_token = str(s3_response["continuation_token"])
+        if next_token is None:
+            return JSONResponse(
+                status_code=204, content={"message": "No More Images Available To Load"}
+            )
 
         boundary = GalleryService.generate_unique_boundary()
         image_files = GalleryService.grab_image_files(

@@ -1,12 +1,11 @@
 import { createEffect, createSignal, Show, type Component } from "solid-js";
-
 import { useModalContext } from "../contexts/ModalContext";
-
-import { compressFiles } from "../utils/utils";
 
 import styles from "../css/UploadImageModal.module.css";
 
 import urls from "../config/urls";
+
+import { compressFiles } from "../utils/utils";
 
 // TODO: Add image previwer in modal
 // TODO: compartmentalize out all SVG images
