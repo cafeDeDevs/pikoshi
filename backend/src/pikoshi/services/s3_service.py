@@ -106,10 +106,17 @@ async def grab_file_list(
             response = await s3_client.list_objects_v2(**params)
 
             if response and "Contents" in response:
+                content_list = []
                 for contents in response["Contents"]:
                     key = contents["Key"]
+                    last_modified = contents["LastModified"]
                     if not key.endswith("/"):
-                        file_list.append(key)
+                        content_list.append(
+                            {"key": key, "last_modified": last_modified}
+                        )
+
+                content_list.sort(key=lambda x: x["last_modified"], reverse=True)
+                file_list = [content["key"] for content in content_list]
 
             next_continuation_token = response.get("NextContinuationToken", None)
 
@@ -175,7 +182,6 @@ async def upload_file(
             # Default Files
             elif object_name is not None:
                 with open(file_name, "rb") as f:
-                    orig_file_name = file_name
                     file_name = file_name.split("/")[-1]
                     hashed_file_name = hash_string(file_name)
                     object_name = os.path.join(

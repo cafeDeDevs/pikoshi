@@ -232,11 +232,16 @@ async def upload_image_to_gallery(
     - to user's bucket/default album.
     """
     try:
-        await GalleryService.upload_new_image(str(access_token), file, db_session)
+        thumbnail_data = await GalleryService.upload_new_image(
+            str(access_token), file, db_session
+        )
 
         return JSONResponse(
             status_code=200,
-            content={"message": "New Image Uploaded To Album Successfully."},
+            content={
+                "message": "New Image Uploaded To Album Successfully.",
+                "data": thumbnail_data,
+            },
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -37,12 +37,16 @@ interface ImageMetadata {
 
 // TODO: Figure out how to pass optional params (i.e. gallery/default)
 // And Then pass this param "default" as an album_name to the backend
+
+// TODO: Address BUG:
+// BUG: On Refresh Images are out of order
+// (cache ordering is different than backend load ordering)
 const Gallery: Component = () => {
     const [isAuthenticated, setIsAuthenticated] = createSignal<boolean>(false);
     const [error, setError] = createSignal<string>("");
     const [images, setImages] = createSignal<ImageMetadata[]>([]);
     const [loadingStates, setLoadingStates] = createSignal<boolean[]>([]);
-    const { openImageModal, reloadGallery, shouldGalleryReload } =
+    const { openImageModal, reloadGallery, newImageData, shouldGalleryReload } =
         useModalContext();
 
     const navigate = useNavigate();
@@ -83,27 +87,18 @@ const Gallery: Component = () => {
                         return newState;
                     });
                 }
-
                 await addThumbnailsToDB(images());
             }
         }
     });
 
-    // TODO: Rewrite to accommmodate new streaming strategy
     createEffect(async () => {
         if (shouldGalleryReload()) {
-            // NOTE: A bit complex here...
-            //
-            // for await (const imageMetaData of streamMoreGallery) {
-            // setImages(prev => [...prev, imageMetaData]);
-            // setLoadingStates(prev => {
-            // const newState = [...prev];
-            // newState.shift();
-            // return newState;
-            // });
-            // }
-            // await clearDB();
-            // await addThumbnailsToDB(images());
+            const newImage = newImageData();
+            setImages(prev => [newImage, ...prev]);
+            const cachedImages = await getThumbnailsFromDB();
+            await clearDB();
+            await addThumbnailsToDB([newImage, ...cachedImages]);
             reloadGallery();
         }
     });

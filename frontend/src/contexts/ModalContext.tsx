@@ -10,13 +10,14 @@ interface ImageMetadata {
 type ModalContextType = {
     isModalOpen: Accessor<boolean>;
     isImageModalOpen: Accessor<boolean>;
+    newImageData: Accessor<ImageMetadata>;
     shouldGalleryReload: Accessor<boolean>;
     selectedImage: Accessor<ImageMetadata | null>;
     openModal: () => void;
     openImageModal: (image: ImageMetadata | null) => void;
     closeModal: () => void;
     closeImageModal: () => void;
-    reloadGallery: () => void;
+    reloadGallery: (image?: ImageMetadata | undefined) => void;
 };
 
 const ModalContext = createContext<ModalContextType>();
@@ -25,6 +26,11 @@ export const ModalProvider = (props: {
     children: JSX.Element;
 }): JSX.Element => {
     const [isModalOpen, setIsModalOpen] = createSignal(false);
+    const [newImageData, setNewImageData] = createSignal<ImageMetadata>({
+        data: "",
+        type: "",
+        file_name: "",
+    });
     const [isImageModalOpen, setIsImageModalOpen] = createSignal(false);
     const [shouldGalleryReload, setShouldGalleryReload] = createSignal(false);
     const [selectedImage, setSelectedImage] =
@@ -32,7 +38,10 @@ export const ModalProvider = (props: {
 
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
-    const reloadGallery = () => setShouldGalleryReload(!shouldGalleryReload());
+    const reloadGallery = (image?: ImageMetadata) => {
+        if (image) setNewImageData(image);
+        setShouldGalleryReload(!shouldGalleryReload());
+    };
 
     const openImageModal = (image: ImageMetadata | null) => {
         setSelectedImage(image);
@@ -47,6 +56,7 @@ export const ModalProvider = (props: {
     const value = {
         isModalOpen: isModalOpen,
         isImageModalOpen: isImageModalOpen,
+        newImageData: newImageData,
         shouldGalleryReload: shouldGalleryReload,
         selectedImage: selectedImage,
         openModal,

@@ -32,7 +32,7 @@ const UploadImageModal: Component = () => {
             if (!response.ok) {
                 throw new Error(jsonRes.message || jsonRes.detail);
             }
-            reloadGallery();
+            reloadGallery(jsonRes.data);
             closeModal();
         } catch (err) {
             const error = err as Error;

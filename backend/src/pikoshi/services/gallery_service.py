@@ -196,7 +196,6 @@ async def grab_image_files(
     """
     try:
         async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
-            # TODO: Once album_name is grabbed from parameters, change this
             for file_name in file_list:
                 if f"/{album_name}/{file_format}" in file_name:
                     orig_file_name = file_name.split("/")[-2]
@@ -218,7 +217,7 @@ async def grab_image_files(
                 # the stream inbetween image chunks
                 # NOTE: Increase if not all images come through stream
                 # (will slow down render of gallery)
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.4)
 
     except Exception as e:
         ExceptionService.handle_generic_exception(e)
@@ -242,7 +241,11 @@ async def grab_single_image(
             file_content = await s3_object["Body"].read()
 
             data = b64encode(file_content).decode("utf-8")
-            image_as_base64 = {"data": data, "file_name": file_name}
+            image_as_base64 = {
+                "data": data,
+                "type": "image/webp",
+                "file_name": file_name,
+            }
 
         return image_as_base64
 
@@ -252,7 +255,7 @@ async def upload_new_image(
     file: UploadFile,
     db_session: AsyncSession = Depends(get_db_session),
     album_name: str = "album_default",
-) -> None:
+):
     """
     - Grabs the User data from the database using the JWT
       access_token's UUID.
@@ -320,6 +323,15 @@ async def upload_new_image(
             file_data=img_bytes,
             file_format="thumbnail",
         )
+
+        img_bytes.seek(0)
+        data = b64encode(img_bytes.read()).decode("utf-8")
+        file_name = str(file.filename).split(".")[0]
+        return {
+            "data": data,
+            "type": "image/webp",
+            "file_name": file_name,
+        }
 
     except Exception as e:
         ExceptionService.handle_generic_exception(e)
