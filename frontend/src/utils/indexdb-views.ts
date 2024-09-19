@@ -94,3 +94,27 @@ export const clearDB = async () => {
         };
     });
 };
+
+export const deleteDatabase = async () => {
+    const db = await openDB();
+    db.close();
+    const request = indexedDB.deleteDatabase(DB_NAME);
+    return new Promise<void>((resolve, reject) => {
+        request.onsuccess = () => {
+            console.log(`Database ${DB_NAME} deleted successfully`);
+            resolve();
+        };
+
+        request.onerror = event => {
+            console.error(`Error deleting database ${DB_NAME}:`, event.target);
+            reject(event.target);
+        };
+
+        request.onblocked = () => {
+            console.warn(
+                `Delete request for database ${DB_NAME} is blocked. Close all other connections.`,
+            );
+            reject(new Error("Delete request blocked"));
+        };
+    });
+};

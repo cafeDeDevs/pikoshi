@@ -3,8 +3,14 @@ import { useNavigate } from "@solidjs/router";
 
 import urls from "../config/urls";
 import { delay } from "../utils/utils";
-import { clearDB as clearDB1 } from "../utils/indexdb";
-import { clearDB as clearDB2 } from "../utils/indexdb-views";
+import {
+    clearDB as clearDB1,
+    deleteDatabase as deleteDatabase1,
+} from "../utils/indexdb";
+import {
+    clearDB as clearDB2,
+    deleteDatabase as deleteDatabase2,
+} from "../utils/indexdb-views";
 
 import styles from "../css/ProfileCard.module.css";
 
@@ -29,6 +35,9 @@ const ProfileCard: Component = () => {
             }
             await clearDB1();
             await clearDB2();
+            await deleteDatabase1();
+            await deleteDatabase2();
+
             setSuccessMsg(
                 "You Have Successfully Logged Out! \nRedirecting you back home!",
             );

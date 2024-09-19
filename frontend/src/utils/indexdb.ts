@@ -35,9 +35,7 @@ export const addThumbnailsToDB = async (images: Array<ImageMetadata>) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
     for (const image of images) {
-        // console.log("image :=>", image);
         const request = store.add(image);
-        // store.
         request.onerror = event => {
             console.error(
                 `Error adding image ${image.file_name} to IndexeDB!: `,
@@ -89,6 +87,31 @@ export const clearDB = async () => {
 
         tx.onerror = event => {
             reject(`Transaction to clear IndexedDB failed: ${event.target}`);
+        };
+    });
+};
+
+export const deleteDatabase = async () => {
+    const db = await openDB();
+    db.close();
+    return new Promise<void>((resolve, reject) => {
+        const request = indexedDB.deleteDatabase(DB_NAME);
+
+        request.onsuccess = () => {
+            console.log(`Database ${DB_NAME} deleted successfully`);
+            resolve();
+        };
+
+        request.onerror = event => {
+            console.error(`Error deleting database ${DB_NAME}:`, event.target);
+            reject(event.target);
+        };
+
+        request.onblocked = () => {
+            console.warn(
+                `Delete request for database ${DB_NAME} is blocked. Close all other connections.`,
+            );
+            reject(new Error("Delete request blocked"));
         };
     });
 };
