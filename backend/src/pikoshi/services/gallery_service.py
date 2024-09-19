@@ -1,7 +1,9 @@
+import asyncio
 import io
 import os
 from base64 import b64encode
-from typing import Any, Dict, List, Tuple
+from typing import Any, AsyncGenerator, Dict, List, Tuple
+from uuid import uuid4
 
 from aiobotocore.session import get_session
 from fastapi import Depends, HTTPException, UploadFile
@@ -108,7 +110,7 @@ async def grab_file_list(
             )
 
         return {
-            "file_list": s3_response["file_list"],
+            "file_list": file_list,
             "continuation_token": s3_response.get("continuation_token", None),
         }
     except Exception as e:
@@ -162,27 +164,38 @@ async def upload_default_image(
         ExceptionService.handle_generic_exception(e)
 
 
+def generate_unique_boundary() -> str:
+    """
+    - Generates a uuid unique boundary for use
+      in streaming images and image metadata.
+    """
+    return f"pikoshi_app_boundary_{uuid4()}"
+
+
 async def grab_image_files(
     file_list,
     bucket_name: str,
+    boundary: str,
     album_name: str = "album_default",
     file_format="thumbnail",
-) -> List[dict]:
+) -> AsyncGenerator:
     """
-    - Establishes an empty `image_files` list.
+    - Iterates over a passed list of image files from `grab_file_list()`
     - From the file_list array passed, check for if the path
       of all the files, the string: `/{album_name}/` exists.
-      - If it does, then:
-          - Grab all those files from the User's S3 bucket/UUID directory,
-            convert them to Base64 encoded strings, and decode them as UTF-8.
-          - And Append those newly encoded image strings to the `image_files`
-            list.
-    - Return the `image_files` list.
+    - If it does, then:
+    - Grab all those files from the User's S3 bucket/UUID directory,
+      convert them to Base64 encoded strings, and decode them as UTF-8.
+    - Create a `part` utf-8 string that will provide image meta data
+      for use on the front end.
+    - And yield those newly encoded image strings and meta data for use
+      in a readable Streaming response.
+    - Sleep for a certain amount of time to ensure stream has had time to finish
+    - NOTE: Sleep strategy is probably naive, consider alternative approach to
+      ensuring all images load.
     """
     try:
         async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
-            image_files = []
-
             # TODO: Once album_name is grabbed from parameters, change this
             for file_name in file_list:
                 if f"/{album_name}/{file_format}" in file_name:
@@ -193,17 +206,22 @@ async def grab_image_files(
                     image_data = b64encode(await file_obj["Body"].read()).decode(
                         "utf-8"
                     )
-                    image_files.append(
-                        {
-                            "data": image_data,
-                            "file_name": orig_file_name,
-                        }
-                    )
+                    part = (
+                        f"--{boundary}\r\n"
+                        f'Content-Disposition: form-data; name="file"; filename="{orig_file_name}"\r\n'
+                        f"Content-Type: image/webp\r\n\r\n"
+                        f"{image_data}\r\n"
+                    ).encode("utf-8")
+                    yield part
 
-            return image_files
+                # NOTE: This time period setting throttles
+                # the stream inbetween image chunks
+                # NOTE: Increase if not all images come through stream
+                # (will slow down render of gallery)
+                await asyncio.sleep(0.2)
+
     except Exception as e:
         ExceptionService.handle_generic_exception(e)
-        return []
 
 
 async def grab_single_image(

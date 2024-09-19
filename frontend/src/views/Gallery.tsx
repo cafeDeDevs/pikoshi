@@ -2,17 +2,21 @@ import {
     createSignal,
     createEffect,
     For,
+    onCleanup,
     onMount,
     Show,
     type Component,
 } from "solid-js";
 
+import urls from "../config/urls";
+
 import { useNavigate } from "@solidjs/router";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useGrabGallery } from "../hooks/useGrabGallery";
+import { useStreamGallery } from "../hooks/useStreamGallery";
+import { useGrabImageCount } from "../hooks/useGrabImageCount";
 import { useModalContext, ModalProvider } from "../contexts/ModalContext";
 
-import urls from "../config/urls";
 import Navbar from "../components/Navbar";
 import UploadImageModal from "../components/UploadImageModal";
 import ImageViewerModal from "../components/ImageViewerModal";
@@ -38,10 +42,22 @@ const Gallery: Component = () => {
     const [isAuthenticated, setIsAuthenticated] = createSignal<boolean>(false);
     const [error, setError] = createSignal<string>("");
     const [images, setImages] = createSignal<ImageMetadata[]>([]);
+    const [loadingStates, setLoadingStates] = createSignal<boolean[]>([]);
     const { openImageModal, reloadGallery, shouldGalleryReload } =
         useModalContext();
 
     const navigate = useNavigate();
+
+    const abortController = new AbortController();
+
+    const streamGallery = useStreamGallery(
+        urls.BACKEND_GALLERY_INITIAL_ROUTE,
+        abortController,
+    );
+    const streamMoreGallery = useStreamGallery(
+        urls.BACKEND_GALLERY_LOAD_MORE_IMAGES_ROUTE,
+        abortController,
+    );
 
     // TODO: Wrap in try/catch/throws
     onMount(async () => {
@@ -56,18 +72,22 @@ const Gallery: Component = () => {
         if (cachedImages && cachedImages.length > 0) {
             setImages(cachedImages);
         } else {
-            const imagesAsBase64 = await useGrabGallery();
-            if (imagesAsBase64) {
-                setImages(imagesAsBase64);
-                await clearDB();
-                await addThumbnailsToDB(imagesAsBase64);
-            } else {
-                setError(imagesAsBase64);
+            const imageCount = await useGrabImageCount();
+            setLoadingStates(Array(imageCount).fill(true));
+
+            for await (const imageMetaData of streamGallery) {
+                setImages(prev => [...prev, imageMetaData]);
+                setLoadingStates(prev => {
+                    const newState = [...prev];
+                    newState.shift();
+                    return newState;
+                });
             }
+            await addThumbnailsToDB(images());
         }
     });
 
-    // TODO: Wrap in try/catch/throws
+    // TODO: Rewrite to accommmodate new streaming strategy
     createEffect(async () => {
         if (shouldGalleryReload()) {
             const imagesAsBase64 = await useGrabGallery();
@@ -88,34 +108,29 @@ const Gallery: Component = () => {
     };
 
     const handleLoadMore = async () => {
-        // TODO: set this out as a hook or util function
         try {
-            const response = await fetch(
-                urls.BACKEND_GALLERY_LOAD_MORE_IMAGES_ROUTE,
-                {
-                    method: "POST",
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
-                    },
-                    credentials: "include",
-                },
-            );
-            if (!response.ok)
-                throw new Error(
-                    "An Error Occurred While Trying To Retrieve More Images",
-                );
-            const jsonRes = await response.json();
-            const { imagesAsBase64 } = jsonRes;
+            const imageCount = await useGrabImageCount();
+            setLoadingStates(Array(imageCount).fill(true));
+
             await clearDB();
-            const prevImages = images();
-            await addThumbnailsToDB([...prevImages, ...imagesAsBase64]);
-            setImages([...prevImages, ...imagesAsBase64]);
+            for await (const imageMetaData of streamMoreGallery) {
+                setImages(prev => [...prev, imageMetaData]);
+                setLoadingStates(prev => {
+                    const newState = [...prev];
+                    newState.shift();
+                    return newState;
+                });
+            }
+            await addThumbnailsToDB(images());
         } catch (err) {
             const error = err as Error;
             return error.message || "Unknown error";
         }
     };
+
+    onCleanup(() => {
+        abortController.abort();
+    });
 
     return (
         <>
@@ -131,7 +146,6 @@ const Gallery: Component = () => {
                     Load More Images
                 </button>
                 <div class={styles.Gallery}>
-                    {/* TODO: Replace Loading... with ImageLoading Component */}
                     <Show
                         when={images().length > 0}
                         fallback={<p>Loading...</p>}>
@@ -142,10 +156,23 @@ const Gallery: Component = () => {
                                         src={`data:image/webp;base64,${image.data}`}
                                         alt={`Gallery Image ${index() + 1}`}
                                         data-name={image.file_name}
+                                        data-type={image.type}
                                         onClick={() => handleImgClick(index())}
                                         loading="lazy"
                                         decoding="async"
                                     />
+                                )}
+                            </For>
+                            <For each={loadingStates()}>
+                                {(_, index) => (
+                                    <Show when={loadingStates()[index()]}>
+                                        <div class={styles["spinner"]}>
+                                            <div></div>
+                                            <div></div>
+                                            <div></div>
+                                            <div></div>
+                                        </div>
+                                    </Show>
                                 )}
                             </For>
                         </div>
