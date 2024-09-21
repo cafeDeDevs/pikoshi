@@ -29,8 +29,8 @@ def get_user_tokens(user_uuid: str) -> Dict[str, str]:
     - Returns a dictionary with both JWT access_token and JWT refresh_token.
     """
     # NOTE: Change each values to test invalidation of token logic
-    access_token_expires = datetime.now(timezone.utc) + timedelta(hours=1)  # default
-    refresh_token_expires = datetime.now(timezone.utc) + timedelta(hours=24)  # default
+    access_token_expires = datetime.now(timezone.utc) + timedelta(minutes=2)  # default
+    refresh_token_expires = datetime.now(timezone.utc) + timedelta(minutes=4)  # default
 
     access_token = jwt.encode(
         {
