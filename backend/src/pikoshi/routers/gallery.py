@@ -21,8 +21,9 @@ from ..utils.auth_cookies import set_s3_continuation_token
 router = APIRouter(prefix="/gallery", tags=["gallery"], route_class=TimedRoute)
 
 
-# TODO: Figure out how to get parameters which will lead to the album name
-# NOTE: IF parameter album_name == None, then default it to "default"
+# TODO: Remove this route once no longer needed
+# REFACTOR: Initial load should just load images and mimic stream of images
+# rather than actually streaming images on initial page load
 @router.post("/image-count/")
 async def get_default_image_count(
     access_token: Annotated[str | None, Cookie()] = None,
@@ -65,6 +66,8 @@ async def get_default_image_count(
         return ExceptionService.handle_s3_exception(e)
 
 
+# REFACTOR: Initial load should just load images and mimic stream of images
+# rather than actually streaming images on initial page load
 # TODO: Figure out how to get parameters which will lead to the album name
 # NOTE: IF parameter album_name == None, then default it to "default"
 @router.post("/default-gallery/")
