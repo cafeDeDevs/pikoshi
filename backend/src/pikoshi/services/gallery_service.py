@@ -57,6 +57,12 @@ async def create_new_user_bucket(
 async def grab_s3_credentials(
     access_token: str, db_session: AsyncSession = Depends(get_db_session)
 ) -> Dict[str, str]:
+    """
+    - Uses the JWT's sub field to grab the User's UUID.
+    - Uses the get_bucket_index method to generate the
+      user's bucket id via simple hashing function (i.e. numbers 1-100).
+    - Returns a dictionary with the bucket name and user's UUID.
+    """
     try:
         user = await AuthService.get_user_by_access_token(access_token, db_session)
         user_uuid = str(user.uuid)
@@ -224,10 +230,27 @@ async def grab_image_files(
 
 
 async def grab_single_image(
-    bucket_name: str, user_uuid: str, file_name: str, file_format: str
+    bucket_name: str,
+    user_uuid: str,
+    file_name: str,
+    file_format: str,
+    album_name: str = "album_default",
 ) -> dict[str, str]:
+    """
+    - Constructs a prefix url to grab specific image based off
+      of user's uuid, album name, file format (i.e. mobile),
+      and name of file.
+    - Grabs a single image from s3 bucket, storing it in result
+      variable.
+    - If result not found, raise ValueError.
+    - Grabs the Key from the results, and uses that to get from s3,
+      the actual file Body as raw bytes.
+    - Converts those bytes to base64/utf-8.
+    - Returns an image_as_base64 dictionary with image data base64
+      string, as well as image metadata.
+    """
     async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
-        prefix = f"{user_uuid}/album_default/{file_format}/{file_name}/"
+        prefix = f"{user_uuid}/{album_name}/{file_format}/{file_name}/"
         result = await s3_client.list_objects(
             Bucket=bucket_name, Prefix=prefix, Delimiter="/"
         )

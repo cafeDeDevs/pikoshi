@@ -70,16 +70,6 @@ async def create_bucket(
         ExceptionService.handle_s3_exception(e)
 
 
-# TODO: Probably don't need to delete bucket ever,
-# but we WILL need to delete album
-async def delete_bucket(bucket) -> None:
-    try:
-        async with session.create_client("s3") as s3_client:
-            await s3_client.delete_bucket(Bucket=bucket)
-    except Exception as e:
-        ExceptionService.handle_s3_exception(e)
-
-
 async def grab_file_list(
     bucket: str,
     user_uuid: str,
@@ -89,6 +79,23 @@ async def grab_file_list(
     file_format: str = "thumbnail",
 ) -> dict[str, str | List[Any] | None]:
     try:
+        """
+        - Checks if user's continuation token is the string "None",
+          then return a simple dictionary indicating as such.
+        - Constructs a params dict to be passed to s3 client.
+        - Appends continuation_token to the params dict if it not None.
+        - Uses s3 client to list out objects within specific s3 subdirectory
+          (i.e. params Prefix).
+        - Appends both the "Key", as well as the "LastModified" fields to a
+          content_list array.
+        - Sorts that list by last_modified field (most recently uploaded files
+          are sorted towards beginning of the content_list).
+        - Filters out the "Key" field from the newly sorted content_list and
+          pushes that onto the file_list array.
+        - Grabs the next continuation token from the response.
+        - Constructs and returns a dict that holds both the file_list and the
+          next continuation token.
+        """
         async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
             if continuation_token == "None":
                 return {"file_list": None}
@@ -194,6 +201,17 @@ async def upload_file(
                     )
             else:
                 raise ValueError("Unknown Error Occurred When Uploading File(s).")
+    except Exception as e:
+        ExceptionService.handle_s3_exception(e)
+
+
+# NOTE: Below are currently unused functions. May be used later...
+# TODO: Probably don't need to delete bucket ever,
+# but we WILL need to delete album
+async def delete_bucket(bucket) -> None:
+    try:
+        async with session.create_client("s3") as s3_client:
+            await s3_client.delete_bucket(Bucket=bucket)
     except Exception as e:
         ExceptionService.handle_s3_exception(e)
 
