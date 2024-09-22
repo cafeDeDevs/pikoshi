@@ -36,6 +36,7 @@ export const addImageToDB = async (image: ImageMetadata) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
     const request = store.add(image);
+    db.close();
     request.onerror = event => {
         console.error(
             `Error adding image ${image.file_name} to IndexeDB!: `,
@@ -59,6 +60,7 @@ export const getImageFromDB = async (
     const store = tx.objectStore(STORE_NAME);
     return new Promise((resolve, reject) => {
         const request = store.get(fileName);
+        db.close();
         request.onsuccess = () => {
             resolve(request.result);
         };
@@ -80,6 +82,7 @@ export const clearDB = async () => {
     const store = tx.objectStore(STORE_NAME);
     return new Promise<void>((resolve, reject) => {
         const request = store.clear();
+        db.close();
 
         request.onsuccess = () => {
             resolve();

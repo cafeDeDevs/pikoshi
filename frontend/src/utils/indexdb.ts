@@ -36,6 +36,7 @@ export const addThumbnailsToDB = async (images: Array<ImageMetadata>) => {
     const store = tx.objectStore(STORE_NAME);
     for (const image of images) {
         const request = store.add(image);
+        db.close();
         request.onerror = event => {
             console.error(
                 `Error adding image ${image.file_name} to IndexeDB!: `,
@@ -55,6 +56,7 @@ export const getThumbnailsFromDB = async (): Promise<Array<ImageMetadata>> => {
     const store = tx.objectStore(STORE_NAME);
     return new Promise((resolve, reject) => {
         const request = store.getAll();
+        db.close();
         request.onsuccess = () => {
             resolve(request.result);
         };
@@ -76,6 +78,7 @@ export const clearDB = async () => {
     const store = tx.objectStore(STORE_NAME);
     return new Promise<void>((resolve, reject) => {
         const request = store.clear();
+        db.close();
 
         request.onsuccess = () => {
             resolve();
