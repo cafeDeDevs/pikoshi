@@ -13,6 +13,8 @@ const Login: Component = () => {
         <div class={styles.AuthCard}>
             <h1>Login</h1>
             <EmailLogin />
+            <br />
+            <a href="/forgot-password">I Forgot My Password</a>
             <p>Or Continue with:</p>
             <GoogleOAuthProvider
                 clientId={googleClientId}
