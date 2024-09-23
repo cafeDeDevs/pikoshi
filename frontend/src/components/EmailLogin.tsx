@@ -74,6 +74,10 @@ const EmailLogin: Component = () => {
                 </div>
                 <br />
                 <button type="submit">Continue</button>
+                <br />
+                <a href="/forgot-password" style="font-size: 90%;">
+                    I Forgot My Password
+                </a>
             </form>
             <Show when={message().length}>
                 <p>{message()}</p>
