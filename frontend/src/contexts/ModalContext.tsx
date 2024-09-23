@@ -10,13 +10,16 @@ interface ImageMetadata {
 type ModalContextType = {
     isModalOpen: Accessor<boolean>;
     isImageModalOpen: Accessor<boolean>;
+    isLogoutModalOpen: Accessor<boolean>;
     newImageData: Accessor<ImageMetadata>;
     shouldGalleryReload: Accessor<boolean>;
     selectedImage: Accessor<ImageMetadata | null>;
     openModal: () => void;
     openImageModal: (image: ImageMetadata | null) => void;
+    openLogoutModal: () => void;
     closeModal: () => void;
     closeImageModal: () => void;
+    closeLogoutModal: () => void;
     reloadGallery: (image?: ImageMetadata | undefined) => void;
 };
 
@@ -32,6 +35,7 @@ export const ModalProvider = (props: {
         file_name: "",
     });
     const [isImageModalOpen, setIsImageModalOpen] = createSignal(false);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = createSignal(false);
     const [shouldGalleryReload, setShouldGalleryReload] = createSignal(false);
     const [selectedImage, setSelectedImage] =
         createSignal<ImageMetadata | null>(null);
@@ -53,16 +57,27 @@ export const ModalProvider = (props: {
         setIsImageModalOpen(false);
     };
 
+    const openLogoutModal = () => {
+        setIsLogoutModalOpen(true);
+    };
+
+    const closeLogoutModal = () => {
+        setIsLogoutModalOpen(false);
+    };
+
     const value = {
         isModalOpen: isModalOpen,
         isImageModalOpen: isImageModalOpen,
+        isLogoutModalOpen: isLogoutModalOpen,
         newImageData: newImageData,
         shouldGalleryReload: shouldGalleryReload,
         selectedImage: selectedImage,
         openModal,
         openImageModal,
+        openLogoutModal,
         closeModal,
         closeImageModal,
+        closeLogoutModal,
         reloadGallery,
     };
 

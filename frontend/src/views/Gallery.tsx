@@ -19,6 +19,7 @@ import { useModalContext, ModalProvider } from "../contexts/ModalContext";
 import Navbar from "../components/Navbar";
 import UploadImageModal from "../components/UploadImageModal";
 import ImageViewerModal from "../components/ImageViewerModal";
+import LogoutSuccessModal from "../components/LogoutSuccessModal";
 
 import { delay } from "../utils/utils";
 import {
@@ -46,8 +47,14 @@ const Gallery: Component = () => {
     const [error, setError] = createSignal<string>("");
     const [images, setImages] = createSignal<ImageMetadata[]>([]);
     const [loadingStates, setLoadingStates] = createSignal<boolean[]>([]);
-    const { openImageModal, reloadGallery, newImageData, shouldGalleryReload } =
-        useModalContext();
+    const {
+        openImageModal,
+        isLogoutModalOpen,
+        closeLogoutModal,
+        reloadGallery,
+        newImageData,
+        shouldGalleryReload,
+    } = useModalContext();
 
     const navigate = useNavigate();
 
@@ -61,6 +68,8 @@ const Gallery: Component = () => {
             await delay(3000);
             return navigate("/");
         }
+
+        if (isLogoutModalOpen()) closeLogoutModal();
 
         const cachedImages = await getThumbnailsFromDB();
         if (cachedImages && cachedImages.length > 0) {
@@ -141,6 +150,7 @@ const Gallery: Component = () => {
                 <Navbar />
                 <UploadImageModal />
                 <ImageViewerModal />
+                <LogoutSuccessModal />
                 {/* TODO: Replace button with Intersection Observer scroll event */}
                 <button
                     style="background-color: lime;"

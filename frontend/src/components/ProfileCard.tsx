@@ -14,10 +14,12 @@ import {
 
 import styles from "../css/ProfileCard.module.css";
 
+import { useModalContext } from "../contexts/ModalContext";
+
 const ProfileCard: Component = () => {
     const navigate = useNavigate();
-    const [errorMsg, setErrorMsg] = createSignal<string>("");
-    const [successMsg, setSuccessMsg] = createSignal<string>("");
+
+    const { openLogoutModal } = useModalContext();
 
     const logout = async () => {
         try {
@@ -38,15 +40,12 @@ const ProfileCard: Component = () => {
             await deleteDatabase1();
             await deleteDatabase2();
 
-            setSuccessMsg(
-                "You Have Successfully Logged Out! \nRedirecting you back home!",
-            );
+            openLogoutModal();
             await delay(3000);
             navigate("/");
         } catch (err) {
             const error = err as Error;
             console.error("ERROR :=>", error);
-            setErrorMsg(error.message);
         }
     };
 
@@ -61,12 +60,6 @@ const ProfileCard: Component = () => {
                 </button>
             </div>
             {/* TODO: Display this in a modal component instead of rendering here */}
-            <Show when={successMsg().length > 0}>
-                <p>{successMsg()}</p>
-            </Show>
-            <Show when={errorMsg().length > 0}>
-                <p>{errorMsg()}</p>
-            </Show>
         </>
     );
 };
