@@ -122,6 +122,8 @@ async def grab_file_list(
                             {"key": key, "last_modified": last_modified}
                         )
 
+                # TODO: This doesn't quite work, remove when working with
+                # pulling images as inputted into Photos Table
                 content_list.sort(key=lambda x: x["last_modified"], reverse=True)
                 file_list = [content["key"] for content in content_list]
 
