@@ -38,7 +38,7 @@ async def create_new_user_bucket(
     - Returns a dictionary containing the User's bucket_name and user_uuid.
     """
     try:
-        user = await AuthService.get_user_by_access_token(access_token, db_session)
+        user = await AuthService.get_user_by_token(access_token, db_session)
         user_uuid = str(user.uuid)
 
         user_bucket_index = S3Service.get_bucket_index(user_uuid)  # type:ignore
@@ -64,7 +64,7 @@ async def grab_s3_credentials(
     - Returns a dictionary with the bucket name and user's UUID.
     """
     try:
-        user = await AuthService.get_user_by_access_token(access_token, db_session)
+        user = await AuthService.get_user_by_token(access_token, db_session)
         user_uuid = str(user.uuid)
 
         user_bucket_index = S3Service.get_bucket_index(user_uuid)  # type:ignore
@@ -294,7 +294,7 @@ async def upload_new_image(
       bucket/UUID-directory/album-directory.
     """
     try:
-        user = await AuthService.get_user_by_access_token(access_token, db_session)
+        user = await AuthService.get_user_by_token(access_token, db_session)
 
         user_uuid = str(user.uuid)
         user_bucket_index = S3Service.get_bucket_index(user_uuid)

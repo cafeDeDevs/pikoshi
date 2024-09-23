@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from fastapi import Response
+from fastapi.responses import JSONResponse, Response
 
 
 def set_s3_continuation_token(response: Response, continuation_token: str) -> Response:
@@ -18,7 +18,9 @@ def set_s3_continuation_token(response: Response, continuation_token: str) -> Re
     return response
 
 
-def set_auth_cookie(response: Response, key: str, value: str, expires: int) -> Response:
+def set_auth_cookie(
+    response: JSONResponse, key: str, value: str, expires: int
+) -> JSONResponse:
     """
     - Creates an HTTP Only Secure Cookie.
     - NOTE: For use with JWT access_token and JWT refresh_token.
@@ -40,8 +42,8 @@ def set_auth_cookie(response: Response, key: str, value: str, expires: int) -> R
 # Both Google OAuth2 and JWT Auth Cookies set here
 # NOTE: The expiry times on both types of tokens expire 1 hour for access_token and 24 hours for refresh_token (as per Google OAuth2 defaults)
 def set_auth_cookies(
-    response: Response, access_token: str, refresh_token: str
-) -> Response:
+    response: JSONResponse, access_token: str, refresh_token: str
+) -> JSONResponse:
     """
     - Sets both JWT access_token and JWT refresh_token in cookie headers,
       establishing them with respective expiration times that should
@@ -53,7 +55,7 @@ def set_auth_cookies(
     return response
 
 
-def remove_auth_cookies(response: Response) -> Response:
+def remove_auth_cookies(response: JSONResponse) -> JSONResponse:
     """
     - Deletes both JWT access_token and JWT refresh_token from cookie headers.
     - Returns response without auth cookies.

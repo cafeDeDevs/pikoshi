@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..dependencies import get_db_session
 from ..schemas.user import User
+from ..services import exception_handler_service as ExceptionService
 from ..services import security_service as SecurityService
 from ..services import user_service as UserService
 
@@ -28,7 +29,6 @@ def get_user_tokens(user_uuid: str) -> Dict[str, str]:
     - Encodes the User's UUID into the `sub` field of both JWTs.
     - Returns a dictionary with both JWT access_token and JWT refresh_token.
     """
-    # NOTE: Change each values to test invalidation of token logic
     access_token_expires = datetime.now(timezone.utc) + timedelta(hours=1)  # default
     refresh_token_expires = datetime.now(timezone.utc) + timedelta(hours=24)  # default
 
@@ -54,12 +54,16 @@ def get_user_tokens(user_uuid: str) -> Dict[str, str]:
     return {"access_token": access_token, "refresh_token": refresh_token}
 
 
-def verify_token(token: str) -> None:
+def verify_token(token: str) -> Dict[str, str] | None:
     """
     - Decodes the JWT and returns all values inside if successful
       (i.e. JWT is not expired or corrupted).
     """
-    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception as e:
+        ExceptionService.handle_generic_exception(e)
+        return None
 
 
 async def signup_user_with_email(
@@ -128,9 +132,8 @@ async def authenticate_user_with_jwt(
     return user_from_db
 
 
-
 def create_access_token(user_uuid: str) -> str:
-    access_token_expires = datetime.now(timezone.utc) + timedelta(minutes=3) 
+    access_token_expires = datetime.now(timezone.utc) + timedelta(hours=1)
     access_token = jwt.encode(
         {
             "exp": access_token_expires,

@@ -12,8 +12,8 @@ from . import jwt_service as JWTAuthService
 # TODO: Implement logic re: refreshing of access_token using refresh_token logic
 # NOTE: See fastapi-with-google POC for refresh_access_token logic for google-oauth2.
 # And also issue new access_token if refresh_token is still good (whether jwt or google-oauth2 token)
-async def get_user_by_access_token(
-    access_token: str, db_session: AsyncSession = Depends(get_db_session)
+async def get_user_by_token(
+    token: str, db_session: AsyncSession = Depends(get_db_session)
 ) -> User:
     """
     - Verifies both that the JWT access_token has not yet expired,
@@ -21,14 +21,16 @@ async def get_user_by_access_token(
     - Queries the User DB for a user with that UUID
       and returns the User data from DB.
     """
-    verified_token = JWTAuthService.verify_token(access_token)
+    verified_token = JWTAuthService.verify_token(token)
+    if verified_token is None:
+        return None  # type:ignore
     user_uuid = verified_token.get("sub")  # type:ignore
-    return await UserService.get_user_by_uuid(db_session, user_uuid)
+    return await UserService.get_user_by_uuid(db_session, str(user_uuid))
 
 
 async def authenticate(
     access_token: str,
-    refresh_token: str, 
+    refresh_token: str,
     db_session: AsyncSession = Depends(get_db_session),
 ) -> JSONResponse:
     """
@@ -37,35 +39,30 @@ async def authenticate(
     - Returns a HTTP 200 response back to the client if the aforementioned is True,
       and returns a HTTP 401 response if either condition is False.
     """
-    user = await get_user_by_access_token(access_token, db_session)
-    
+    user = await get_user_by_token(access_token, db_session)
+
     if not user or not user.is_active:
-        #todo: Rename function as get_use
-        user = await get_user_by_access_token(refresh_token, db_session)
+        user = await get_user_by_token(refresh_token, db_session)
 
         if user and user.is_active:
             new_access_token = JWTAuthService.create_access_token(user.uuid)
 
             response = set_authenticated_response(new_access_token, refresh_token)
-            return response 
 
-        else: 
-            await UserService.set_user_as_inactive(db_session, user)
+            return response
 
+        else:
             raise HTTPException(
-                status_code=401,
-                detail="No valid authentication tokens provided."
+                status_code=401, detail="No valid authentication tokens provided."
             )
-        
+
     return JSONResponse(
         status_code=200,
         content={"message": "User Is Authenticated."},
     )
 
 
-
-
-def set_authenticated_response(access_token, refresh_token) -> Response:
+def set_authenticated_response(access_token, refresh_token) -> JSONResponse:
     """
     - Appends HTTP Only Secure Cookies with JWT access_token
       and JWT refresh_token in response.
@@ -90,7 +87,7 @@ async def logout(
     - Removes JWT access_token and JWT refresh_token from Client's Cookie Storage.
     - Returns response to Client.
     """
-    user = await get_user_by_access_token(access_token, db_session)
+    user = await get_user_by_token(access_token, db_session)
 
     await UserService.set_user_as_inactive(db_session, user)
     response = JSONResponse(
