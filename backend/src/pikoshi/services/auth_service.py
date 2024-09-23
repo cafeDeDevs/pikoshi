@@ -28,6 +28,7 @@ async def get_user_by_access_token(
 
 async def authenticate(
     access_token: str,
+    refresh_token: str, 
     db_session: AsyncSession = Depends(get_db_session),
 ) -> JSONResponse:
     """
@@ -37,16 +38,20 @@ async def authenticate(
     - Returns a HTTP 200 response back to the client if aforementioned is True,
       and returns a HTTP 401 response if either condition is False.
     """
-    user = await get_user_by_access_token(access_token, db_session)
-    if user and user.is_active:
-        return JSONResponse(
-            status_code=200,
-            content={"message": "User Is Authenticated."},
-        )
-    else:
-        raise HTTPException(
-            status_code=401, detail="No User Found Within DB or User Not Active"
-        )
+user = await get_user_by_access_token(access_token, db_session)
+if not user or not user.is_active:
+    user = await get_user_by_access_token(refresh_token, db_session)
+
+if user and user.is_active:
+    return JSONResponse(
+        status_code=200,
+        content={"message": "User Is Authenticated."},
+    )
+else:
+    raise HTTPException(
+        status_code=401, detail="No User Found Within DB or User Not Active"
+    )
+
 
 
 def set_authenticated_response(access_token, refresh_token) -> Response:

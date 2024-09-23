@@ -27,7 +27,10 @@ async def check_auth_context(
                 status_code=401,
                 detail="No Authentication Tokens Submitted For Authentication.",
             )
-        return await AuthService.authenticate(access_token, db_session)
+        return await AuthService.authenticate(access_token, refresh_token, db_session)
+
+        # todo paul: insert refresh token
+
 
     except HTTPException as http_e:
         return ExceptionService.handle_http_exception(http_e)

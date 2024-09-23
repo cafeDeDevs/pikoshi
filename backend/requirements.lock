@@ -54,6 +54,8 @@ frozenlist==1.4.1
     # via aiosignal
 greenlet==3.0.3
     # via sqlalchemy
+greenlet==3.1.0
+    # via pikoshi
 h11==0.14.0
     # via httpcore
     # via uvicorn
