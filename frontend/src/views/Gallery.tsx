@@ -113,6 +113,7 @@ const Gallery: Component = () => {
         openImageModal(image);
     };
 
+    // TODO: Hook Up Intersection Observer/Infinite Scroll Logic Here
     const handleLoadMore = async () => {
         try {
             const imageCount = await useGrabImageCount();
