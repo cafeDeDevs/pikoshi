@@ -3,6 +3,7 @@ import GalleryWrapper from "../views/Gallery";
 import Login from "../views/Login";
 import Onboarding from "../views/Onboarding";
 import Signup from "../views/Signup";
+import NotFound from "../views/NotFound";
 
 const routes = [
     {
@@ -24,6 +25,10 @@ const routes = [
     {
         path: "/gallery",
         component: GalleryWrapper,
+    },
+    {
+        path: "/*",
+        component: NotFound,
     },
 ];
 
