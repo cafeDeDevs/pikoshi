@@ -41,11 +41,9 @@ async def authenticate(
     
     if not user or not user.is_active:
         #todo: Rename function as get_use
-        print("User access token being refreshed")
         user = await get_user_by_access_token(refresh_token, db_session)
 
         if user and user.is_active:
-            print("User refresh token valud, craeting new access token")
             new_access_token = JWTAuthService.create_access_token(user.uuid)
 
             response = set_authenticated_response(new_access_token, refresh_token)

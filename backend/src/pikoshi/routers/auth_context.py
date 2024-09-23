@@ -31,8 +31,6 @@ async def check_auth_context(
 
     except HTTPException as http_e:
         return ExceptionService.handle_http_exception(http_e)
-    except PyJWTError as jwt_e:
-        return ExceptionService.handle_jwt_exception(jwt_e)
     except ValueError as ve:
         return ExceptionService.handle_value_exception(ve)
     except Exception as e:
