@@ -54,10 +54,9 @@ fastapi==0.112.1
 frozenlist==1.4.1
     # via aiohttp
     # via aiosignal
-greenlet==3.0.3
-    # via sqlalchemy
 greenlet==3.1.0
     # via pikoshi
+    # via sqlalchemy
 h11==0.14.0
     # via httpcore
     # via uvicorn
