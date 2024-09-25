@@ -28,6 +28,7 @@ class User(Base):
     last_login: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), onupdate=func.now()
     )
+    signed_up_method: Mapped[str] = mapped_column(String, nullable=False, default="email")
 
     def __repr__(self):
         return f"<User(name='{self.name}', email='{self.email}', is_active={self.is_active})>"
