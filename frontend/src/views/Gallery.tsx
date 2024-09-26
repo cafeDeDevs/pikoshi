@@ -119,7 +119,7 @@ const Gallery: Component = () => {
     });
 
     createEffect(() => {
-        if (!imagesLoaded()) return;
+        if (!imagesLoaded() || !isScrollingDown()) return;
 
         const observerOptions = {
             root: null,
@@ -129,7 +129,7 @@ const Gallery: Component = () => {
 
         const observerCallBack = (entries: IntersectionObserverEntry[]) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting && isScrollingDown()) {
+                if (entry.isIntersecting) {
                     handleLoadMore();
                 }
             });
