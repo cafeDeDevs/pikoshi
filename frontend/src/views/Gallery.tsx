@@ -47,6 +47,12 @@ const Gallery: Component = () => {
     const [error, setError] = createSignal<string>("");
     const [images, setImages] = createSignal<ImageMetadata[]>([]);
     const [loadingStates, setLoadingStates] = createSignal<boolean[]>([]);
+    const [imagesLoaded, setImagesLoaded] = createSignal<boolean>(false);
+    const [isScrollingDown, setIsScrollingDown] = createSignal<boolean>(false);
+
+    const [observerRef, setObserverRef] = createSignal<HTMLDivElement>();
+    const [lastScrollY, setLastScrollY] = createSignal<number>(0);
+
     const {
         openImageModal,
         isLogoutModalOpen,
@@ -69,11 +75,14 @@ const Gallery: Component = () => {
             return navigate("/");
         }
 
+        window.addEventListener("scroll", handleScroll);
+
         if (isLogoutModalOpen()) closeLogoutModal();
 
         const cachedImages = await getThumbnailsFromDB();
         if (cachedImages && cachedImages.length > 0) {
             setImages(cachedImages);
+            setImagesLoaded(true);
         } else {
             const imageCount = await useGrabImageCount();
             if (imageCount) {
@@ -93,6 +102,7 @@ const Gallery: Component = () => {
                     });
                 }
                 await addThumbnailsToDB(images());
+                setImagesLoaded(true);
             }
         }
     });
@@ -108,14 +118,53 @@ const Gallery: Component = () => {
         }
     });
 
+    createEffect(() => {
+        if (!imagesLoaded()) return;
+
+        const observerOptions = {
+            root: null,
+            rootMargin: "-250px",
+            threshold: 0,
+        };
+
+        const observerCallBack = (entries: IntersectionObserverEntry[]) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && isScrollingDown()) {
+                    handleLoadMore();
+                }
+            });
+        };
+
+        const observer = new IntersectionObserver(
+            observerCallBack,
+            observerOptions,
+        );
+
+        if (observerRef) observer.observe(observerRef()!);
+
+        onCleanup(() => {
+            if (observerRef) observer.unobserve(observerRef()!);
+        });
+    });
+
+    const handleScroll = () => {
+        if (window.scrollY > lastScrollY()) {
+            setLastScrollY(window.scrollY);
+            setIsScrollingDown(true);
+        } else {
+            setLastScrollY(window.scrollY - 1);
+            setIsScrollingDown(false);
+        }
+    };
+
     const handleImgClick = (index: number) => {
         const image = images()[index];
         openImageModal(image);
     };
 
-    // TODO: Hook Up Intersection Observer/Infinite Scroll Logic Here
     const handleLoadMore = async () => {
         try {
+            setImagesLoaded(false);
             const imageCount = await useGrabImageCount();
             setLoadingStates(Array(imageCount).fill(true));
 
@@ -134,14 +183,17 @@ const Gallery: Component = () => {
             }
             await clearDB();
             await addThumbnailsToDB(images());
+            setImagesLoaded(true);
         } catch (err) {
             const error = err as Error;
-            return error.message || "Unknown error";
+            console.error("ERROR :=>", error.message);
+            setError(error.message);
         }
     };
 
     onCleanup(() => {
         abortController.abort();
+        window.removeEventListener("scroll", handleScroll);
     });
 
     return (
@@ -152,12 +204,6 @@ const Gallery: Component = () => {
                 <UploadImageModal />
                 <ImageViewerModal />
                 <LogoutSuccessModal />
-                {/* TODO: Replace button with Intersection Observer scroll event */}
-                <button
-                    style="background-color: lime;"
-                    onClick={handleLoadMore}>
-                    Load More Images
-                </button>
                 <div class={styles.Gallery}>
                     <Show
                         when={images().length > 0}
@@ -189,6 +235,9 @@ const Gallery: Component = () => {
                                 )}
                             </For>
                         </div>
+                    </Show>
+                    <Show when={imagesLoaded()}>
+                        <div ref={setObserverRef}></div>
                     </Show>
                     <Show when={error().length > 0}>
                         <p style="color: red;">{error()}</p>
