@@ -66,7 +66,6 @@ const Gallery: Component = () => {
 
     const abortController = new AbortController();
 
-    // TODO: Wrap in try/catch/throws
     onMount(async () => {
         const authContext = await useAuthContext();
         setIsAuthenticated(authContext);
@@ -140,11 +139,30 @@ const Gallery: Component = () => {
             observerOptions,
         );
 
+        /* NOTE: TS warninig ignored: imagesLoaded() check above
+         * ensures observerRef() is defined here */
         if (observerRef) observer.observe(observerRef()!);
 
         onCleanup(() => {
             if (observerRef) observer.unobserve(observerRef()!);
         });
+    });
+
+    createEffect(() => {
+        /*
+         * Opens Dialogue Box letting user know that data may not be
+         * saved, i.e. prevents user from navigating away/refreshing while
+         * images are still streaming in.
+         */
+        const handleBeforeUnload = (event: Event) => {
+            if (!imagesLoaded()) {
+                event.preventDefault();
+            }
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        onCleanup(() =>
+            window.removeEventListener("beforeunload", handleBeforeUnload),
+        );
     });
 
     const handleScroll = () => {
