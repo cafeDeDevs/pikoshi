@@ -25,6 +25,7 @@ async def signup_with_google(
     - Grabs the new User's UUID and puts it inside of JWT access_token and refresh_token.
     - Sets the JWT access_token and JWT refresh_token in HTTP-Only Secure cookies,
       and sends them back to Client.
+
     """
     try:
         auth_code = request.code
