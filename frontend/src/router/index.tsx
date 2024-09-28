@@ -4,6 +4,7 @@ import Login from "../views/Login";
 import Onboarding from "../views/Onboarding";
 import Signup from "../views/Signup";
 import NotFound from "../views/NotFound";
+import ForgotPassword from "../views/ForgotPassword.tsx";
 
 const routes = [
     {
@@ -29,6 +30,10 @@ const routes = [
     {
         path: "/*",
         component: NotFound,
+    },
+    {
+        path: "/forgot-password",
+        component: ForgotPassword,
     },
 ];
 
