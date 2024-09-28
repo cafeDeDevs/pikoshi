@@ -101,9 +101,10 @@ async def email_onboarding(
         await redis.delete(f"signup_token_for_{user_info.token}")
 
         new_user = await JWTAuthService.signup_user_with_email(
-            user_info, user_email, db_session
+            user_info, user_email, db_session, method='email'
         )
         user_uuid = new_user.uuid
+
 
         user_tokens = JWTAuthService.get_user_tokens(user_uuid)
         access_token = user_tokens["access_token"]
