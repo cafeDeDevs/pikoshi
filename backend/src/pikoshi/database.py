@@ -3,12 +3,8 @@ import os
 from typing import Any, AsyncIterator
 
 from dotenv import load_dotenv
-from sqlalchemy.ext.asyncio import (
-    AsyncConnection,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
+from sqlalchemy.ext.asyncio import (AsyncConnection, AsyncSession,
+                                    async_sessionmaker, create_async_engine)
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
