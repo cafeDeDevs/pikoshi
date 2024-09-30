@@ -52,6 +52,8 @@ upgrade = "alembic --config ./src/pikoshi/alembic.ini upgrade"
 downgrade = "alembic --config ./src/pikoshi/alembic.ini downgrade"
 generate = "alembic --config ./src/pikoshi/alembic.ini revision --autogenerate -m"
 fmt = "bash -c 'black --quiet ./src/pikoshi/ && isort --quiet ./src/pikoshi/'"
+backup = "./scripts/db_backup.sh"
+restore = "./scripts/db_restore.sh"
 
 [project.scripts]
 start = "pikoshi.main:main"
