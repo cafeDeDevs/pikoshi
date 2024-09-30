@@ -1,7 +1,14 @@
 from typing import Annotated
 
-from fastapi import (APIRouter, Body, Cookie, Depends, HTTPException, Response,
-                     UploadFile)
+from fastapi import (
+    APIRouter,
+    Body,
+    Cookie,
+    Depends,
+    HTTPException,
+    Response,
+    UploadFile,
+)
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
