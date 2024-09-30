@@ -114,6 +114,7 @@ async def grab_file_list(
                 continuation_token,
                 file_format=file_format,
             )
+            file_list = s3_response["file_list"]
 
         return {
             "file_list": file_list,

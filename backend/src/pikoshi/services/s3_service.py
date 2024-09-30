@@ -4,6 +4,7 @@ import os
 from typing import Any, List
 
 from aiobotocore.session import get_session
+from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 from fastapi import UploadFile
 
@@ -134,11 +135,33 @@ async def grab_file_list(
                 "continuation_token": next_continuation_token,
             }
     except Exception as e:
+        if isinstance(e, ClientError):
+            error_code = e.response.get("Error", {}).get("Code")
+            if error_code == "NoSuchBucket":
+                return {
+                    "file_list": [],
+                    "continuation_token": None,
+                }
         ExceptionService.handle_s3_exception(e)
         return {
             "file_list": [],
             "continuation_token": None,
         }
+
+
+async def _create_bucket_if_not_exists(s3_client, bucket_name: str) -> None:
+    """
+    - Ensures that the specified S3 bucket exists.
+    - If it does not exist, creates the bucket.
+    """
+    try:
+        await s3_client.head_bucket(Bucket=bucket_name)
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code")
+        if error_code == "404":
+            await s3_client.create_bucket(Bucket=bucket_name)
+        else:
+            raise
 
 
 async def upload_file(
@@ -167,7 +190,8 @@ async def upload_file(
       or file specified.
     """
     try:
-        async with session.create_client("s3", region_name=AWS_REGION) as s3_client:
+        async with session.create_client("s3") as s3_client:
+            await _create_bucket_if_not_exists(s3_client, bucket_name)
 
             gallery_name = f"{user_uuid}/{album_name}/{file_format}"
 
