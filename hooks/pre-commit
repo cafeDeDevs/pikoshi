@@ -1,0 +1,3 @@
+#!/bin/sh
+
+(bun --cwd frontend fmt) && (cd backend && rye run fmt && cd ..)

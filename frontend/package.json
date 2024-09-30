@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "test": "vitest --environment jsdom run --coverage"
+    "test": "vitest --environment jsdom run --coverage",
+    "fmt": "prettier --log-level silent --write 'src/**/*.{tsx,css}'"
   },
   "type": "module",
   "license": "MIT",
