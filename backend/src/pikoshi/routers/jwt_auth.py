@@ -1,4 +1,5 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
+from fastapi import (APIRouter, BackgroundTasks, Depends, HTTPException,
+                     Response)
 from fastapi.responses import JSONResponse
 from jwt.exceptions import PyJWTError
 from sqlalchemy.ext.asyncio import AsyncSession
