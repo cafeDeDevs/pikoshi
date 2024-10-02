@@ -116,7 +116,7 @@ async def signup_user_with_google(
     new_user = UserService.generate_user_profile(
         user_name, user_password, user_email, salt, uuid
     )
-    new_user = await UserService.create_user(db_session, new_user)
+    new_user = await UserService.create_user(db_session, new_use, method='oauth2')
     if not new_user:
         raise HTTPException(
             status_code=409, detail="Email has already been registered."

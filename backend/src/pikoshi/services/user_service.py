@@ -55,7 +55,7 @@ def generate_user_profile(
     return new_user
 
 
-async def create_user(db_session: AsyncSession, user: UserCreate) -> UserModel | None:
+async def create_user(db_session: AsyncSession, user: UserCreate, method: str = 'email') -> UserModel | None:
     """
     - Grabs the User By Email.
     - Establishes a new random UUID.
@@ -77,6 +77,7 @@ async def create_user(db_session: AsyncSession, user: UserCreate) -> UserModel |
         salt=user.salt,
         is_active=True,
         last_login=func.now(),
+        signed_up_method=method
     )
     db_session.add(db_user)
     await db_session.commit()
