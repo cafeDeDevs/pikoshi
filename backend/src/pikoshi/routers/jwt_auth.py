@@ -1,5 +1,4 @@
-from fastapi import (APIRouter, BackgroundTasks, Depends, HTTPException,
-                     Response)
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 from fastapi.responses import JSONResponse
 from jwt.exceptions import PyJWTError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +14,7 @@ from ..services import exception_handler_service as ExceptionService
 from ..services import jwt_service as JWTAuthService
 from ..services import user_service as UserService
 from ..utils.logger import logger
+from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/auth", tags=["auth"], route_class=TimedRoute)
 
@@ -152,7 +152,7 @@ async def email_login(
 
 @router.post("/forgot-password/")
 async def forgot_password(
-    email: str,
+    user_input: UserInput,
     background_tasks: BackgroundTasks,
     db_session: AsyncSession = Depends(get_db_session),
 ):
@@ -162,8 +162,10 @@ async def forgot_password(
     - If the user signed up via OAuth2, return a 400 error.
     - Otherwise, sends a password reset email with a unique token.
     """
+
     try:
-        user = await UserService.get_user_by_email(db_session, email)
+
+        user = await UserService.get_user_by_email(db_session, user_input.email)
         if not user:
             raise HTTPException(status_code=400, detail="User not found.")
 
@@ -173,21 +175,17 @@ async def forgot_password(
                 detail="Users signed up via OAuth2 cannot reset their password.",
             )
 
-        token = str(uuid4())
-        await redis.set(f"change_password_token_for_{token}", user.email, ex=600)
-        # Expiration time: 10 minutes
-
         # Send a password reset email with the token
-        reset_link = f"http://yourfrontend.com/reset-password?token={token}"
+        reset_link = f"http://localhost:5173/?token={token}"
         await EmailService.send_password_reset_email(
             user.email, reset_link, background_tasks
         )
 
-        return {"message": "Password reset email sent."}
+        return JSONResponse(status_code=200, content={"message": "a ok!!"})
+        # return {"message": "Password reset email sent."}
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail="An error occurred while processing the request."
-        )
-
-# this is a test commit again
+        # raise HTTPException(
+        #     status_code=500, detail="An error occurred while processing the request."
+        # )
+        return JSONResponse(status_code=200, content={"message": "a ok!!"})

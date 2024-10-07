@@ -15,4 +15,6 @@ export default {
     BACKEND_GALLERY_UPLOAD_IMAGE_ROUTE: "http://localhost:8000/gallery/upload/",
     BACKEND_GALLERY_LOAD_MORE_IMAGES_ROUTE:
         "http://localhost:8000/gallery/default-load-more/",
+    BACKEND_FORGOT_PASSWORD_ROUTE:
+        "http://localhost:8000/auth/forgot-password/",
 };
