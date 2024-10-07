@@ -1,15 +1,44 @@
 import type { Component } from "solid-js";
 import { createSignal } from "solid-js";
+import { validateEmailInput } from "../utils/schema-validators";
+import urls from "../config/urls";
 
 import styles from "../css/AuthCard.module.css";
 
 const ForgotPassword: Component = () => {
     const [email, setEmail] = createSignal("");
 
-    const handleSubmit = (e: Event) => {
+    const handleSubmit = async (e: Event) => {
         e.preventDefault();
-        console.log("Email submitted for password reset:", email());
+        try {
+            validateEmailInput(email());
+            const res = await fetch(urls.BACKEND_FORGOT_PASSWORD_ROUTE, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email: email() }),
+            });
+            const jsonRes = await res.json();
+            if (!res.ok) {
+                throw new Error(jsonRes.message || jsonRes.detail);
+            } else {
+                // TODO: SET ACTUAL MESSAGES HERE
+                console.log(jsonRes.message);
+
+                // setMessage(jsonRes.message);
+            }
+        } catch (err) {
+            const error = err as Error;
+            // console.error("ERROR :=>", error.message);
+            // setMessage(error.message);
+        }
     };
+
+    // const handleSubmit = (e: Event) => {
+    //     e.preventDefault();
+    //     console.log("Email submitted for password reset:", email());
+    // };
 
     return (
         <div class={styles.AuthCard}>

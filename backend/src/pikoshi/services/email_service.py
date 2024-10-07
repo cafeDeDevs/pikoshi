@@ -30,6 +30,23 @@ def send_signup_email(email: EmailStr, html_content: str) -> None:
     )
 
 
+def send_change_password_email(email: EmailStr, html_content: str) -> None:
+    """
+    - Wrapper around Resend Email API.
+    - Takes email from Client side /signup form.
+    - Sends html_content, which has a cached hashed `token` embedded in link.
+      (see templates/signup_email.html)
+    """
+    resend.Emails.send(
+        {
+            "from": "pikoshi@thelastselftaught.dev",
+            "to": email,
+            "subject": "Reset password for Pikoshi",
+            "html": html_content,
+        }
+    )
+
+
 async def send_transac_email(
     user_input,
     user_email: EmailStr,
@@ -56,3 +73,30 @@ async def send_transac_email(
     html_content = html_template.format(activation_link=activation_link)
 
     background_tasks.add_task(send_signup_email, user_input.email, html_content)
+
+    # await EmailService.send_password_reset_email(
+    #     user.email, reset_link, background_tasks
+    # )
+
+
+async def send_password_reset_email(
+    user_input,
+    user_email: EmailStr,
+    background_tasks: BackgroundTasks,
+) -> None:
+    """
+    TODO: FILL IN DOC STRING LATER
+    """
+
+    token = SecurityService.generate_sha256_hash(user_input.email)
+    await redis.set(f"change_password_token_for_{token}", user_email, ex=600)
+
+    # TODO: CREATE VIEW FOR CHANGE-PASSWORD
+    reset_link = f"http://localhost:5173/change-password/?token={token}"
+    template_path = Path("./src/pikoshi/templates/change_password.html")
+    html_template = template_path.read_text()
+    html_content = html_template.format(reset_link=reset_link)
+
+    background_tasks.add_task(
+        send_change_password_email, user_input.email, html_content
+    )
