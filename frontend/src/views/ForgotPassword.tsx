@@ -45,6 +45,7 @@ const ForgotPassword: Component = () => {
             <h1>Forgot Password</h1>
             <form onSubmit={handleSubmit}>
                 <label for="email">Enter your email:</label>
+                <br />
                 <input
                     type="email"
                     id="email"
