@@ -1,5 +1,4 @@
-from fastapi import (APIRouter, BackgroundTasks, Depends, HTTPException,
-                     Response)
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 from fastapi.responses import JSONResponse
 from jwt.exceptions import PyJWTError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -176,15 +175,13 @@ async def forgot_password(
             )
 
         # Send a password reset email with the token
-        reset_link = f"http://localhost:5173/?token={token}"
-        await EmailService.send_password_reset_email(
-            user.email, reset_link, background_tasks
-        )
+        await EmailService.send_password_reset_email(user_input, background_tasks)
 
         return JSONResponse(status_code=200, content={"message": "a ok!!"})
         # return {"message": "Password reset email sent."}
 
     except Exception as e:
+        print("Exception :=>", e)
         # raise HTTPException(
         #     status_code=500, detail="An error occurred while processing the request."
         # )

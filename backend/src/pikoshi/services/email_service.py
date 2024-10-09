@@ -7,6 +7,7 @@ from fastapi import BackgroundTasks
 from pydantic import EmailStr
 
 from ..config.redis_config import redis_instance as redis
+from ..schemas.user import UserInput
 from ..services import security_service as SecurityService
 
 load_dotenv()
@@ -74,21 +75,17 @@ async def send_transac_email(
 
     background_tasks.add_task(send_signup_email, user_input.email, html_content)
 
-    # await EmailService.send_password_reset_email(
-    #     user.email, reset_link, background_tasks
-    # )
-
 
 async def send_password_reset_email(
-    user_input,
-    user_email: EmailStr,
+    user_input: UserInput,
     background_tasks: BackgroundTasks,
 ) -> None:
     """
     TODO: FILL IN DOC STRING LATER
     """
 
-    token = SecurityService.generate_sha256_hash(user_input.email)
+    user_email = user_input.email
+    token = SecurityService.generate_sha256_hash(user_email)
     await redis.set(f"change_password_token_for_{token}", user_email, ex=600)
 
     # TODO: CREATE VIEW FOR CHANGE-PASSWORD
