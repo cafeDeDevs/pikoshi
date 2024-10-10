@@ -32,6 +32,9 @@ def upgrade() -> None:
         sa.Column("uuid", sa.String(36), unique=True, nullable=False, index=True),
         sa.Column("is_active", sa.Boolean(), default=False),
         sa.Column("last_login", sa.DateTime(timezone=True)),
+        sa.Column(
+            "signed_up_method", sa.String(length=254), nullable=False, default="email"
+        ),
     )
 
     # Create albums table

@@ -22,10 +22,6 @@
     z-index: 1100;
 }
 
-.modal-header {
-    font-size: 180%;
-}
-
 .file-picker {
     display: none;
     color: transparent;
@@ -43,4 +39,55 @@
     scale: 1.2;
     cursor: pointer;
     background-color: transparent;
+}
+
+.drop-zone {
+    margin: 1em auto 1em auto;
+    width: 300px;
+    height: 200px;
+    border: 2px dashed #aaa;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.drop-zone p {
+    padding: 1em;
+    text-align: center;
+    color: #888;
+    font-size: 18px;
+}
+
+.dragover {
+    background-color: #bbb;
+    border-color: #555;
+}
+
+#file-input {
+    display: none;
+}
+
+#file-list {
+    margin-top: 20px;
+}
+
+.file-item {
+    background-color: #eee;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+/* Mobile specific css */
+@media only screen and (max-width: 32.5em) {
+    .UploadImageModal {
+        margin-left: -130px;
+    }
+    .drop-zone {
+        width: 225px;
+        height: 125px;
+    }
 }

@@ -7,6 +7,7 @@ from fastapi import BackgroundTasks
 from pydantic import EmailStr
 
 from ..config.redis_config import redis_instance as redis
+from ..schemas.user import UserInput
 from ..services import security_service as SecurityService
 
 load_dotenv()
@@ -25,6 +26,23 @@ def send_signup_email(email: EmailStr, html_content: str) -> None:
             "from": "pikoshi@thelastselftaught.dev",
             "to": email,
             "subject": "Complete Pikoshi Sign up",
+            "html": html_content,
+        }
+    )
+
+
+def send_change_password_email(email: EmailStr, html_content: str) -> None:
+    """
+    - Wrapper around Resend Email API.
+    - Takes email from Client side /signup form.
+    - Sends html_content, which has a cached hashed `token` embedded in link.
+      (see templates/signup_email.html)
+    """
+    resend.Emails.send(
+        {
+            "from": "pikoshi@thelastselftaught.dev",
+            "to": email,
+            "subject": "Reset password for Pikoshi",
             "html": html_content,
         }
     )
@@ -56,3 +74,26 @@ async def send_transac_email(
     html_content = html_template.format(activation_link=activation_link)
 
     background_tasks.add_task(send_signup_email, user_input.email, html_content)
+
+
+async def send_password_reset_email(
+    user_input: UserInput,
+    background_tasks: BackgroundTasks,
+) -> None:
+    """
+    TODO: FILL IN DOC STRING LATER
+    """
+
+    user_email = user_input.email
+    token = SecurityService.generate_sha256_hash(user_email)
+    await redis.set(f"change_password_token_for_{token}", user_email, ex=600)
+
+    # TODO: CREATE VIEW FOR CHANGE-PASSWORD
+    reset_link = f"http://localhost:5173/change-password/?token={token}"
+    template_path = Path("./src/pikoshi/templates/change_password.html")
+    html_template = template_path.read_text()
+    html_content = html_template.format(reset_link=reset_link)
+
+    background_tasks.add_task(
+        send_change_password_email, user_input.email, html_content
+    )

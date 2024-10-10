@@ -102,10 +102,9 @@ async def email_onboarding(
         await redis.delete(f"signup_token_for_{user_info.token}")
 
         new_user = await JWTAuthService.signup_user_with_email(
-            user_info, user_email, db_session, method='email'
+            user_info, user_email, db_session, method="email"
         )
         user_uuid = new_user.uuid
-
 
         user_tokens = JWTAuthService.get_user_tokens(user_uuid)
         access_token = user_tokens["access_token"]
@@ -149,3 +148,42 @@ async def email_login(
         return ExceptionService.handle_jwt_exception(jwt_e)
     except Exception as e:
         return ExceptionService.handle_generic_exception(e)
+
+
+@router.post("/forgot-password/")
+async def forgot_password(
+    user_input: UserInput,
+    background_tasks: BackgroundTasks,
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    Handles the Forgot Password functionality:
+    - Checks if the user exists in the database.
+    - If the user signed up via OAuth2, return a 400 error.
+    - Otherwise, sends a password reset email with a unique token.
+    """
+
+    try:
+
+        user = await UserService.get_user_by_email(db_session, user_input.email)
+        if not user:
+            raise HTTPException(status_code=400, detail="User not found.")
+
+        if user.signed_up_method == "oauth2":
+            raise HTTPException(
+                status_code=400,
+                detail="Users signed up via OAuth2 cannot reset their password.",
+            )
+
+        # Send a password reset email with the token
+        await EmailService.send_password_reset_email(user_input, background_tasks)
+
+        return JSONResponse(status_code=200, content={"message": "a ok!!"})
+        # return {"message": "Password reset email sent."}
+
+    except Exception as e:
+        print("Exception :=>", e)
+        # raise HTTPException(
+        #     status_code=500, detail="An error occurred while processing the request."
+        # )
+        return JSONResponse(status_code=200, content={"message": "a ok!!"})

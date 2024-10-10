@@ -70,6 +70,7 @@ async def signup_user_with_email(
     user_info,
     user_email: EmailStr,
     db_session: AsyncSession = Depends(get_db_session),
+    method="email",
 ) -> User:
     """
     - Creates a User instance in DB using fields grabbed from Front End Forms
@@ -85,7 +86,7 @@ async def signup_user_with_email(
     new_user = UserService.generate_user_profile(
         user_name, user_password, user_email, salt, uuid
     )
-    new_user = await UserService.create_user(db_session, new_user)
+    new_user = await UserService.create_user(db_session, new_user, method)
 
     if not new_user:
         raise HTTPException(

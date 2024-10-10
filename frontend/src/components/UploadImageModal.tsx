@@ -15,6 +15,7 @@ const UploadImageModal: Component = () => {
     const [files, setFiles] = createSignal<File[]>([]);
     const [error, setError] = createSignal<string>("");
     let inputRef: HTMLInputElement | null = null;
+    let dropZoneRef: HTMLDivElement | null = null;
 
     const { isModalOpen, closeModal, reloadGallery } = useModalContext();
 
@@ -52,12 +53,6 @@ const UploadImageModal: Component = () => {
         }
     });
 
-    const handleUploadClick = (): void => {
-        if (inputRef !== null) {
-            inputRef.click();
-        }
-    };
-
     const handleFileChange = (e: Event): void => {
         const target = e.target as HTMLInputElement;
         if (target.files) {
@@ -71,11 +66,37 @@ const UploadImageModal: Component = () => {
         }
     };
 
+    const handleDrop = (e: DragEvent): void => {
+        e.preventDefault();
+        if (dropZoneRef) dropZoneRef.classList.remove(styles.dragover);
+        if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            if (!file.type.startsWith("image/")) {
+                console.error("ERROR :=> Uploaded file is not an image:", file);
+                setError("Please upload a valid image file.");
+                return;
+            }
+            setFiles([...files(), file]);
+        }
+    };
+
+    const handleDragOver = (e: DragEvent): void => {
+        e.preventDefault();
+        if (dropZoneRef) dropZoneRef.classList.add(styles.dragover);
+    };
+
+    const handleDragLeave = (): void => {
+        if (dropZoneRef) dropZoneRef.classList.remove(styles.dragover);
+    };
+
+    const handleDropZoneClick = (): void => {
+        if (inputRef) inputRef.click();
+    };
+
     return (
         <Show when={isModalOpen()}>
             <div class={styles.ModalOverlay}>
                 <div class={styles.UploadImageModal}>
-                    <h1 class={styles["modal-header"]}>Upload An Image</h1>
                     <input
                         class={styles["file-picker"]}
                         type="file"
@@ -83,9 +104,18 @@ const UploadImageModal: Component = () => {
                         onChange={handleFileChange}
                         ref={el => (inputRef = el)}
                     />
-                    <button class="upload-btn" onClick={handleUploadClick}>
-                        Choose Image
-                    </button>
+                    <div
+                        class={styles["drop-zone"]}
+                        onClick={handleDropZoneClick}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        ref={el => (dropZoneRef = el)}>
+                        <p>
+                            Drag and drop your image here, or click to select
+                            image.
+                        </p>
+                    </div>
                     <button class={styles["close-btn"]} onClick={closeModal}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
