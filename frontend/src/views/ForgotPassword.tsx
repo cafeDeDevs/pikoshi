@@ -12,6 +12,8 @@ const ForgotPassword: Component = () => {
         e.preventDefault();
         try {
             validateEmailInput(email());
+            console.log("Submitting email:", email()); // Log the submitted email
+
             const res = await fetch(urls.BACKEND_FORGOT_PASSWORD_ROUTE, {
                 method: "POST",
                 headers: {
@@ -19,21 +21,49 @@ const ForgotPassword: Component = () => {
                 },
                 body: JSON.stringify({ email: email() }),
             });
+
             const jsonRes = await res.json();
+            console.log("Backend response:", jsonRes); // Log the backend response
+
             if (!res.ok) {
                 throw new Error(jsonRes.message || jsonRes.detail);
             } else {
-                // TODO: SET ACTUAL MESSAGES HERE
-                console.log(jsonRes.message);
-
-                // setMessage(jsonRes.message);
+                console.log("Email submission successful:", jsonRes.message);
+                // setMessage(jsonRes.message);  // Handle success messages
             }
         } catch (err) {
             const error = err as Error;
-            // console.error("ERROR :=>", error.message);
-            // setMessage(error.message);
+            console.error("Error during email submission:", error.message);
+            // setMessage(error.message);  // Handle error messages
         }
     };
+
+    // const handleSubmit = async (e: Event) => {
+    //     e.preventDefault();
+    //     try {
+    //         validateEmailInput(email());
+    //         const res = await fetch(urls.BACKEND_FORGOT_PASSWORD_ROUTE, {
+    //             method: "POST",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({ email: email() }),
+    //         });
+    //         const jsonRes = await res.json();
+    //         if (!res.ok) {
+    //             throw new Error(jsonRes.message || jsonRes.detail);
+    //         } else {
+    //             // TODO: SET ACTUAL MESSAGES HERE
+    //             console.log(jsonRes.message);
+
+    //             // setMessage(jsonRes.message);
+    //         }
+    //     } catch (err) {
+    //         const error = err as Error;
+    //         // console.error("ERROR :=>", error.message);
+    //         // setMessage(error.message);
+    //     }
+    // };
 
     // const handleSubmit = (e: Event) => {
     //     e.preventDefault();

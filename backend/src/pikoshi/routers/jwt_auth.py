@@ -164,26 +164,38 @@ async def forgot_password(
     """
 
     try:
+        # Log the incoming email
+        print(f"Received forgot password request for: {user_input.email}")
 
+        # Check if the user exists
         user = await UserService.get_user_by_email(db_session, user_input.email)
         if not user:
+            print(f"User not found: {user_input.email}")
             raise HTTPException(status_code=400, detail="User not found.")
 
+        # Check if the user signed up with OAuth2
         if user.signed_up_method == "oauth2":
+            print(
+                f"User {user_input.email} signed up via OAuth2, cannot reset password."
+            )
             raise HTTPException(
                 status_code=400,
                 detail="Users signed up via OAuth2 cannot reset their password.",
             )
 
         # Send a password reset email with the token
+        print(f"Sending password reset email to: {user_input.email}")
         await EmailService.send_password_reset_email(user_input, background_tasks)
+        print(f"Password reset email sent successfully to: {user_input.email}")
 
-        return JSONResponse(status_code=200, content={"message": "a ok!!"})
-        # return {"message": "Password reset email sent."}
+        # Return success response
+        return JSONResponse(
+            status_code=200, content={"message": "Password reset email sent."}
+        )
 
     except Exception as e:
-        print("Exception :=>", e)
-        # raise HTTPException(
-        #     status_code=500, detail="An error occurred while processing the request."
-        # )
-        return JSONResponse(status_code=200, content={"message": "a ok!!"})
+        print(f"Exception occurred: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"message": "An error occurred while processing the request."},
+        )
