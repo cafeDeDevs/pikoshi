@@ -11,3 +11,7 @@ redis_instance = aioredis.StrictRedis(
     db=0,
     decode_responses=True,
 )
+
+
+async def get_redis_client():
+    return redis_instance

@@ -1,5 +1,4 @@
-from fastapi import (APIRouter, BackgroundTasks, Depends, HTTPException,
-                     Response)
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 from fastapi.responses import JSONResponse
 from jwt.exceptions import PyJWTError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +14,7 @@ from ..services import exception_handler_service as ExceptionService
 from ..services import jwt_service as JWTAuthService
 from ..services import user_service as UserService
 from ..utils.logger import logger
+from ..config.redis_config import get_redis_client
 
 router = APIRouter(prefix="/auth", tags=["auth"], route_class=TimedRoute)
 
@@ -199,3 +199,20 @@ async def forgot_password(
             status_code=500,
             content={"message": "An error occurred while processing the request."},
         )
+
+
+@router.post("/verify-change-password-token/")
+async def verify_change_password_token(token: str, redis=Depends(get_redis_client)):
+    """
+    Verifies if the change_password_token exists in Redis.
+    If it exists, return 200. If it does not, return a 401.
+    """
+    try:
+        user_email = await redis.get(f"change_password_token_for_{token}")
+        if not user_email:
+            raise HTTPException(status_code=401, detail="Invalid or expired token.")
+
+        return JSONResponse(status_code=200, content={"message": "Token is valid."})
+    except Exception as e:
+        print(f"Error verifying token: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error.")
