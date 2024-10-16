@@ -207,13 +207,14 @@ async def verify_change_password(request: TokenRequest):
     Verifies if the change_password_token exists in Redis.
     If it exists, return 200. If it does not, return a 401.
     """
-    print("hit backend ok")
-    # try:
-    #     user_email = await redis.get(f"change_password_token_for_{token}")
-    #     if not user_email:
-    #         raise HTTPException(status_code=401, detail="Invalid or expired token.")
+    print(request)
+    try:
+        user_email = await redis.get(f"change_password_token_for_{request.token}")
 
-    #     return JSONResponse(status_code=200, content={"message": "Token is valid."})
-    # except Exception as e:
-    #     print(f"Error verifying token: {e}")
-    #     raise HTTPException(status_code=500, detail="Internal server error.")
+        if not user_email:
+            raise HTTPException(status_code=401, detail="Invalid or expired token.")
+
+        return JSONResponse(status_code=200, content={"message": "Token is valid."})
+    except Exception as e:
+        print(f"Error verifying token: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error.")
