@@ -17,4 +17,6 @@ export default {
         "http://localhost:8000/gallery/default-load-more/",
     BACKEND_FORGOT_PASSWORD_ROUTE:
         "http://localhost:8000/auth/forgot-password/",
+    BACKEND_VERIFY_CHANGE_PASSWORD:
+        "http://localhost:8000/auth/verify-change-password/",
 };

@@ -19,20 +19,23 @@ const ChangePassword: Component = () => {
     const [confirmPassword, setConfirmPassword] = createSignal<string>("");
 
     const queryParams = new URLSearchParams(location.search);
-    const token = queryParams.get("change_password_token");
+    const token = queryParams.get("token");
 
     onMount(() => {
         if (!token) navigate("/");
         (async () => {
             try {
-                const response = await fetch(urls.BACKEND_CHECK_TOKEN_ROUTE, {
-                    method: "POST",
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
+                const response = await fetch(
+                    urls.BACKEND_VERIFY_CHANGE_PASSWORD,
+                    {
+                        method: "POST",
+                        headers: {
+                            Accept: "application/json",
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ token }),
                     },
-                    body: JSON.stringify({ token }),
-                });
+                );
 
                 if (!response.ok) {
                     const jsonRes = await response.json();
