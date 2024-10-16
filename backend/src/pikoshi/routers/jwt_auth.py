@@ -1,8 +1,10 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
+from fastapi import (APIRouter, BackgroundTasks, Depends, HTTPException,
+                     Response)
 from fastapi.responses import JSONResponse
 from jwt.exceptions import PyJWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..config.redis_config import get_redis_client
 from ..config.redis_config import redis_instance as redis
 from ..dependencies import get_db_session
 from ..middlewares.logger import TimedRoute
@@ -14,7 +16,6 @@ from ..services import exception_handler_service as ExceptionService
 from ..services import jwt_service as JWTAuthService
 from ..services import user_service as UserService
 from ..utils.logger import logger
-from ..config.redis_config import get_redis_client
 
 router = APIRouter(prefix="/auth", tags=["auth"], route_class=TimedRoute)
 
